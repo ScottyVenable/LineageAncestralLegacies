@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_pop_names",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_pop_names",
+  "parent":{
+    "name":"names",
+    "path":"folders/Data/names.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

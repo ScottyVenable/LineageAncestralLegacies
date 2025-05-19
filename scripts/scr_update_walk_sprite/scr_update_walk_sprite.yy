@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_update_walk_sprite",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_update_walk_sprite",
+  "parent":{
+    "name":"Art",
+    "path":"folders/Scripts/Pop/Art.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

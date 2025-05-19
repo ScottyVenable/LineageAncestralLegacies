@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_seperate_pops",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_seperate_pops",
+  "parent":{
+    "name":"Physics",
+    "path":"folders/Scripts/Pop/Physics.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

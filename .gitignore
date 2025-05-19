@@ -1,0 +1,261 @@
+# General GameMaker Studio 2 .gitignore
+# Last updated: Based on common community templates and GMS2 structure
+
+# Default Ignore
+###################
+*.yy~
+*.backup
+*.temp
+*.gml~
+*.cs~
+*.js~
+*.dll~
+*.exe~
+*.obj~
+*.o~
+*.pdb~
+*.ilk~
+*.suo~
+*.userprefs
+*.user
+*.lock
+*.DS_Store
+*.orig
+*.yy.rej
+*.gml.rej
+*.cs.rej
+*.js.rej
+*.dll.rej
+*.exe.rej
+*.obj.rej
+*.o.rej
+*.pdb.rej
+*.ilk.rej
+*.suo.rej
+*.userprefs.rej
+*.user.rej
+*.lock.rej
+*.DS_Store.rej
+*.orig.rej
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Linux
+*~
+*.swp
+*.swo
+
+# GameMaker Studio 2 specific
+###############################
+
+# Cache files
+cache/
+assetcompiler/
+project_compiler_cache/
+project_cache/
+output/
+targetoptions.json
+*.project.gmx
+*.project.gmx.backup.*
+*.project.gmx.backup
+*.project.gmx.orig
+*.project.gmk
+*.project.gmk.backup.*
+*.project.gmk.backup
+*.project.gmk.orig
+*.gmx
+*.gmk
+*.gex
+*.extension
+*.action
+*.background
+*.font
+*.object
+*.path
+*.room
+*.script
+*.shader
+*.sound
+*.sprite
+*.timeline
+*.project
+*.project.backup
+*.project.user
+*.userprefs
+*.solution
+*.user
+*.config
+*.backup.*
+*.backup1
+*.backup2
+*.backup3
+*.backup4
+*.backup5
+*.backup6
+*.backup7
+*.backup8
+*.backup9
+*.backup10
+*.backup11
+*.backup12
+*.backup13
+*.backup14
+*.backup15
+*.backup16
+*.backup17
+*.backup18
+*.backup19
+*.backup20
+*.backup21
+*.backup22
+*.backup23
+*.backup24
+*.backup25
+*.backup26
+*.backup27
+*.backup28
+*.backup29
+*.backup30
+*.backup31
+*.backup32
+*.backup33
+*.backup34
+*.backup35
+*.backup36
+*.backup37
+*.backup38
+*.backup39
+*.backup40
+*.backup41
+*.backup42
+*.backup43
+*.backup44
+*.backup45
+*.backup46
+*.backup47
+*.backup48
+*.backup49
+*.backup50
+
+# Compiled game files
+*.win
+*.exe
+*.zip
+*.dmg
+*.pkg
+*.apk
+*.ipa
+*.aab
+*.target
+*.ios
+*.android
+*.html5
+*.tvos
+*.ps4
+*.ps5
+*.xboxone
+*.switch
+*.uwp
+*.linux
+*.mac
+*.wasm
+datafiles/
+datafiles_yy/
+html5game/
+runner.html
+*.yydebug
+*.log
+*.trace
+
+# User specific files
+options/
+options_yy/
+*.local
+*.#
+*~
+*.swp
+*.tmp
+*.bak
+*.orig
+*.log
+*.trace
+*.map
+*.lst
+*.pdb
+*.ilk
+*.ncb
+*.suo
+*.user
+*.aps
+*.opt
+*.plg
+*.manifest
+*.dep
+*.sdf
+*.VC.db
+*.VC.VC.opendb
+.vs/
+.vscode/
+*.sln.docstates
+
+# IDE specific files (like from Visual Studio or other editors if you use them externally)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build output directories (common names)
+build/
+bin/
+obj/
+dist/
+target/
+release/
+debug/
+
+# GameMaker's HTML5 output often includes these
+gms_logo.png
+splash.png
+loading_bar.png
+
+# Marketplace assets that are managed by the IDE
+# Usually, you want to commit the .yymps files that *reference* marketplace assets,
+# but not the downloaded assets themselves if they are large or easily redownloaded.
+# This is a point of preference; some prefer to commit them for easier setup on new machines.
+# If you want to ignore them, you might add lines like:
+# extensions/[MarketplaceAssetName]/
+# objects/obj_[MarketplaceAssetName]/
+# etc.
+# For now, leaving them unignored is safer for project portability unless you specifically manage them.
+
+# If you use specific build tools or scripts that generate temporary files, add them here.
+# Example:
+# my_build_tool_output/
+
+# Steam Workshop Content (if applicable)
+# This depends on how you manage workshop content.
+# If you download content into your project that shouldn't be versioned:
+# steam_workshop_content/
+# *.workshop.json
+
+# User-defined folder for temporary files or backups
+# (Create this folder in your project if you want to use it for things Git should ignore)
+/ignore_this_folder/
+
+# GameMaker's temporary save files when editing rooms, etc.
+*.yy.autosave
+*.yyp.autosave
+
+# HTML5 Runner specific
+html5_output/

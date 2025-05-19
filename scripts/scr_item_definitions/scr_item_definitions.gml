@@ -134,7 +134,7 @@ function scr_item_defs_materials() {
     var def_stone = scr_create_item_base_definition(
         "Stone",                                  // name
         "A common piece of rock. Useful for crafting.", // description
-        ItemType.MATERIAL,                        // item_type (assuming ItemType.MATERIAL exists)
+        ItemType.MATERIAL_STONE,                        // item_type (assuming ItemType.MATERIAL exists)
         50,                                       // max_stack (example)
         1,                                        // base_value (example)
         // ... any other base properties ...
@@ -173,7 +173,7 @@ function scr_item_defs_materials() {
     var def_wood = scr_create_item_base_definition(
         "Wood",
         "A sturdy piece of timber. Good for building and fuel.",
-        ItemType.MATERIAL,
+        ItemType.MATERIAL_WOOD,
         50,
         2
     );

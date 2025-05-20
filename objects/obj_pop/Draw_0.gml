@@ -23,7 +23,7 @@ var _y_pop      = y;
 var _state_current = state;
 var _time       = current_time;
 var _pop_sex    = variable_instance_exists(id, "sex") ? sex : undefined;
-var _show_name  = (selected || is_mouse_hovering);
+var _show_name  = (is_mouse_hovering || (selected && is_solely_selected)); // New condition
 #endregion
 
 

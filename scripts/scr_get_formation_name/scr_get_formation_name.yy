@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_get_formation_name",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_get_formation_name",
+  "parent":{
+    "name":"Formations",
+    "path":"folders/Scripts/Pop/Behaviors/Formations.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

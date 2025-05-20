@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_interaction",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_interaction",
+  "parent":{
+    "name":"Systems",
+    "path":"folders/Scripts/Pop/Systems.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

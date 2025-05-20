@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_trigger_formation_notification",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_trigger_formation_notification",
+  "parent":{
+    "name":"Formations",
+    "path":"folders/Scripts/Pop/Behaviors/Formations.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

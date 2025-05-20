@@ -2,60 +2,106 @@
 ///
 /// Purpose:
 ///    Initializes the berry bush's properties, including its berry stock,
-///    regrowth timing parameters, and initial state.
+///    regrowth timing, interaction slots, and initial state. Inherits from
+///    par_slot_provider.
 ///
 /// Metadata:
-///    Summary:         Sets up the bush for harvesting and regrowth.
+///    Summary:         Sets up the bush for harvesting and regrowth with defined work slots.
 ///    Usage:           obj_redBerryBush Create Event.
 ///    Parameters:    none
 ///    Returns:         void
-///    Tags:            [world_object][harvestable][resource][init]
-///    Version:         1.2 — [Current Date] (Initialized _time variables and corrected delay_active)
+///    Tags:            [world_object][harvestable][resource][init][slot_provider_child]
+///    Version:         1.2 - [Current Date] (Corrected debug message line)
+///    Dependencies:  par_slot_provider, room_speed, relevant sprite assets.
 
-// —— Harvestable stock ——
-max_berries         = 10;   // How many berries this bush can hold at once
-berry_count         = max_berries; // Current berries remaining (starts full)
+event_inherited(); // Inherit from par_slot_provider. This runs parent's Create event.
 
-// —— Regrowth timing (Durations are in SECONDS for constants) ——
-// These are conceptual constants defining the desired duration in seconds.
-BERRY_REGROW_DURATION_SECONDS = 3.0;  // Target: 3 seconds to regrow one berry
-BERRY_DELAY_DURATION_SECONDS  = 20.0; // Target: 20-second delay before regrowth can start
+// ============================================================================
+// 1. BUSH-SPECIFIC HARVESTABLE PROPERTIES
+// ============================================================================
+#region 1.1 Harvestable Stock
+max_berries = 10;
+berry_count = max_berries;
+#endregion
 
-// Actual timer target values (in game steps/frames) - THESE ARE THE INSTANCE VARIABLES TO USE
-// Convert seconds to game steps by multiplying by room_speed.
-berry_regrow_time   = BERRY_REGROW_DURATION_SECONDS * room_speed; // <<<<< ADDED THIS
-berry_delay_time    = BERRY_DELAY_DURATION_SECONDS * room_speed;  // <<<<< ADDED THIS
+#region 1.2 Regrowth Timing
+BERRY_REGROW_DURATION_SECONDS = 3.0;
+BERRY_DELAY_DURATION_SECONDS  = 20.0;
+berry_regrow_time   = BERRY_REGROW_DURATION_SECONDS * room_speed;
+berry_delay_time    = BERRY_DELAY_DURATION_SECONDS * room_speed;
+berry_regrow_timer  = 0;
+berry_delay_timer   = 0;
+delay_active        = false;
+#endregion
 
-// Timer accumulators (these will count up by 1 per step in the Step Event)
-berry_regrow_timer  = 0;    // Tracks time towards regrowing the next berry
-berry_delay_timer   = 0;    // Tracks time for the initial delay after being emptied
-delay_active        = false;  // True if the bush is currently in its regrowth delay period (RENAMED from is_in_delay_phase for consistency with Step)
+// ============================================================================
+// 2. INTERACTION SLOT CONFIGURATION (Overrides/defines for this bush type)
+// ============================================================================
+#region 2.1 Define Interaction Slots
+max_interaction_slots = 2;
+init_interaction_slots(); 
 
-// —— Physics-based sway parameters ——
+var slot_offset_x_distance = 24; 
+var slot_offset_y_distance = 0;  
+
+if (max_interaction_slots > 0) {
+    interaction_slot_positions[0] = { 
+        rel_x: -slot_offset_x_distance, 
+        rel_y: slot_offset_y_distance, 
+        interaction_type_tag: "forage_left" 
+    };
+}
+
+if (max_interaction_slots > 1) {
+    interaction_slot_positions[1] = { 
+        rel_x: slot_offset_x_distance, 
+        rel_y: slot_offset_y_distance, 
+        interaction_type_tag: "forage_right" 
+    };
+}
+#endregion
+
+// ============================================================================
+// 3. PHYSICS-BASED SWAY
+// ============================================================================
+#region 3.1 Sway Parameters
 sway_angle          = 0;    
 sway_velocity       = 0;
-sway_stiffness      = 0.3;   // Spring strength
-sway_damping        = 0.25;  // Energy loss per frame
-sway_impulse        = 10;    // Degrees/sec initial kick
-is_wiggling         = false; // This is for the visual sway, distinct from regrowth delay
+sway_stiffness      = 0.3;
+sway_damping        = 0.25;
+sway_impulse        = 10;
+is_wiggling         = false;
+#endregion
 
-// —— Sprites ——
-// Ensure these sprite assets exist in your project
-spr_full            = spr_redBerryBush_full; // Assign your actual full bush sprite
-spr_empty           = spr_bush_empty;        // Assign your actual empty bush sprite
+// ============================================================================
+// 4. SPRITES & INITIAL APPEARANCE
+// ============================================================================
+#region 4.1 Sprites
+spr_full            = spr_redBerryBush_full;
+spr_empty           = spr_bush_empty;      
 
-// Initialize sprite based on berry_count
 if (sprite_exists(spr_full) && sprite_exists(spr_empty)) {
     sprite_index    = (berry_count > 0) ? spr_full : spr_empty;
 } else {
-    show_debug_message("ERROR: Bush sprites (spr_full or spr_empty) not found for obj_redBerryBush!");
-    // sprite_index = -1; // Or some default/error sprite
+    show_debug_message($"ERROR (obj_redBerryBush Create): Bush sprites (spr_full or spr_empty) not found for ID {id}!");
 }
+#endregion
 
-// —— Interaction flags ——
+// ============================================================================
+// 5. INTERACTION FLAGS & DEPTH
+// ============================================================================
+#region 5.1 Interaction Flags
 is_harvestable      = (berry_count > 0);
+#endregion
 
-// —— Depth sorting ——
+#region 5.2 Depth Sorting
 depth = -y;
+#endregion
 
-show_debug_message($"Bush {id} created. Regrow time: {berry_regrow_time} steps, Delay time: {berry_delay_time} steps");
+// ============================================================================
+// 6. INITIALIZATION COMPLETE LOG
+// ============================================================================
+#region 6.1 Debug Log
+// Corrected debug message line:
+show_debug_message($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {berry_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.");
+#endregion

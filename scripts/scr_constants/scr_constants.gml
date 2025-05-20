@@ -263,6 +263,14 @@ enum TaskPriority {
     CRITICAL    // System critical, must be done
 }
 
+enum Formation {
+    NONE,               // All target the same spot
+    LINE_HORIZONTAL,
+    LINE_VERTICAL,
+    GRID,
+    // Future: WEDGE, CIRCLE
+}
+
 enum AlertLevel { // For colony/settlement wide alerts
     NONE,       // All clear
     CAUTION,    // Potential threat, be aware

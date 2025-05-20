@@ -1,8 +1,20 @@
 {
-  "FolderOrderSettings":[],
+  "FolderOrderSettings":[
+    {"name":"Formations","order":2,"path":"folders/Scripts/Pop/Behaviors/Formations.yy",},
+    {"name":"Man","order":2,"path":"folders/Sprites/Pop/Man.yy",},
+    {"name":"Foraging","order":2,"path":"folders/Sprites/Pop/Man/Foraging.yy",},
+  ],
   "ResourceOrderSettings":[
     {"name":"fnt_pop_displayname","order":1,"path":"fonts/fnt_pop_displayname/fnt_pop_displayname.yy",},
+    {"name":"par_slot_provider","order":1,"path":"objects/par_slot_provider/par_slot_provider.yy",},
     {"name":"scr_create_item_base_definition","order":1,"path":"scripts/scr_create_item_base_definition/scr_create_item_base_definition.yy",},
     {"name":"scr_generate_pop_details","order":1,"path":"scripts/scr_generate_pop_details/scr_generate_pop_details.yy",},
+    {"name":"scr_get_formation_name","order":2,"path":"scripts/scr_get_formation_name/scr_get_formation_name.yy",},
+    {"name":"scr_trigger_formation_notification","order":1,"path":"scripts/scr_trigger_formation_notification/scr_trigger_formation_notification.yy",},
+    {"name":"spr_man_foraging_left","order":1,"path":"sprites/spr_man_foraging_left/spr_man_foraging_left.yy",},
+    {"name":"spr_man_idle","order":1,"path":"sprites/spr_man_idle/spr_man_idle.yy",},
+    {"name":"spr_man_walking_left","order":1,"path":"sprites/spr_man_walking_left/spr_man_walking_left.yy",},
+    {"name":"spr_man_walking_right","order":2,"path":"sprites/spr_man_walking_right/spr_man_walking_right.yy",},
+    {"name":"spr_man_walking_up","order":3,"path":"sprites/spr_man_walking_up/spr_man_walking_up.yy",},
   ],
 }

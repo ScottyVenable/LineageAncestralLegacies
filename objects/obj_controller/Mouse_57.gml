@@ -1,152 +1,228 @@
 /// obj_controller - Event Global Right Released (Mouse_57)
 ///
 /// Purpose:
-///     Handles global right-click mouse input. If a harvestable bush is clicked,
-///     selected pops are commanded to forage from it. Otherwise, selected pops
-///     are commanded to move to the clicked location. Includes debug messages
-///     for command assignments. Uses device_mouse_x/y for robust mouse coordinate retrieval.
+///     Handles global right-click mouse input.
+///     If a "Slot Provider" object (e.g., bush, rock) is clicked (sprite-based detection),
+///     selected pops are commanded to find and claim an interaction slot on it.
+///     Otherwise, selected pops are commanded to move (potentially in formation).
 ///
 /// Metadata:
-///     Summary:        Handles right-click commands for pop interactions (forage/move).
-///     Usage:          obj_controller Event: Mouse > Global Mouse > Global Right Released
-///     Parameters:     none
-///     Returns:        void
-///     Tags:           [input][command][interaction][foraging][movement][selection][debug]
-///     Version:        1.4 - 2025-05-19 (Corrected access to local mouse coordinates for pop commands)
-///     Dependencies:   obj_pop, obj_redBerryBush, PopState (enum), global.order_counter,
-///                     Standard GML functions (e.g., with, instance_exists, etc.)
+///    Summary:        Handles right-click commands for interactions (via slots) or movement.
+///    Usage:          obj_controller Event: Mouse > Global Mouse > Global Right Released
+///    Parameters:     none
+///    Returns:        void
+///    Tags:           [input][command][interaction][movement][formation][slot_system]
+///    Version:        1.9 - [Current Date] (Corrected scope for _target_object_for_interaction in 'with' block)
+///    Dependencies:   obj_pop, par_slot_provider (or objects with slot variables), PopState (enum),
+///                     scr_interaction_slot_get_free, scr_interaction_slot_claim,
+///                     scr_interaction_slot_get_world_pos, scr_interaction_slot_release,
+///                     scr_calculate_formation_slots, global.current_formation_type,
+///                     global.formation_spacing, global.order_counter
 
 // =========================================================================
 // 0. IMPORTS & CACHES
 // =========================================================================
 #region 0.1 Imports & Cached Locals
-// (No explicit script imports or complex caching needed for this event's top level)
+// Functions from scr_interaction will be called directly
 #endregion
 
 // =========================================================================
-// 1. VALIDATION & EARLY RETURNS
+// 1. INITIAL CHECKS & MOUSE POSITION
 // =========================================================================
-#region 1.1 Initial Checks & Setup
-var b = noone; // Variable to store the ID of a clicked bush
-
-// These are LOCAL variables for this event. They are perfectly fine here.
-var _event_mouse_x_room = device_mouse_x(0); // Get mouse X in room coordinates for THIS EVENT
-var _event_mouse_y_room = device_mouse_y(0); // Get mouse Y in room coordinates for THIS EVENT
-#endregion
-
-// Section 1.2 (Bush Detection & Forage Command) contains an early return if foraging is initiated.
-
-// =========================================================================
-// 2. CONFIGURATION & CONSTANTS
-// =========================================================================
-#region 2.1 Local Constants
-// (No specific constants defined at the top level of this event)
+#region 1.1 Setup
+var _event_mouse_x_room = device_mouse_x(0); // Mouse X in room coordinates
+var _event_mouse_y_room = device_mouse_y(0); // Mouse Y in room coordinates
+var _clicked_interactive_object = noone;   // Will store the ID of a clicked slot provider
 #endregion
 
 // =========================================================================
-// 3. INITIALIZATION & STATE SETUP (for Move Command)
+// 2. DETECT CLICKED INTERACTIVE OBJECT (SLOT PROVIDER - Sprite Focused)
 // =========================================================================
-#region 3.1 Order Counter (used if not foraging)
-// This is handled directly before the move command logic if that path is taken.
-#endregion
+#region 2.1 Detect Slot Provider (Sprite-Focused)
+var _potential_targets_list = ds_list_create();
+var _num_targets_found = instance_position_list(_event_mouse_x_room, _event_mouse_y_room, par_slot_provider, _potential_targets_list, false);
 
-// =========================================================================
-// 4. CORE LOGIC
-// =========================================================================
+if (_num_targets_found > 0) {
+    for (var i = 0; i < _num_targets_found; i++) {
+        var _inst_id = _potential_targets_list[| i];
+        if (position_meeting(_event_mouse_x_room, _event_mouse_y_room, _inst_id)) {
+            _clicked_interactive_object = _inst_id;
+            break; 
+        }
+    }
+}
+ds_list_destroy(_potential_targets_list);
 
-#region 4.1 Harvestable Bush Detection
-// Purpose: Check if the right-click targets a harvestable bush.
-
-with (obj_redBerryBush) {
-    var sw = sprite_get_width(sprite_index)  * image_xscale;
-    var sh = sprite_get_height(sprite_index) * image_yscale;
-    var ox = sprite_get_xoffset(sprite_index) * image_xscale;
-    var oy = sprite_get_yoffset(sprite_index) * image_yscale;
-
-    var _left   = x - ox;
-    var _top    = y - oy;
-    var _right  = _left + sw;
-    var _bottom = _top  + sh;
-
-    // Using the event's local mouse coordinates
-    if (_event_mouse_x_room >= _left && _event_mouse_x_room <= _right &&
-        _event_mouse_y_room >= _top  && _event_mouse_y_room <= _bottom &&
-        variable_instance_exists(id, "is_harvestable") && is_harvestable)
-    {
-        b = id;
-        break;
+if (instance_exists(_clicked_interactive_object)) {
+    var _can_interact = true;
+    // Example: If it's a bush, check if it's harvestable
+    if (object_is_ancestor(_clicked_interactive_object.object_index, obj_redBerryBush)) {
+        if (variable_instance_exists(_clicked_interactive_object, "is_harvestable") &&
+            !_clicked_interactive_object.is_harvestable) {
+            _can_interact = false;
+            // show_debug_message("Clicked on a non-harvestable bush.");
+        }
+    }
+    if (!_can_interact) {
+        _clicked_interactive_object = noone;
     }
 }
 #endregion
 
-#region 4.2 Forage Command Logic
-// Purpose: If a harvestable bush was clicked, command selected pops to forage.
+// =========================================================================
+// 3. COMMAND LOGIC
+// =========================================================================
+#region 3.1 Interaction Command (if an interactive object was clicked)
+if (_clicked_interactive_object != noone) {
+    // Use _clicked_interactive_object directly, as it's a local var in this event's scope
+    var _target_object_for_this_command = _clicked_interactive_object; 
+    var _pops_assigned_to_interaction = 0;
+    var _successfully_assigned_pops = []; // Keep track of pops successfully assigned in this batch
 
-if (b != noone) {
     with (obj_pop) {
         if (selected) {
-            target_bush   = b;
-            state         = PopState.FORAGING;
-            forage_timer  = 0;
-            has_arrived   = false; // Reset arrival for foraging state
-            // Ensure `travel_point_x/y` are cleared or set appropriately if Foraging state uses them
-            // For now, assuming Foraging state primarily uses target_bush.
-            show_debug_message($"DEBUG (obj_controller): Pop ID {id} commanded to FORAGE bush {b}");
+            // If this pop was already working on something else, release its old slot
+            if ((state == PopState.FORAGING || state == PopState.WORKING) && // Check relevant working states
+                instance_exists(target_interaction_object_id) && 
+                target_interaction_slot_index != -1) {
+                
+                // If new target is different, or if it's same target but we want to re-evaluate slot
+                if (target_interaction_object_id != _target_object_for_this_command) { // Access local var directly
+                    scr_interaction_slot_release(target_interaction_object_id, id);
+                    target_interaction_object_id = noone;
+                    target_interaction_slot_index = -1;
+                    target_interaction_type_tag = "";
+                } else {
+                    // Clicked same target it's already working on. Release slot to re-evaluate/re-claim.
+                    scr_interaction_slot_release(target_interaction_object_id, id); 
+                    target_interaction_slot_index = -1; // Mark as having no slot temporarily
+                }
+            }
+
+            var _slot_index = scr_interaction_slot_get_free(_target_object_for_this_command); // Use local var
+            
+            if (_slot_index != -1) {
+                if (scr_interaction_slot_claim(_target_object_for_this_command, _slot_index, id)) { // Use local var
+                    var _slot_details = scr_interaction_slot_get_world_pos(_target_object_for_this_command, _slot_index); // Use local var
+                    
+                    if (_slot_details != undefined) {
+                        target_interaction_object_id = _target_object_for_this_command; // Use local var
+                        target_interaction_slot_index = _slot_index;
+                        target_interaction_type_tag = _slot_details.type_tag;
+                        
+                        travel_point_x = _slot_details.x;
+                        travel_point_y = _slot_details.y;
+                        
+                        state = PopState.FORAGING; // TODO: Make this dynamic based on target/tag
+                        if (state == PopState.FORAGING) { forage_timer = 0; }
+                        
+                        has_arrived = false;
+                        is_waiting = false;
+                        
+                        array_push(_successfully_assigned_pops, id);
+                        show_debug_message($"Pop {id} assigned to work on {target_interaction_object_id} (slot {_slot_index}, type '{target_interaction_type_tag}') at ({floor(travel_point_x)},{floor(travel_point_y)})");
+                    } else {
+                        show_debug_message($"Pop {id} could not get slot details for target {_target_object_for_this_command}, slot {_slot_index}.");
+                        scr_interaction_slot_release(_target_object_for_this_command, id); // Use local var
+                    }
+                } else {
+                     show_debug_message($"Pop {id} failed to claim slot {_slot_index} on target {_target_object_for_this_command} (already taken?).");
+                }
+            } else {
+                show_debug_message($"Pop {id} wants to work on {_target_object_for_this_command}, but no free slots.");
+            }
         }
     }
-    exit; // Skip move command
+    _pops_assigned_to_interaction = array_length(_successfully_assigned_pops);
+
+    if (_pops_assigned_to_interaction > 0) {
+        exit; // At least one pop was assigned an interaction, skip move command
+    }
+    // If no pops were assigned (e.g., target was full or invalid), it will fall through to move command.
 }
 #endregion
 
-#region 4.3 Move Command Logic (Fallback)
-// Purpose: If no bush was targeted, issue a move command to selected pops.
-
-global.order_counter++; // Increment the global order counter for this new command
-
-// --- DEBUG: Check mouse coordinates in controller's scope before 'with' block ---
-// Using the event's local mouse coordinates
-show_debug_message($"DEBUG (obj_controller - Move Command): Event Mouse Coords Before 'with': mouse_x={_event_mouse_x_room}, mouse_y={_event_mouse_y_room}");
-if (!is_real(_event_mouse_x_room) || !is_real(_event_mouse_y_room)) {
-    show_debug_message($"CRITICAL DEBUG (obj_controller - Move Command): _event_mouse_x_room or _event_mouse_y_room is NOT REAL here! mouse_x: {_event_mouse_x_room}, mouse_y: {_event_mouse_y_room}");
-}
-
+#region 3.2 Move Command Logic (Fallback if no interaction target clicked or interaction failed for all)
+var _selected_pops_list_for_move = [];
 with (obj_pop) {
     if (selected) {
-        var _old_tx = variable_instance_exists(id, "travel_point_x") ? travel_point_x : "N/A";
-        var _old_ty = variable_instance_exists(id, "travel_point_y") ? travel_point_y : "N/A";
-        show_debug_message($"DEBUG (obj_controller - Move Command): Pop ID {id} selected. Current travel_point_x={_old_tx}, travel_point_y={_old_ty}");
+        // If pop was working and is now given a simple move command, release its old interaction slot.
+        if ((state == PopState.FORAGING || state == PopState.WORKING) && 
+            instance_exists(target_interaction_object_id) && 
+            target_interaction_slot_index != -1) {
+            scr_interaction_slot_release(target_interaction_object_id, id);
+            target_interaction_object_id = noone;
+            target_interaction_slot_index = -1;
+            target_interaction_type_tag = "";
+        }
+        array_push(_selected_pops_list_for_move, id);
+    }
+}
+var _num_selected_for_move = array_length(_selected_pops_list_for_move);
 
-        // Assign mouse coordinates (from the controller event's local variables) to the pop's travel points.
-        // We can directly access _event_mouse_x_room and _event_mouse_y_room here because they are
-        // local variables in the scope of the event that is executing this 'with' block.
-        // No need for 'other.' to access these specific local variables.
-        travel_point_x = _event_mouse_x_room; // <<<< CHANGED THIS LINE
-        travel_point_y = _event_mouse_y_room; // <<<< CHANGED THIS LINE
-        
-        show_debug_message($"DEBUG (obj_controller - Move Command): Pop ID {id} NEW travel_point_x={travel_point_x}, travel_point_y={travel_point_y} (set from controller's event local mouse vars)");
+if (_num_selected_for_move > 0) {
+    global.order_counter++; 
 
-        has_arrived    = false;
-        state          = PopState.COMMANDED;
-        order_id       = global.order_counter; // Use the updated global.order_counter directly.
-                                               // 'other.global.order_counter' would also work but is redundant for global vars.
-        
-        if (!is_real(travel_point_x) || !is_real(travel_point_y)) {
-            show_debug_message($"CRITICAL DEBUG (obj_controller - Move Command): Pop ID {id} travel_point_x or travel_point_y became NOT REAL after assignment!");
+    if (_num_selected_for_move > 1 && global.current_formation_type != Formation.NONE) {
+        // --- MULTIPLE POPS & FORMATION SELECTED ---
+        var _formation_slots = scr_calculate_formation_slots(
+            _event_mouse_x_room, _event_mouse_y_room, _num_selected_for_move,
+            global.current_formation_type, global.formation_spacing
+        );
+        if (array_length(_formation_slots) == _num_selected_for_move) {
+            for (var i = 0; i < _num_selected_for_move; i++) {
+                var _pop_id = _selected_pops_list_for_move[i]; 
+                var _slot = _formation_slots[i]; // This is a position struct {x, y} from formation calc
+                if (instance_exists(_pop_id)) { 
+                    with (_pop_id) {
+                        travel_point_x = _slot.x; 
+                        travel_point_y = _slot.y;
+                        has_arrived = false; 
+                        state = PopState.COMMANDED;
+                        order_id = global.order_counter; 
+                        is_waiting = false;
+                    }
+                }
+            }
+        } else { 
+            // Fallback to all move to same spot if formation slot calculation failed (shouldn't happen with current logic)
+            show_debug_message("ERROR (Controller GRR): Mismatch in formation slots. Defaulting to single point move for group.");
+            for (var i = 0; i < _num_selected_for_move; i++) {
+                var _pop_id = _selected_pops_list_for_move[i];
+                if (instance_exists(_pop_id)) { 
+                    with (_pop_id) {
+                        travel_point_x = _event_mouse_x_room; 
+                        travel_point_y = _event_mouse_y_room;
+                        has_arrived = false; 
+                        state = PopState.COMMANDED;
+                        order_id = global.order_counter; 
+                        is_waiting = false;
+                    }
+                }
+            }
+        }
+    } else {
+        // --- SINGLE POP OR Formation.NONE ---
+        for (var i = 0; i < _num_selected_for_move; i++) {
+            var _pop_id = _selected_pops_list_for_move[i];
+            if (instance_exists(_pop_id)) { 
+                with (_pop_id) {
+                    travel_point_x = _event_mouse_x_room; 
+                    travel_point_y = _event_mouse_y_room;
+                    has_arrived = false; 
+                    state = PopState.COMMANDED;
+                    order_id = global.order_counter; 
+                    is_waiting = false;
+                }
+            }
         }
     }
 }
 #endregion
 
 // =========================================================================
-// 5. CLEANUP & RETURN
+// 4. CLEANUP & RETURN
 // =========================================================================
-#region 5.1 Cleanup
-// (No dynamic data structures created at this event's top level that need explicit cleanup here)
-#endregion
-
-// =========================================================================
-// 6. DEBUG/PROFILING (Optional)
-// =================================S========================================
-#region 6.1 Debug & Profile Hooks
-// Debug messages are integrated directly into the core logic sections.
+#region 4.1 Cleanup
+// (No dynamic data structures created directly in this event that need explicit cleanup here)
 #endregion

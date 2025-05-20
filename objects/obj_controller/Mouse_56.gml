@@ -157,20 +157,24 @@ if (_is_click && _was_dragging) { // Process as a single click
 }
 #endregion
 
-#region 2.4 Update Controller's Selected Pop & UI
-// Update the controller's 'selected_pop' variable if only one pop ended up selected.
+#region 2.4 Update Controller's Selected Pop, UI, and Pop Selection Flags
+// First, clear is_solely_selected for all pops
+with (obj_pop) {
+    is_solely_selected = false;
+}
+
 if (_selected_count == 1 && _newly_selected_pop_id != noone) {
-    selected_pop = _newly_selected_pop_id;
-    show_debug_message($"DEBUG (obj_controller GLR): Controller selected_pop set to {_newly_selected_pop_id}.");
-    // Call scr_selection_controller to show the panel for the single selected pop
-    scr_selection_controller(_newly_selected_pop_id);
+    selected_pop = _newly_selected_pop_id; // Controller tracks the single selected pop
+    if (instance_exists(selected_pop)) {
+        selected_pop.is_solely_selected = true; // Set flag for the one pop
+    }
+    scr_selection_controller(_newly_selected_pop_id); // Update UI panel
 } else if (_selected_count > 1) {
-    selected_pop = noone; // Multiple pops selected, so no single 'selected_pop'
-    scr_selection_controller(noone); // Close panel if multiple selected
-    show_debug_message($"DEBUG (obj_controller GLR): Multiple pops selected. Panel closed.");
+    selected_pop = noone; // No single pop is "the" selected_pop for the controller
+    // is_solely_selected remains false for all pops
+    scr_selection_controller(noone);
 } else { // No pops selected
     selected_pop = noone;
-    scr_selection_controller(noone); // Close panel if nothing selected
-    show_debug_message($"DEBUG (obj_controller GLR): No pops selected. Panel closed.");
+    scr_selection_controller(noone);
 }
 #endregion

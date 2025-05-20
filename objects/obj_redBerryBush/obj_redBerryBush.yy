@@ -13,7 +13,10 @@
     "name":"Foliage",
     "path":"folders/Objects/Entities/Foliage.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"par_slot_provider",
+    "path":"objects/par_slot_provider/par_slot_provider.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,

@@ -264,11 +264,12 @@ enum TaskPriority {
 }
 
 enum Formation {
-    NONE,               // All target the same spot
-    LINE_HORIZONTAL,
-    LINE_VERTICAL,
-    GRID,
-    // Future: WEDGE, CIRCLE
+    NONE,                       // Value 0
+    LINE_HORIZONTAL,            // Value 1
+    LINE_VERTICAL,              // Value 2
+    GRID,                       // Value 3
+    STAGGERED_LINE_HORIZONTAL,  // Value 4
+    CIRCLE                      // Value 5 <<<< THIS IS THE NEW HIGHEST
 }
 
 enum AlertLevel { // For colony/settlement wide alerts

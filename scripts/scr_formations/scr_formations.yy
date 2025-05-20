@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_calculate_formation_slots",
+  "%Name":"scr_formations",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_calculate_formation_slots",
+  "name":"scr_formations",
   "parent":{
     "name":"Formations",
     "path":"folders/Scripts/Pop/Behaviors/Formations.yy",

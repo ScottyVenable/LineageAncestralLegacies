@@ -39,7 +39,7 @@ zoom_target   = 1.0;
 zoom_min      = 0.5;
 zoom_max      = 2.0;
 zoom_speed    = 0.1;
-zoom_smooth   = 0.20;
+zoom_smooth   = 0.50;
 #endregion
 
 #region 2.3 Camera Tracking Variables
@@ -67,10 +67,10 @@ if (is_real(_active_cam) && _active_cam >= 0) {
 // ============================================================================
 #region 4.1 Gameplay Globals
 global.order_counter = 0;
-global.initial_pop_count = 5;
+global.initial_pop_count = 1000;
 
 // Formation System Globals
-global.current_formation_type = Formation.NONE;
+global.current_formation_type = Formation.GRID;
 global.formation_spacing = 48;
 #endregion
 

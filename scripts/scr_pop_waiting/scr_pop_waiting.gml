@@ -11,6 +11,7 @@ function scr_pop_waiting() {
 
     // Don’t move
     speed = 0;
+	
 
     // No timer here — stays until we explicitly clear it
 }

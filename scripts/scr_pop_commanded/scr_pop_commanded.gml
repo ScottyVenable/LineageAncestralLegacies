@@ -80,6 +80,8 @@ function scr_pop_commanded() {
         
         state = PopState.WAITING;       // <<<<<----- CHANGED: Transition to WAITING state -----<<<<<
         is_waiting = true;              // <<<<<----- ADDED: Set the is_waiting flag -----<<<<<
+		
+		depth = -y
         
         // Reset state-specific initialization flags
         _commanded_state_initialized = false; 

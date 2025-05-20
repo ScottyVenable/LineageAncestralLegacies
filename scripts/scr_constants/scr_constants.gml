@@ -53,7 +53,10 @@ enum PopState {
     FORAGING
     // Add other pop states as needed
 }
-
+enum PopSex {
+	MALE,
+	FEMALE
+}
 enum PopNeed {
     HUNGER,
     THIRST,

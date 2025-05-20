@@ -3,7 +3,7 @@ function scr_get_state_name(_state) {
         case PopState.IDLE:
             return "Idle";
         case PopState.COMMANDED:
-            return "Commanded";
+            return "Moving";
         case PopState.WANDERING:
             return "Wandering"
         case PopState.WAITING:

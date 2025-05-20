@@ -1,4 +1,4 @@
-/// obj_controller - Event Global Right Pressed
+/// obj_controller - Event Global Right Released (Mouse_57)
 ///
 /// Purpose:
 ///     Handles global right-click mouse input. If a harvestable bush is clicked,
@@ -8,11 +8,11 @@
 ///
 /// Metadata:
 ///     Summary:        Handles right-click commands for pop interactions (forage/move).
-///     Usage:          obj_controller Event: Mouse > Global Mouse > Global Right Pressed (Assumed)
+///     Usage:          obj_controller Event: Mouse > Global Mouse > Global Right Released
 ///     Parameters:     none
 ///     Returns:        void
 ///     Tags:           [input][command][interaction][foraging][movement][selection][debug]
-///     Version:        1.3 - 2025-05-18 (Used device_mouse_x/y for explicit mouse coordinates)
+///     Version:        1.4 - 2025-05-19 (Corrected access to local mouse coordinates for pop commands)
 ///     Dependencies:   obj_pop, obj_redBerryBush, PopState (enum), global.order_counter,
 ///                     Standard GML functions (e.g., with, instance_exists, etc.)
 
@@ -21,7 +21,6 @@
 // =========================================================================
 #region 0.1 Imports & Cached Locals
 // (No explicit script imports or complex caching needed for this event's top level)
-// Mouse coordinates are retrieved using device_mouse_x(0) and device_mouse_y(0).
 #endregion
 
 // =========================================================================
@@ -29,8 +28,10 @@
 // =========================================================================
 #region 1.1 Initial Checks & Setup
 var b = noone; // Variable to store the ID of a clicked bush
-var _mouse_x_room = device_mouse_x(0); // Get mouse X in room coordinates
-var _mouse_y_room = device_mouse_y(0); // Get mouse Y in room coordinates
+
+// These are LOCAL variables for this event. They are perfectly fine here.
+var _event_mouse_x_room = device_mouse_x(0); // Get mouse X in room coordinates for THIS EVENT
+var _event_mouse_y_room = device_mouse_y(0); // Get mouse Y in room coordinates for THIS EVENT
 #endregion
 
 // Section 1.2 (Bush Detection & Forage Command) contains an early return if foraging is initiated.
@@ -46,7 +47,7 @@ var _mouse_y_room = device_mouse_y(0); // Get mouse Y in room coordinates
 // 3. INITIALIZATION & STATE SETUP (for Move Command)
 // =========================================================================
 #region 3.1 Order Counter (used if not foraging)
-var _this_order_id_for_move_command = global.order_counter + 1; // Prepare potential order ID
+// This is handled directly before the move command logic if that path is taken.
 #endregion
 
 // =========================================================================
@@ -67,10 +68,9 @@ with (obj_redBerryBush) {
     var _right  = _left + sw;
     var _bottom = _top  + sh;
 
-    // Using cached _mouse_x_room and _mouse_y_room from the start of the event
-    // This is line 68 (approximately) where the error occurred.
-    if (_mouse_x_room >= _left && _mouse_x_room <= _right &&
-        _mouse_y_room >= _top  && _mouse_y_room <= _bottom &&
+    // Using the event's local mouse coordinates
+    if (_event_mouse_x_room >= _left && _event_mouse_x_room <= _right &&
+        _event_mouse_y_room >= _top  && _event_mouse_y_room <= _bottom &&
         variable_instance_exists(id, "is_harvestable") && is_harvestable)
     {
         b = id;
@@ -88,7 +88,9 @@ if (b != noone) {
             target_bush   = b;
             state         = PopState.FORAGING;
             forage_timer  = 0;
-            has_arrived   = false;
+            has_arrived   = false; // Reset arrival for foraging state
+            // Ensure `travel_point_x/y` are cleared or set appropriately if Foraging state uses them
+            // For now, assuming Foraging state primarily uses target_bush.
             show_debug_message($"DEBUG (obj_controller): Pop ID {id} commanded to FORAGE bush {b}");
         }
     }
@@ -99,13 +101,13 @@ if (b != noone) {
 #region 4.3 Move Command Logic (Fallback)
 // Purpose: If no bush was targeted, issue a move command to selected pops.
 
-global.order_counter = _this_order_id_for_move_command;
+global.order_counter++; // Increment the global order counter for this new command
 
 // --- DEBUG: Check mouse coordinates in controller's scope before 'with' block ---
-// Using cached _mouse_x_room and _mouse_y_room
-show_debug_message($"DEBUG (obj_controller - Move Command): Mouse Coords Before 'with': mouse_x={_mouse_x_room}, mouse_y={_mouse_y_room}");
-if (!is_real(_mouse_x_room) || !is_real(_mouse_y_room)) {
-    show_debug_message($"CRITICAL DEBUG (obj_controller - Move Command): _mouse_x_room or _mouse_y_room is NOT REAL here! mouse_x: {_mouse_x_room}, mouse_y: {_mouse_y_room}");
+// Using the event's local mouse coordinates
+show_debug_message($"DEBUG (obj_controller - Move Command): Event Mouse Coords Before 'with': mouse_x={_event_mouse_x_room}, mouse_y={_event_mouse_y_room}");
+if (!is_real(_event_mouse_x_room) || !is_real(_event_mouse_y_room)) {
+    show_debug_message($"CRITICAL DEBUG (obj_controller - Move Command): _event_mouse_x_room or _event_mouse_y_room is NOT REAL here! mouse_x: {_event_mouse_x_room}, mouse_y: {_event_mouse_y_room}");
 }
 
 with (obj_pop) {
@@ -114,15 +116,19 @@ with (obj_pop) {
         var _old_ty = variable_instance_exists(id, "travel_point_y") ? travel_point_y : "N/A";
         show_debug_message($"DEBUG (obj_controller - Move Command): Pop ID {id} selected. Current travel_point_x={_old_tx}, travel_point_y={_old_ty}");
 
-        // Assign mouse coordinates (from device_mouse_x/y, cached in _mouse_x_room/_mouse_y_room) to the pop's travel points
-        travel_point_x = other._mouse_x_room; // Access the controller's cached mouse coordinates
-        travel_point_y = other._mouse_y_room;
+        // Assign mouse coordinates (from the controller event's local variables) to the pop's travel points.
+        // We can directly access _event_mouse_x_room and _event_mouse_y_room here because they are
+        // local variables in the scope of the event that is executing this 'with' block.
+        // No need for 'other.' to access these specific local variables.
+        travel_point_x = _event_mouse_x_room; // <<<< CHANGED THIS LINE
+        travel_point_y = _event_mouse_y_room; // <<<< CHANGED THIS LINE
         
-        show_debug_message($"DEBUG (obj_controller - Move Command): Pop ID {id} NEW travel_point_x={travel_point_x}, travel_point_y={travel_point_y} (set from other._mouse_x_room/y)");
+        show_debug_message($"DEBUG (obj_controller - Move Command): Pop ID {id} NEW travel_point_x={travel_point_x}, travel_point_y={travel_point_y} (set from controller's event local mouse vars)");
 
         has_arrived    = false;
         state          = PopState.COMMANDED;
-        order_id       = other.global.order_counter;
+        order_id       = global.order_counter; // Use the updated global.order_counter directly.
+                                               // 'other.global.order_counter' would also work but is redundant for global vars.
         
         if (!is_real(travel_point_x) || !is_real(travel_point_y)) {
             show_debug_message($"CRITICAL DEBUG (obj_controller - Move Command): Pop ID {id} travel_point_x or travel_point_y became NOT REAL after assignment!");
@@ -140,7 +146,7 @@ with (obj_pop) {
 
 // =========================================================================
 // 6. DEBUG/PROFILING (Optional)
-// =========================================================================
+// =================================S========================================
 #region 6.1 Debug & Profile Hooks
 // Debug messages are integrated directly into the core logic sections.
 #endregion

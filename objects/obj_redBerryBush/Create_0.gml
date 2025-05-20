@@ -10,20 +10,26 @@
 ///    Parameters:    none
 ///    Returns:         void
 ///    Tags:            [world_object][harvestable][resource][init]
-///    Version:         1.1 — 2025-05-18 (Corrected timer duration setup)
+///    Version:         1.2 — [Current Date] (Initialized _time variables and corrected delay_active)
 
 // —— Harvestable stock ——
 max_berries         = 10;   // How many berries this bush can hold at once
 berry_count         = max_berries; // Current berries remaining (starts full)
 
-// —— Regrowth timing (Durations are in SECONDS) ——
+// —— Regrowth timing (Durations are in SECONDS for constants) ——
+// These are conceptual constants defining the desired duration in seconds.
 BERRY_REGROW_DURATION_SECONDS = 3.0;  // Target: 3 seconds to regrow one berry
 BERRY_DELAY_DURATION_SECONDS  = 20.0; // Target: 20-second delay before regrowth can start
 
-// Timer accumulators (these will count up in seconds in the Step Event)
-current_regrow_timer = 0;    // Tracks time towards regrowing the next berry
-current_delay_timer  = 0;    // Tracks time for the initial delay after being emptied
-is_in_delay_phase    = false;  // True if the bush is currently in its regrowth delay period
+// Actual timer target values (in game steps/frames) - THESE ARE THE INSTANCE VARIABLES TO USE
+// Convert seconds to game steps by multiplying by room_speed.
+berry_regrow_time   = BERRY_REGROW_DURATION_SECONDS * room_speed; // <<<<< ADDED THIS
+berry_delay_time    = BERRY_DELAY_DURATION_SECONDS * room_speed;  // <<<<< ADDED THIS
+
+// Timer accumulators (these will count up by 1 per step in the Step Event)
+berry_regrow_timer  = 0;    // Tracks time towards regrowing the next berry
+berry_delay_timer   = 0;    // Tracks time for the initial delay after being emptied
+delay_active        = false;  // True if the bush is currently in its regrowth delay period (RENAMED from is_in_delay_phase for consistency with Step)
 
 // —— Physics-based sway parameters ——
 sway_angle          = 0;    
@@ -31,7 +37,7 @@ sway_velocity       = 0;
 sway_stiffness      = 0.3;   // Spring strength
 sway_damping        = 0.25;  // Energy loss per frame
 sway_impulse        = 10;    // Degrees/sec initial kick
-is_wiggling         = false;
+is_wiggling         = false; // This is for the visual sway, distinct from regrowth delay
 
 // —— Sprites ——
 // Ensure these sprite assets exist in your project
@@ -52,4 +58,4 @@ is_harvestable      = (berry_count > 0);
 // —— Depth sorting ——
 depth = -y;
 
-show_debug_message($"Bush {id} created. Regrow: {BERRY_REGROW_DURATION_SECONDS}s, Delay: {BERRY_DELAY_DURATION_SECONDS}s");
+show_debug_message($"Bush {id} created. Regrow time: {berry_regrow_time} steps, Delay time: {berry_delay_time} steps");

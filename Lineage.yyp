@@ -62,6 +62,7 @@
   "name":"Evolve",
   "resources":[
     {"id":{"name":"fnt_main_ui","path":"fonts/fnt_main_ui/fnt_main_ui.yy",},},
+    {"id":{"name":"fnt_pop_displayname","path":"fonts/fnt_pop_displayname/fnt_pop_displayname.yy",},},
     {"id":{"name":"fnt_state","path":"fonts/fnt_state/fnt_state.yy",},},
     {"id":{"name":"fnt_ui_header","path":"fonts/fnt_ui_header/fnt_ui_header.yy",},},
     {"id":{"name":"fnt_ui_text","path":"fonts/fnt_ui_text/fnt_ui_text.yy",},},
@@ -79,6 +80,7 @@
     {"id":{"name":"scr_constants","path":"scripts/scr_constants/scr_constants.yy",},},
     {"id":{"name":"scr_create_item_base_definition","path":"scripts/scr_create_item_base_definition/scr_create_item_base_definition.yy",},},
     {"id":{"name":"scr_draw_selection_box","path":"scripts/scr_draw_selection_box/scr_draw_selection_box.yy",},},
+    {"id":{"name":"scr_generate_pop_details","path":"scripts/scr_generate_pop_details/scr_generate_pop_details.yy",},},
     {"id":{"name":"scr_get_state_name","path":"scripts/scr_get_state_name/scr_get_state_name.yy",},},
     {"id":{"name":"scr_item_definitions","path":"scripts/scr_item_definitions/scr_item_definitions.yy",},},
     {"id":{"name":"scr_pop_behavior","path":"scripts/scr_pop_behavior/scr_pop_behavior.yy",},},

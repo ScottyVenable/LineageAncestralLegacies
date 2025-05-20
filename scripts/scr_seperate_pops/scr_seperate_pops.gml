@@ -10,7 +10,7 @@ function scr_separate_pops() {
         // Compute a small push vector away from the other pop
         var ang = point_direction(inst_hit.x, inst_hit.y, x, y);
         // Nudge by 1px (tweak as needed)
-        x += lengthdir_x(0.5, ang);
-        y += lengthdir_y(0.5, ang);
+        x += lengthdir_x(2, ang);
+        y += lengthdir_y(2, ang);
     }
 }

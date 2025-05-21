@@ -1,0 +1,20 @@
+{
+  "$GMRoomUI":"",
+  "%Name":"RoomUI",
+  "children":[
+    {"$GMRUILayer":"v1","%Name":"UILayer","alignItems":2,"children":[
+        {"$GMRFlexPanel":"","%Name":"FlexPanel","alignItems":2,"children":[],"flexDirection":0,"height":{"unit":3,"value":20.0,},"justifyContent":1,"name":"FlexPanel","nodeColour":4282949362,"resourceType":"GMRFlexPanel","resourceVersion":"2.0","width":{"unit":3,"value":85.0,},},
+        {"$GMRInstance":"v2","%Name":"inst_2E4DB6BF","colour":4294967295,"flexProperties":{"$InstanceFlexProps":"v1","anchor":0,"resourceType":"InstanceFlexProps",},"frozen":false,"hasCreationCode":false,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"name":"inst_2E4DB6BF","objectId":{"name":"obj_top_status_bar_bone","path":"objects/obj_top_status_bar_bone/obj_top_status_bar_bone.yy",},"properties":[],"resourceType":"GMRInstance","resourceVersion":"2.0","rotation":0.0,"scaleX":10.918128,"scaleY":0.48387098,"x":32.0,"y":32.0,},
+      ],"flexDirection":0,"gridX":32,"gridY":32,"justifyContent":1,"name":"UILayer","nodeColour":4291883592,"resourceType":"GMRUILayer","resourceVersion":"2.0",},
+  ],
+  "locked":false,
+  "name":"RoomUI",
+  "parent":{
+    "name":"Lineage",
+    "path":"Lineage.yyp",
+  },
+  "resourceType":"GMRoomUI",
+  "resourceVersion":"2.0",
+  "viewspaceChildren":[],
+  "visible":true,
+}

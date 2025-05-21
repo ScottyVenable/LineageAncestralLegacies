@@ -11,6 +11,7 @@
   "ResourceOrderSettings":[
     {"name":"fnt_pop_displayname","order":1,"path":"fonts/fnt_pop_displayname/fnt_pop_displayname.yy",},
     {"name":"obj_sound_controller","order":2,"path":"objects/obj_sound_controller/obj_sound_controller.yy",},
+    {"name":"obj_top_status_bar_bone","order":2,"path":"objects/obj_top_status_bar_bone/obj_top_status_bar_bone.yy",},
     {"name":"obj_top_status_bar","order":1,"path":"objects/obj_top_status_bar/obj_top_status_bar.yy",},
     {"name":"par_slot_provider","order":1,"path":"objects/par_slot_provider/par_slot_provider.yy",},
     {"name":"RoomUI","order":1,"path":"roomui/RoomUI/RoomUI.yy",},

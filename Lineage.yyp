@@ -1,6 +1,6 @@
 {
   "$GMProject":"v1",
-  "%Name":"Evolve",
+  "%Name":"Lineage",
   "AudioGroups":[
     {"$GMAudioGroup":"","%Name":"audiogroup_default","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
   ],
@@ -8,7 +8,7 @@
     "children":[],
     "name":"Default",
   },
-  "defaultScriptType":2,
+  "defaultScriptType":1,
   "Folders":[
     {"$GMFolder":"","%Name":"Animation Curves","folderPath":"folders/Animation Curves.yy","name":"Animation Curves","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Data","folderPath":"folders/Data.yy","name":"Data","resourceType":"GMFolder","resourceVersion":"2.0",},
@@ -67,7 +67,7 @@
   "MetaData":{
     "IDEVersion":"2024.13.1.193",
   },
-  "name":"Evolve",
+  "name":"Lineage",
   "resources":[
     {"id":{"name":"fnt_main_ui","path":"fonts/fnt_main_ui/fnt_main_ui.yy",},},
     {"id":{"name":"fnt_pop_displayname","path":"fonts/fnt_pop_displayname/fnt_pop_displayname.yy",},},
@@ -81,11 +81,11 @@
     {"id":{"name":"obj_pop","path":"objects/obj_pop/obj_pop.yy",},},
     {"id":{"name":"obj_redBerryBush","path":"objects/obj_redBerryBush/obj_redBerryBush.yy",},},
     {"id":{"name":"obj_sound_controller","path":"objects/obj_sound_controller/obj_sound_controller.yy",},},
+    {"id":{"name":"obj_top_status_bar_bone","path":"objects/obj_top_status_bar_bone/obj_top_status_bar_bone.yy",},},
     {"id":{"name":"obj_top_status_bar","path":"objects/obj_top_status_bar/obj_top_status_bar.yy",},},
     {"id":{"name":"obj_travelMarker","path":"objects/obj_travelMarker/obj_travelMarker.yy",},},
-    {"id":{"name":"obj_UIPanel_Generic","path":"objects/obj_UIPanel_Generic/obj_UIPanel_Generic.yy",},},
     {"id":{"name":"par_slot_provider","path":"objects/par_slot_provider/par_slot_provider.yy",},},
-    {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
+    {"id":{"name":"World","path":"rooms/World/World.yy",},},
     {"id":{"name":"RoomUI","path":"roomui/RoomUI/RoomUI.yy",},},
     {"id":{"name":"scr_camera_controller","path":"scripts/scr_camera_controller/scr_camera_controller.yy",},},
     {"id":{"name":"scr_constants","path":"scripts/scr_constants/scr_constants.yy",},},
@@ -153,7 +153,7 @@
   "resourceType":"GMProject",
   "resourceVersion":"2.0",
   "RoomOrderNodes":[
-    {"roomId":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
+    {"roomId":{"name":"World","path":"rooms/World/World.yy",},},
   ],
   "templateType":"game",
   "TextureGroups":[

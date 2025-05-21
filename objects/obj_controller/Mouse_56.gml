@@ -123,33 +123,6 @@ if (is_dragging) { // This instance variable 'is_dragging' was set in GLP
 // =========================================================================
 // 3. UPDATE UI / SELECTION CONTROLLER
 // =========================================================================
-#region 3.1 Call Selection Controller
-show_debug_message("DEBUG GLR: Region 3.1 Updating UI. self is: " + object_get_name(object_index));
-var _target_for_ui_panel = noone; 
-
-if (ds_exists(global.selected_pops_list, ds_type_list)) {
-    var _num_selected = ds_list_size(global.selected_pops_list);
-    if (_num_selected == 1) {
-        _target_for_ui_panel = global.selected_pops_list[| 0];
-        show_debug_message($"DEBUG GLR: Region 3.1 Single pop selected (ID: {_target_for_ui_panel}), targeting for UI panel.");
-    } else if (_num_selected > 1) {
-        _target_for_ui_panel = noone;
-        show_debug_message($"DEBUG GLR: Region 3.1 Multiple ({_num_selected}) pops selected. No pop_info panel will be shown by current scr_selection_controller.");
-    } else {
-        _target_for_ui_panel = noone;
-        show_debug_message("DEBUG GLR: Region 3.1 No pops selected. UI panel will be closed/hidden.");
-    }
-} else {
-    _target_for_ui_panel = noone;
-    show_debug_message("ERROR (obj_controller GLR): Region 3.1 global.selected_pops_list does not exist!");
-}
-
-if (script_exists(scr_selection_controller)) {
-    scr_selection_controller(_target_for_ui_panel); 
-} else {
-    show_debug_message("ERROR (obj_controller GLR): Region 3.1 scr_selection_controller does not exist!");
-}
-#endregion
 
 if (ds_exists(global.selected_pops_list, ds_type_list)) {
     show_debug_message($"DEBUG GLR: Selection finalized. {ds_list_size(global.selected_pops_list)} pops selected.");

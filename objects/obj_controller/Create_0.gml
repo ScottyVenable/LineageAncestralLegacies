@@ -25,22 +25,6 @@ scr_item_definitions_init(); // Assuming this defines items
 #region 1.2 Create Status Bar
 // Create Top Status Bar instance
 var _top_bar_layer = "UILayer"; // Use the same UI layer as your panel
-if (object_exists(obj_top_status_bar)) {
-    if (!layer_exists(_top_bar_layer)) { // Ensure layer exists
-        layer_create(10000, _top_bar_layer); 
-        show_debug_message($"Dynamically created UI layer for Top Bar: '{_top_bar_layer}' at depth 10000.");
-    }
-    global.top_status_bar_instance = instance_create_layer(0, 0, _top_bar_layer, obj_top_status_bar);
-    if (!instance_exists(global.top_status_bar_instance)) {
-        show_debug_message("ERROR (obj_controller Create): Failed to create obj_top_status_bar instance.");
-        global.top_status_bar_instance = noone;
-    } else {
-        show_debug_message($"obj_top_status_bar instance created (ID: {global.top_status_bar_instance}) on layer '{_top_bar_layer}'.");
-    }
-} else {
-    show_debug_message("ERROR (obj_controller Create): obj_top_status_bar object asset does not exist.");
-    global.top_status_bar_instance = noone;
-}
 #endregion
 
 // ============================================================================
@@ -127,20 +111,6 @@ if (!layer_exists(_ui_layer_name)) {
     show_debug_message($"Dynamically created UI layer: '{_ui_layer_name}' at depth 10000.");
 }
 
-if (object_exists(obj_UIPanel_Generic)) {
-    var _initial_panel_config = { panel_type_arg: "none", target_data_source_id_arg: noone, custom_title_arg: "" };
-    global.ui_panel_instance = instance_create_layer(0, 0, _ui_layer_name, obj_UIPanel_Generic, _initial_panel_config);
-    
-    if (instance_exists(global.ui_panel_instance)) { 
-        global.ui_panel_instance.visible = false; 
-    } else { 
-        show_debug_message("ERROR (obj_controller Create): Failed to create global.ui_panel_instance."); 
-        global.ui_panel_instance = noone; 
-    }
-} else { 
-    show_debug_message("ERROR (obj_controller Create): obj_UIPanel_Generic object asset does not exist."); 
-    global.ui_panel_instance = noone; 
-}
 #endregion
 
 // ============================================================================
@@ -212,7 +182,4 @@ if (object_exists(obj_pop)) {
 // ============================================================================
 #region 6.1 Initial Log
 show_debug_message("obj_controller initialized successfully.");
-if (instance_exists(global.ui_panel_instance)) { 
-    show_debug_message($"obj_controller: global.ui_panel_instance created with ID: {global.ui_panel_instance}");
-}
 #endregion

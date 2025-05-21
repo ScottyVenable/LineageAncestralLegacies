@@ -256,20 +256,17 @@ if (panel_type == "pop_info") {
     if (_fnt_header != -1) draw_set_font(_fnt_header); draw_set_color(_col_text_header);
     draw_text(_content_x, _current_y, "Inventory:"); _current_y += string_height_ext("Inventory:", _line_height_med, _content_width) + _padding;
     
-    if (script_exists(scr_inventory_struct_draw)) {
+    if (!is_undefined(scr_inventory_struct_draw) && typeof(scr_inventory_struct_draw) == "function") {
         with (_pop) { // Call in context of the pop
-            // Assuming scr_inventory_struct_draw uses other. for panel's _content_x, _padding etc. if needed,
-            // or simply draws relative to the x,y passed.
             var _inv_x = other._content_x + other._padding; // Pass panel's content x
             var _inv_y = other._current_y;                 // Pass panel's current y
             scr_inventory_struct_draw(_inv_x, _inv_y, 16, 18, other._fnt_item, other._col_text_value);
-            // Note: _current_y is not updated here based on inventory height. Inventory is last.
         }
         show_debug_message("Panel Draw: Called scr_inventory_struct_draw.");
     } else {
-        show_debug_message("Panel Draw WARNING: scr_inventory_struct_draw script does not exist! Cannot draw inventory.");
+        show_debug_message("Panel Draw WARNING: scr_inventory_struct_draw script does not exist or is not a function! Cannot draw inventory.");
         draw_text(_content_x + _padding, _current_y, "[Inventory System Placeholder]");
-         _current_y += _line_height_med;
+        _current_y += _line_height_med;
     }
     show_debug_message("Panel Draw: Finished drawing pop_info content.");
 }

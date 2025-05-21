@@ -129,7 +129,6 @@ if (global.formation_notification_alpha > 0) {
 #endregion
 
 // ============================================================================
-// 3. OTHER CONTINUOUS CONTROLLER LOGIC
+// 3. POPULATION & LINEAGE CHECKS
 // ============================================================================
-// (Placeholder for other logic)
-#endregion
+

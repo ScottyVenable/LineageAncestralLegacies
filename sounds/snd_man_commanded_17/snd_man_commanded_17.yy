@@ -1,0 +1,25 @@
+{
+  "$GMSound":"",
+  "%Name":"snd_man_commanded_17",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "bitRate":128,
+  "compression":0,
+  "conversionMode":0,
+  "duration":0.98213154,
+  "name":"snd_man_commanded_17",
+  "parent":{
+    "name":"Commanded",
+    "path":"folders/Sounds/Pops/Man/Commanded.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"snd_man_commanded_17.wav",
+  "type":0,
+  "volume":1.0,
+}

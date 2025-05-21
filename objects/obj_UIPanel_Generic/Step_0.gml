@@ -12,9 +12,10 @@ if (dragging) {
         var _gui_mx = device_mouse_x_to_gui(0);
         var _gui_my = device_mouse_y_to_gui(0);
 
-        // Update panel position based on mouse and initial offset
-        panel_x = _gui_mx + drag_offset_x;
-        panel_y = _gui_my + drag_offset_y;
+		x = _gui_mx + drag_offset_x; // Update instance's x
+		y = _gui_my + drag_offset_y; // Update instance's y
+		x = clamp(x, 0, _screen_w - width);
+		y = clamp(y, 0, _screen_h - height);
 
         // Optional: Clamp panel position to stay within screen bounds
         var _screen_w = display_get_gui_width();

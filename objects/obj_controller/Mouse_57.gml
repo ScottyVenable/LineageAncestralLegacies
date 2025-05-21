@@ -104,7 +104,20 @@ if (_clicked_interactive_object != noone) {
     var _target_object_for_this_command = _clicked_interactive_object; 
     var _pops_assigned_to_interaction = 0;
     var _successfully_assigned_pops = []; 
-
+	
+	#region Play Commanded Sound
+	if (array_length(global.sfx_man_commanded_list) > 0) {
+		var list_size = array_length(global.sfx_man_commanded_list);
+		var random_index_in_list = irandom(list_size - 1); // irandom(max) gives 0 to max
+    
+		var sound_to_play = global.sfx_man_commanded_list[random_index_in_list];
+    
+		audio_play_sound(sound_to_play, 1, false); // Priority 1, not looping
+	} else {
+		show_debug_message("Warning: global.sfx_man_commanded_list is empty or not initialized.");
+	}
+	#endregion
+			
     with (obj_pop) { 
         if (selected) {
             if ((state == PopState.FORAGING || state == PopState.WORKING) && instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
@@ -143,6 +156,19 @@ if (_clicked_interactive_object != noone) {
 
 #region 3.2 Move Command Logic (Fallback)
 var _selected_pops_list_for_move = [];
+	#region Play Commanded Sound
+	if (array_length(global.sfx_man_commanded_list) > 0) {
+		var list_size = array_length(global.sfx_man_commanded_list);
+		var random_index_in_list = irandom(list_size - 1); // irandom(max) gives 0 to max
+    
+		var sound_to_play = global.sfx_man_commanded_list[random_index_in_list];
+    
+		audio_play_sound(sound_to_play, 1, false); // Priority 1, not looping
+	} else {
+		show_debug_message("Warning: global.sfx_man_commanded_list is empty or not initialized.");
+	}
+	#endregion
+	
 with (obj_pop) {
     if (selected) {
         if ((state == PopState.FORAGING || state == PopState.WORKING) && 

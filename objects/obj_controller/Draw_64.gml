@@ -55,8 +55,13 @@ if (global.formation_notification_alpha > 0 && global.formation_notification_tex
 #endregion
 
 // =========================================================================
-// X. FINAL GUI DRAW RESETS (Optional, but good practice if this is the last thing drawn)
+// 3. STATUS BAR
 // =========================================================================
+
+
+
+
+
 /*
 #region X.1 Final GUI Resets
 draw_set_font(-1);          // Reset to default font

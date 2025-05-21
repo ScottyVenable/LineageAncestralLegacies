@@ -32,9 +32,16 @@ function scr_pop_commanded() {
                                     // If scr_update_walk_sprite handles image_speed, this might be redundant or conflict.
         _commanded_state_initialized = true;
     }
-    // Call scr_update_walk_sprite every step to handle direction changes for animation
-    scr_update_walk_sprite();
-    #endregion
+    
+	// Call scr_update_walk_sprite every step to handle direction changes for animation
+	scr_update_walk_sprite();
+	#endregion
+	
+
+	
+	
+
+
 
     // =========================================================================
     // 1. MOVEMENT LOGIC

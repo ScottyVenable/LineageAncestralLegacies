@@ -1,18 +1,25 @@
 /// obj_controller – Event Global Left Released
 ///
 /// Purpose:
-///    Handles global left-click mouse release. Finalizes drag selection
-///    or processes a single click selection.
+///    Handles global left-click release. Finalizes drag selection or performs single pop selection.
+///    Updates selection states and the global selected pops list. Enhanced debugging.
 ///
 /// Metadata:
-///    Summary:        Finalizes selection (drag or click).
+///    Summary:        Finalizes selection (drag or single) and updates UI.
 ///    Usage:          obj_controller Event: Mouse > Global Mouse > Global Left Released
-///    Parameters:     none
-///    Returns:        void
-///    Tags:           [input][selection][drag_selection]
-///    Version:        1.0
-///    Dependencies:   device_mouse_x_to_gui(), device_mouse_y_to_gui(), scr_selection_controller(),
-///                     instance_position(), obj_pop
+///    Tags:           [input][selection][drag_selection][ui_update][debug]
+///    Version:        1.1 — 2024-05-19 // Scotty's Current Date - Enhanced debugging for click_start_world_x
+///    Dependencies:   device_mouse_x_to_gui(), device_mouse_y_to_gui(), obj_pop,
+///                    global.selected_pops_list, scr_selection_controller()
+
+show_debug_message("========================================================");
+show_debug_message("DEBUG GLR: Entered Global Left Released. self is: " + object_get_name(object_index) + " (ID: " + string(id) + ")");
+if (variable_instance_exists(id, "click_start_world_x")) {
+    show_debug_message($"DEBUG GLR: Initial click_start_world_x: {click_start_world_x}, exists: true");
+} else {
+    show_debug_message("DEBUG GLR: Initial click_start_world_x: UNDEFINED, exists: false");
+}
+
 
 // =========================================================================
 // 0. IMPORTS & CACHES
@@ -20,161 +27,131 @@
 #region 0.1 Imports & Cached Locals
 var _gui_mx = device_mouse_x_to_gui(0);
 var _gui_my = device_mouse_y_to_gui(0);
+var _world_mx = mouse_x; 
+var _world_my = mouse_y; 
+
+var _drag_threshold = 5; 
 #endregion
 
 // =========================================================================
-// 1. FINALIZE DRAG STATE
+// 1. PREPARE FOR NEW SELECTION: DESELECT PREVIOUSLY SELECTED POPS
 // =========================================================================
-#region 1.1 End Drag
-var _was_dragging = is_dragging; // Store if we were actually dragging
-is_dragging = false;
-show_debug_message($"DEBUG (obj_controller GLR): is_dragging set to false.");
-#endregion
+#region 1.1 Deselect All
+show_debug_message("DEBUG GLR: Region 1.1 Before 'with (obj_pop)'. self is: " + object_get_name(object_index));
+if (variable_instance_exists(id, "click_start_world_x")) { show_debug_message($"DEBUG GLR: Region 1.1 click_start_world_x: {click_start_world_x}"); }
 
-// =========================================================================
-// 2. PROCESS SELECTION
-// =========================================================================
-#region 2.1 Deselect All Pops (Standard practice before applying new selection)
-with (obj_pop) {
-    selected = false;
+if (ds_exists(global.selected_pops_list, ds_type_list)) {
+    ds_list_clear(global.selected_pops_list);
 }
-// Clear the single selected pop in the controller.
-// This will be re-populated if a single pop is selected by the click/drag.
-selected_pop = noone;
-#endregion
 
-#region 2.2 Define Selection Area
-// Coordinates for the selection rectangle
-var _sel_x1 = min(sel_start_x, _gui_mx);
-var _sel_y1 = min(sel_start_y, _gui_my);
-var _sel_x2 = max(sel_start_x, _gui_mx);
-var _sel_y2 = max(sel_start_y, _gui_my);
-
-// Define a small threshold to differentiate a click from a drag
-var _drag_threshold = 5; // If mouse moved less than 5 pixels, consider it a click
-var _is_click = (abs(sel_start_x - _gui_mx) < _drag_threshold && abs(sel_start_y - _gui_my) < _drag_threshold);
-#endregion
-
-#region 2.3 Perform Selection
-var _newly_selected_pop_id = noone;
-var _selected_count = 0;
-
-if (_is_click && _was_dragging) { // Process as a single click
-    show_debug_message("DEBUG (obj_controller GLR): Processing as CLICK.");
-    // Convert GUI mouse coordinates to room coordinates for instance_position
-    // Note: This assumes your pops are NOT drawn in the GUI layer for selection.
-    // If pops are in room space, you need to convert GUI click to room click.
-    // The camera script shows you have cam_x, cam_y, and zoom_level.
-    var _click_room_x = camera_get_view_x(view_camera[0]) + (_gui_mx / camera_get_view_width(view_camera[0])) * room_width;
-    var _click_room_y = camera_get_view_y(view_camera[0]) + (_gui_my / camera_get_view_height(view_camera[0])) * room_height;
-    
-    // Simpler conversion using your existing variables:
-    // This needs the current camera view properties
-    var _cam_current_x = camera_get_view_x(view_camera[0]);
-    var _cam_current_y = camera_get_view_y(view_camera[0]);
-    var _view_w_on_gui = display_get_gui_width(); // This might not be what you want if letterboxed
-    var _view_h_on_gui = display_get_gui_height();
-
-    // Correct conversion from GUI to World space:
-    // This assumes your GUI overlay matches your view port aspect ratio,
-    // and zoom_level is the world space zoom factor of the camera.
-    // Get current camera properties
-    var current_cam = view_camera[0];
-    var cam_view_x = camera_get_view_x(current_cam);
-    var cam_view_y = camera_get_view_y(current_cam);
-    var cam_view_w = camera_get_view_width(current_cam);
-    var cam_view_h = camera_get_view_height(current_cam);
-    var gui_w = display_get_gui_width();
-    var gui_h = display_get_gui_height();
-
-    // Map GUI coordinates to view coordinates (0 to 1 range within the view)
-    var _vx = _gui_mx / gui_w;
-    var _vy = _gui_my / gui_h;
-
-    // Map view coordinates to world coordinates
-    _click_room_x = cam_view_x + (_vx * cam_view_w);
-    _click_room_y = cam_view_y + (_vy * cam_view_h);
-
-    var _clicked_instance = instance_position(_click_room_x, _click_room_y, obj_pop);
-    if (instance_exists(_clicked_instance)) {
-        _clicked_instance.selected = true;
-        _newly_selected_pop_id = _clicked_instance.id;
-        _selected_count = 1;
-        show_debug_message($"DEBUG (obj_controller GLR): Click selected Pop ID: {_newly_selected_pop_id} at world ({_click_room_x},{_click_room_y}) from gui ({_gui_mx},{_gui_my})");
-    } else {
-        show_debug_message($"DEBUG (obj_controller GLR): Click at world ({_click_room_x},{_click_room_y}) found no pop.");
-    }
-
-} else if (_was_dragging) { // Process as a drag box selection
-    show_debug_message($"DEBUG (obj_controller GLR): Processing as DRAG BOX: ({_sel_x1},{_sel_y1}) to ({_sel_x2},{_sel_y2}) in GUI space.");
-    var _first_selected_in_box = noone; // To handle single selection for panel
-
+if (instance_exists(obj_pop)) {
     with (obj_pop) {
-        // For pops in room space, we need to check their GUI bounding box against the selection box.
-        // This is more complex as you need to project pop's room AABB to GUI space.
+        selected = false;
+    }
+} else {
+    show_debug_message("DEBUG GLR: Region 1.1 No obj_pop instances found to deselect.");
+}
 
-        // Simpler: iterate all pops and check if their *center* (converted to GUI) is in the box.
-        // Or, convert the GUI selection box back to world coordinates and use collision_rectangle.
-        // Let's try converting selection box to world space, as it's more robust.
+show_debug_message("DEBUG GLR: Region 1.1 After 'with (obj_pop)'. self is: " + object_get_name(object_index));
+if (variable_instance_exists(id, "click_start_world_x")) { show_debug_message($"DEBUG GLR: Region 1.1 click_start_world_x: {click_start_world_x}"); }
+selected_pop = noone; 
+#endregion
 
-        var current_cam = view_camera[0];
-        var cam_view_x = camera_get_view_x(current_cam);
-        var cam_view_y = camera_get_view_y(current_cam);
-        var cam_view_w = camera_get_view_width(current_cam);
-        var cam_view_h = camera_get_view_height(current_cam);
-        var gui_w = display_get_gui_width();
-        var gui_h = display_get_gui_height();
+// =========================================================================
+// 2. PROCESS SELECTION (DRAG OR CLICK)
+// =========================================================================
+#region 2.1 Drag Selection Logic
+show_debug_message("DEBUG GLR: Region 2.1 Before 'if (is_dragging)'. self is: " + object_get_name(object_index));
+if (variable_instance_exists(id, "click_start_world_x")) { show_debug_message($"DEBUG GLR: Region 2.1 click_start_world_x: {click_start_world_x}"); }
 
-        // Convert GUI selection box corners to world coordinates
-        var _world_sel_x1 = cam_view_x + ((_sel_x1 / gui_w) * cam_view_w);
-        var _world_sel_y1 = cam_view_y + ((_sel_y1 / gui_h) * cam_view_h);
-        var _world_sel_x2 = cam_view_x + ((_sel_x2 / gui_w) * cam_view_w);
-        var _world_sel_y2 = cam_view_y + ((_sel_y2 / gui_h) * cam_view_h);
-        
-        // Ensure correct ordering for collision_rectangle
-        var _rect_left   = min(_world_sel_x1, _world_sel_x2);
-        var _rect_top    = min(_world_sel_y1, _world_sel_y2);
-        var _rect_right  = max(_world_sel_x1, _world_sel_x2);
-        var _rect_bottom = max(_world_sel_y1, _world_sel_y2);
+if (is_dragging) { // This instance variable 'is_dragging' was set in GLP
+    is_dragging = false; // Stop dragging state now
 
-        // Check if this pop's bounding box intersects the world-space selection rectangle
-        // Using the pop's own bounding box (bbox_left, etc.)
-        if (rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom,
-                                   _rect_left, _rect_top, _rect_right, _rect_bottom) > 0) // 0=no, 1=part, 2=full
-        {
-            selected = true;
-            if (_first_selected_in_box == noone) {
-                _first_selected_in_box = id;
+    var _drag_dist_x = abs(_gui_mx - sel_start_x); // sel_start_x is instance var of obj_controller
+    var _drag_dist_y = abs(_gui_my - sel_start_y); // sel_start_y is instance var of obj_controller
+
+    show_debug_message("DEBUG GLR: Region 2.1 Inside 'if (is_dragging)'. self is: " + object_get_name(object_index));
+    if (variable_instance_exists(id, "click_start_world_x")) { show_debug_message($"DEBUG GLR: Region 2.1 click_start_world_x: {click_start_world_x}"); }
+    
+    if (_drag_dist_x > _drag_threshold || _drag_dist_y > _drag_threshold) {
+        // --- It was a DRAG BOX selection ---
+        show_debug_message("DEBUG GLR: Region 2.1 Processing Drag Box. self is: " + object_get_name(object_index));
+        if (variable_instance_exists(id, "click_start_world_x")) {
+            show_debug_message($"DEBUG GLR: Region 2.1 click_start_world_x BEFORE min/max: {click_start_world_x}");
+            
+            var _tmp_click_start_world_x = click_start_world_x; // Try caching it to a local var RIGHT BEFORE USE
+            var _tmp_click_start_world_y = click_start_world_y; // Cache Y as well for consistency
+            show_debug_message($"DEBUG GLR: Region 2.1 Cached _tmp_click_start_world_x = {_tmp_click_start_world_x}");
+
+            var _world_sel_x1 = min(_tmp_click_start_world_x, _world_mx); // USE THE TEMP VAR
+            var _world_sel_y1 = min(_tmp_click_start_world_y, _world_my); 
+            var _world_sel_x2 = max(_tmp_click_start_world_x, _world_mx); // USE THE TEMP VAR
+            var _world_sel_y2 = max(_tmp_click_start_world_y, _world_my);
+            
+            show_debug_message($"DEBUG GLR: Region 2.1 Drag box world coords: ({_world_sel_x1},{_world_sel_y1}) to ({_world_sel_x2},{_world_sel_y2})");
+
+            with (obj_pop) {
+                if (point_in_rectangle(x, y, _world_sel_x1, _world_sel_y1, _world_sel_x2, _world_sel_y2)) {
+                    selected = true;
+                    ds_list_add(global.selected_pops_list, id);
+                }
             }
-            _selected_count++;
-            show_debug_message($"DEBUG (obj_controller GLR): Pop ID {id} selected by drag box.");
+        } else {
+            show_debug_message("CRITICAL DEBUG GLR: Region 2.1 click_start_world_x NOT DEFINED just before drag box min/max calculations!");
+            // This case should ideally not be reached if Create and GLP are working
+        }
+    } else {
+        // --- It was a CLICK (drag distance was too small) ---
+        show_debug_message("DEBUG GLR: Region 2.1 Processing as Single Click (short drag). self is: " + object_get_name(object_index));
+        if (variable_instance_exists(id, "click_start_world_x")) {
+            show_debug_message($"DEBUG GLR: Region 2.1 click_start_world_x for single click: {click_start_world_x}");
+            var _clicked_pop = instance_position(click_start_world_x, click_start_world_y, obj_pop);
+            if (instance_exists(_clicked_pop)) {
+                _clicked_pop.selected = true;
+                ds_list_add(global.selected_pops_list, _clicked_pop.id);
+                selected_pop = _clicked_pop.id; 
+            }
+        } else {
+            show_debug_message("CRITICAL DEBUG GLR: Region 2.1 click_start_world_x NOT DEFINED for single click check!");
         }
     }
-    if (_selected_count == 1 && _first_selected_in_box != noone) {
-        _newly_selected_pop_id = _first_selected_in_box;
-    }
-     show_debug_message($"DEBUG (obj_controller GLR): Drag box selected {_selected_count} pops. First selected was {_first_selected_in_box}");
+} else {
+    show_debug_message("DEBUG GLR: Region 2.1 'is_dragging' was false. No selection processing.");
 }
 #endregion
 
-#region 2.4 Update Controller's Selected Pop, UI, and Pop Selection Flags
-// First, clear is_solely_selected for all pops
-with (obj_pop) {
-    is_solely_selected = false;
+// =========================================================================
+// 3. UPDATE UI / SELECTION CONTROLLER
+// =========================================================================
+#region 3.1 Call Selection Controller
+show_debug_message("DEBUG GLR: Region 3.1 Updating UI. self is: " + object_get_name(object_index));
+var _target_for_ui_panel = noone; 
+
+if (ds_exists(global.selected_pops_list, ds_type_list)) {
+    var _num_selected = ds_list_size(global.selected_pops_list);
+    if (_num_selected == 1) {
+        _target_for_ui_panel = global.selected_pops_list[| 0];
+        show_debug_message($"DEBUG GLR: Region 3.1 Single pop selected (ID: {_target_for_ui_panel}), targeting for UI panel.");
+    } else if (_num_selected > 1) {
+        _target_for_ui_panel = noone;
+        show_debug_message($"DEBUG GLR: Region 3.1 Multiple ({_num_selected}) pops selected. No pop_info panel will be shown by current scr_selection_controller.");
+    } else {
+        _target_for_ui_panel = noone;
+        show_debug_message("DEBUG GLR: Region 3.1 No pops selected. UI panel will be closed/hidden.");
+    }
+} else {
+    _target_for_ui_panel = noone;
+    show_debug_message("ERROR (obj_controller GLR): Region 3.1 global.selected_pops_list does not exist!");
 }
 
-if (_selected_count == 1 && _newly_selected_pop_id != noone) {
-    selected_pop = _newly_selected_pop_id; // Controller tracks the single selected pop
-    if (instance_exists(selected_pop)) {
-        selected_pop.is_solely_selected = true; // Set flag for the one pop
-    }
-    scr_selection_controller(_newly_selected_pop_id); // Update UI panel
-} else if (_selected_count > 1) {
-    selected_pop = noone; // No single pop is "the" selected_pop for the controller
-    // is_solely_selected remains false for all pops
-    scr_selection_controller(noone);
-} else { // No pops selected
-    selected_pop = noone;
-    scr_selection_controller(noone);
+if (script_exists(scr_selection_controller)) {
+    scr_selection_controller(_target_for_ui_panel); 
+} else {
+    show_debug_message("ERROR (obj_controller GLR): Region 3.1 scr_selection_controller does not exist!");
 }
 #endregion
+
+if (ds_exists(global.selected_pops_list, ds_type_list)) {
+    show_debug_message($"DEBUG GLR: Selection finalized. {ds_list_size(global.selected_pops_list)} pops selected.");
+}
+show_debug_message("========================================================");

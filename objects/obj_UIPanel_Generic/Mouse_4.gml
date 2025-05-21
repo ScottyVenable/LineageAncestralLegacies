@@ -9,10 +9,11 @@ var _gui_my = device_mouse_y_to_gui(0);
 
 // --- Check if click is within the panel's overall bounds ---
 // Assumes panel_x, panel_y, panel_width, panel_height are instance variables
-var _panel_x1 = panel_x;
-var _panel_y1 = panel_y;
-var _panel_x2 = panel_x + panel_width;
-var _panel_y2 = panel_y + panel_height;
+// NEW:
+var _panel_x1 = x;          // Use instance's actual x
+var _panel_y1 = y;          // Use instance's actual y
+var _panel_x2 = x + width;  // Use instance's actual width
+var _panel_y2 = y + height; // Use instance's actual height
 
 if (point_in_rectangle(_gui_mx, _gui_my, _panel_x1, _panel_y1, _panel_x2, _panel_y2)) {
     // Click is inside the panel. Now check for specific actions.
@@ -44,8 +45,8 @@ if (point_in_rectangle(_gui_mx, _gui_my, _panel_x1, _panel_y1, _panel_x2, _panel
 
     if (point_in_rectangle(_gui_mx, _gui_my, _header_x1, _header_y1, _header_x2, _header_y2)) {
         dragging = true;
-        drag_offset_x = panel_x - _gui_mx; // Store offset from mouse to panel's top-left
-        drag_offset_y = panel_y - _gui_my;
+		drag_offset_x = x - _gui_mx;
+		drag_offset_y = y - _gui_my;
         
         // Consume the mouse event
         if (variable_global_exists("mouse_event_consumed_by_ui")) {

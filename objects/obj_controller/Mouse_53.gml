@@ -2,16 +2,16 @@
 ///
 /// Purpose:
 ///    Handles global left-click mouse input. Initiates drag selection.
-///    Also handles single pop selection.
+///    Records click position for potential single click handling on release.
 ///
 /// Metadata:
-///    Summary:        Initiates drag selection or performs single selection.
+///    Summary:        Initiates drag selection or marks start of a potential single click.
 ///    Usage:          obj_controller Event: Mouse > Global Mouse > Global Left Pressed
 ///    Parameters:     none
 ///    Returns:        void
 ///    Tags:           [input][selection][drag_selection]
-///    Version:        1.0
-///    Dependencies:   device_mouse_x_to_gui(), device_mouse_y_to_gui(), scr_selection_controller()
+///    Version:        1.1 — 2024-05-19 // Scotty's Current Date - Focus on initiating drag/click
+///    Dependencies:   device_mouse_x_to_gui(), device_mouse_y_to_gui()
 
 // =========================================================================
 // 0. IMPORTS & CACHES
@@ -19,39 +19,43 @@
 #region 0.1 Imports & Cached Locals
 var _gui_mx = device_mouse_x_to_gui(0);
 var _gui_my = device_mouse_y_to_gui(0);
+
+// Store the world position of the click as well, for checking instance_position later
+// This assumes your camera setup correctly translates GUI to world.
+// If using view_get_xport/yport and view_wport/hport for scaling, adjust accordingly.
+// For simplicity, if camera is 1:1 with GUI and no complex port scaling:
+var _world_mx = mouse_x; 
+var _world_my = mouse_y;
 #endregion
 
 // =========================================================================
-// 1. RESET PREVIOUS SELECTION STATE (Optional: Deselect all first on new click)
+// 1. CHECK IF CLICK IS ON UI (Prevent game world interaction if UI handles it)
 // =========================================================================
-#region 1.1 Deselect All Pops (if desired behavior)
-// with (obj_pop) {
-//     selected = false;
+#region 1.1 UI Click Consumption
+// This should ideally be set by UI elements themselves in their own mouse press events
+// if (global.mouse_event_consumed_by_ui) {
+//     is_dragging = false; // Don't start a game world drag
+//     exit; // Exit this script if UI consumed the click
 // }
-// selected_pop = noone; // From obj_controller
-// if (instance_exists(global.ui_panel_instance)) { // Close existing panel
-//     scr_selection_controller(noone);
-// }
+// For now, assume UI consumption is handled elsewhere or not yet critical.
 #endregion
 
 // =========================================================================
-// 2. INITIATE DRAG SELECTION
+// 2. INITIATE DRAG SELECTION / PREPARE FOR SINGLE CLICK
 // =========================================================================
 #region 2.1 Start Drag Box
-is_dragging = true;
-sel_start_x = _gui_mx;
+is_dragging = true;     // Assume a drag until proven otherwise (e.g., very short drag in Released event)
+sel_start_x = _gui_mx;  // GUI coordinates for drawing the selection box
 sel_start_y = _gui_my;
-show_debug_message($"DEBUG (obj_controller GLP): Drag started at ({sel_start_x}, {sel_start_y}). is_dragging = {is_dragging}");
+
+// Store initial world coordinates for precise instance checking later
+// (You might already have these as other variables for camera or movement)
+click_start_world_x = _world_mx; 
+click_start_world_y = _world_my;
+
+
+show_debug_message($"DEBUG (obj_controller GLP): Drag/Click initiated at GUI({sel_start_x}, {sel_start_y}), World({click_start_world_x},{click_start_world_y}). is_dragging = {is_dragging}");
+show_debug_message($"DEBUG GLP: click_start_world_x set to: {click_start_world_x} (was _world_mx: {_world_mx})");
 #endregion
 
-// =========================================================================
-// 3. SINGLE CLICK SELECTION (This part is usually handled in Global Left *Released*
-//    to differentiate a click from a drag. But if you want immediate feedback on press,
-//    you might do a preliminary check here. For now, we focus on drag.)
-// =========================================================================
-// For a pure click (no drag), this logic would be better in Global Left Released.
-// We'll handle the result of the drag (which could be a small drag treated as a click) there.
-
-// At this point, scr_selection_controller(0) in your original setup for Global Left Pressed
-// would likely be premature if you intend to allow dragging.
-// We'll call scr_selection_controller in Global Left Released after the drag is complete.
+// No actual selection or deselection happens here yet. That's for Global Left Released.

@@ -122,6 +122,7 @@ enum ItemType {
     FURNITURE,      // Placeable items
     BLUEPRINT,      // For learning new crafts/buildings
     QUEST,
+	UNDEFINED,
     MISC
 }
 

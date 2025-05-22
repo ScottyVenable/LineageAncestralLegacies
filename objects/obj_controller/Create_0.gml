@@ -78,7 +78,7 @@ global.pop_count            = global.initial_pop_count
 global.selected_pops_list   = ds_list_create(); // Create the global list for selected pops ONCE here.
 // Initialize game_speed using the current room's speed (steps per second)
 // This is the recommended way to handle game speed for time-based calculations.
-global.game_speed			= room_get_speed(room); 
+global.GameSpeed			= room_speed; // Set the game speed to the room's speed
 
 global.lineage_food_stock       = 100; // Example starting food
 global.lineage_wood_stock       = 50;  // Example starting wood
@@ -98,14 +98,27 @@ global.formation_spacing        = 48;
 global.formation_notification_text  = "";
 global.formation_notification_alpha = 0;
 global.formation_notification_timer = 0;
-global.formation_notification_stay_time = 1.5 * global.game_speed; 
-global.formation_notification_fade_time = 0.5 * global.game_speed; 
+global.formation_notification_stay_time = 1.5 * global.GameSpeed; 
+global.formation_notification_fade_time = 0.5 * global.GameSpeed; 
 #endregion
 
 #region 4.3 UI Globals & Initialization
 global.mouse_event_consumed_by_ui = false;
 
 
+#endregion
+
+// ============================================================================
+// 4.B PRE-SPAWN DATA INITIALIZATION (e.g. Name data for pops)
+// ============================================================================
+#region 4.B.1 Load Name Data
+// Ensure name data is loaded before any pops are created, as scr_generate_pop_details needs it.
+if (script_exists(scr_load_name_data)) {
+    scr_load_name_data();
+    debug_log("Name data loaded via scr_load_name_data().", "obj_controller:Create", "green");
+} else {
+    debug_log("ERROR: scr_load_name_data() script not found. Pop names may not generate correctly.", "obj_controller:Create", "red");
+}
 #endregion
 
 // ============================================================================

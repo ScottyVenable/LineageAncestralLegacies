@@ -6,7 +6,7 @@
 /// Metadata:
 ///    Summary:         Sets up basic pop structure and generates detailed attributes.
 ///    Usage:           Automatically called when an obj_pop instance is created.
-///    Version:        1.10 - [Current Date] (Removed pre-defined name color variables as Draw event uses c_ constants directly)
+///    Version:        1.10 - May 22, 2025 (Updated life stage assignment logic and ensured metadata reflects current date)
 ///    Dependencies:  PopState (enum), scr_generate_pop_details, spr_man_idle.
 
 // =========================================================================
@@ -80,8 +80,16 @@ _interaction_type_tag = "";
 #region 4.1 Generate Details
 // This script will set: pop_identifier_string, pop_name, sex, age, scale,
 // stats (strength, etc.), health, hunger, thirst, energy, skills, traits.
-scr_generate_pop_details();
+// Pass the life_stage variable explicitly to scr_generate_pop_details
+// Use the global life_stage variable
+scr_generate_pop_details(global.life_stage);
 // After scr_generate_pop_details, 'image_xscale' and 'image_yscale' will be set based on age.
+
+// Debugging: Log the generated pop name
+debug_log("Generated pop name: " + pop_identifier_string, "obj_pop:Create");
+
+// Debugging: Log the value of pop_identifier_string to ensure it is set correctly
+debug_log("Pop identifier string during creation: " + pop_identifier_string, "obj_pop:Create");
 #endregion
 
 // =========================================================================
@@ -99,6 +107,22 @@ if (!variable_global_exists("game_speed")) {
     global.game_speed = room_get_speed(room); 
 }
 forage_rate = global.game_speed;
+
+// Ensure global.life_stage is initialized before proceeding
+if (!variable_global_exists("life_stage")) {
+    show_error("Global variable 'life_stage' is not initialized. Ensure obj_controller is created first.", true);
+    exit; // Stop further execution to prevent errors
+}
+
+// Assign the PopLifeStage in the Create Event of the pop object
+if (global.first_load) {
+    life_stage = PopLifeStage.TRIBAL; // Set to TRIBAL for the first game load
+    debug_log("Assigned life stage TRIBAL to pop on first load.", "obj_pop:Create");
+} else {
+    // Dynamically determine the life stage based on game state
+    life_stage = scr_determine_life_stage(); // Placeholder for dynamic logic
+    debug_log("Life stage dynamically determined for this pop.", "obj_pop:Create", "yellow");
+}
 
 // Post-generation debug message is intentionally disabled for production.
 // Uncomment the line below for debugging purposes during development.

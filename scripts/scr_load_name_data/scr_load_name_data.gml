@@ -29,10 +29,10 @@ function scr_load_name_data() {
     // =========================================================================
     #region 2.1 Local Constants
     // Corrected paths to the .txt name data files
-    var _male_prefixes_path   = "data/names/male_name_prefixes.txt";
-    var _male_suffixes_path   = "data/names/male_name_suffixes.txt";
-    var _female_prefixes_path = "data/names/female_name_prefixes.txt";
-    var _female_suffixes_path = "data/names/female_name_suffixes.txt";
+    var _male_prefixes_path   = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt";
+    var _male_suffixes_path   = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt";
+    var _female_prefixes_path = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt";
+    var _female_suffixes_path = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt";
     #endregion
     // =========================================================================
     // 3. INITIALIZATION & STATE SETUP
@@ -62,14 +62,32 @@ function scr_load_name_data() {
     #region 6.1 Debug & Profile Hooks
     // Uncomment for debugging:
     // show_debug_message("Loaded name data: " + string(array_length(global.male_prefixes)) + " male prefixes, " + string(array_length(global.female_prefixes)) + " female prefixes.");
+    // Debugging: Log the number of prefixes and suffixes loaded
+    show_debug_message("Loaded male prefixes: " + string(array_length(global.male_prefixes)));
+    show_debug_message("Loaded male suffixes: " + string(array_length(global.male_suffixes)));
+    show_debug_message("Loaded female prefixes: " + string(array_length(global.female_prefixes)));
+    show_debug_message("Loaded female suffixes: " + string(array_length(global.female_suffixes)));
+    // Debugging: Log the file paths being accessed
+    show_debug_message("Attempting to load male prefixes from: " + _male_prefixes_path);
+    show_debug_message("Attempting to load male suffixes from: " + _male_suffixes_path);
+    show_debug_message("Attempting to load female prefixes from: " + _female_prefixes_path);
+    show_debug_message("Attempting to load female suffixes from: " + _female_suffixes_path);
     #endregion
 }
 
-// New helper function to load lines from a text file into an array
+// Updated helper function to load lines from a text file into an array
 function scr_load_text_file_lines(_path) {
     var _list = ds_list_create();
-    var _file = file_text_open_read(_path);
     var _array = []; // Initialize an empty array
+
+    // Check if the file exists before attempting to open it
+    if (!file_exists(_path)) {
+        show_debug_message("Error: File not found - " + _path);
+        ds_list_destroy(_list); // Clean up the DS list
+        return _array; // Return an empty array as fallback
+    }
+
+    var _file = file_text_open_read(_path);
 
     if (_file != -1) {
         while (!file_text_eof(_file)) {
@@ -80,6 +98,8 @@ function scr_load_text_file_lines(_path) {
             }
         }
         file_text_close(_file);
+    } else {
+        show_debug_message("Error: Unable to open file - " + _path);
     }
 
     // Convert ds_list to array by iterating

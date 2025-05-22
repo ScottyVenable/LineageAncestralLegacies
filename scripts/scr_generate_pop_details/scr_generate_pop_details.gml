@@ -9,7 +9,7 @@
 ///    Version:       1.4 - 2024-05-19 // Scotty's Current Date - Added missing vars for UI Panel compatibility
 ///    Dependencies:  scr_pop_names, PopSex enum, PopSkill enum (optional)
 
-function scr_generate_pop_details() {
+function scr_generate_pop_details(life_stage) {
     // =========================================================================
     // A. DETERMINE SEX
     // =========================================================================
@@ -29,14 +29,26 @@ function scr_generate_pop_details() {
     var _suffixes_list;
     var _name_base = "";
 
-    if (sex == PopSex.MALE) {
-        _prefixes_list = global.male_prefixes;
-        _suffixes_list = global.male_suffixes;
-        _name_base = "MalePop";
-    } else { // FEMALE
-        _prefixes_list = global.female_prefixes;
-        _suffixes_list = global.female_suffixes;
-        _name_base = "FemalePop";
+    // Check if the pop is in the TRIBAL life stage
+    if (life_stage == PopLifeStage.TRIBAL) {
+        if (sex == PopSex.MALE) {
+            _prefixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt");
+            _suffixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt");
+        } else { // FEMALE
+            _prefixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt");
+            _suffixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt");
+        }
+    } else {
+        // Default to global prefixes and suffixes
+        if (sex == PopSex.MALE) {
+            _prefixes_list = global.male_prefixes;
+            _suffixes_list = global.male_suffixes;
+            _name_base = "MalePop";
+        } else { // FEMALE
+            _prefixes_list = global.female_prefixes;
+            _suffixes_list = global.female_suffixes;
+            _name_base = "FemalePop";
+        }
     }
 
     var _prefix = (_prefixes_list != undefined && array_length(_prefixes_list) > 0) ? _prefixes_list[irandom(array_length(_prefixes_list) - 1)] : "";
@@ -45,6 +57,7 @@ function scr_generate_pop_details() {
 
     if (_generated_name == "") {
         _generated_name = _name_base + string(id); // Use instance id for fallback
+        show_debug_message("Fallback name used for pop: " + _generated_name);
     }
     
     pop_name = _generated_name;

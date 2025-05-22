@@ -13,7 +13,7 @@
 ///     Parameters:     none (This script is not a function and does not accept parameters)
 ///     Returns:        n/a (This script is not a function and does not return values)
 ///     Tags:           [global][definitions][enums][constants]
-///     Version:        1.3 — 2025-05-19 (Added comprehensive future-proofing enums)
+///     Version:        1.4 — 2025-05-22 (Added PopLifeStage enum for pop life stages)
 ///     Dependencies:   none (Enums defined here are self-contained)
 
 // =========================================================================
@@ -100,6 +100,13 @@ enum PopRelationship {
     FAMILY_SIBLING,
     FAMILY_CHILD,
     FAMILY_SPOUSE
+}
+
+// Define the PopLifeStage enum to represent different life stages of pops
+enum PopLifeStage {
+    TRIBAL, // Represents the tribal life stage
+    AGRICULTURAL, // Placeholder for future life stages
+    INDUSTRIAL // Placeholder for future life stages
 }
 #endregion
 

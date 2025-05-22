@@ -14,6 +14,27 @@
 ///                     Formation (enum from scr_constants.gml), room_speed
 
 // ============================================================================
+// 0. GLOBAL VARIABLES INITIALIZATION (Ensure before any pops are created)
+// ============================================================================
+#region 0.1 Initialize Global Variables
+// Ensure the first_load variable is initialized
+if (!variable_global_exists("first_load")) {
+    global.first_load = true; // Assume it's a new game if not set
+}
+
+// Initialize global life_stage variable
+if (!variable_global_exists("life_stage")) {
+    if (global.first_load) {
+        global.life_stage = PopLifeStage.TRIBAL; // Set to TRIBAL for the first game load
+        debug_log("Global life_stage set to TRIBAL on first load.", "obj_controller:Create", "green");
+    } else {
+        global.life_stage = undefined; // Placeholder for dynamic assignment later
+        debug_log("Global life_stage will be determined dynamically.", "obj_controller:Create", "yellow");
+    }
+}
+#endregion
+
+// ============================================================================
 // 1. DISPLAY & GUI SETUP
 // ============================================================================
 randomize();
@@ -119,6 +140,27 @@ if (script_exists(scr_load_name_data)) {
     debug_log("Name data loaded via scr_load_name_data().", "obj_controller:Create", "green");
 } else {
     debug_log("ERROR: scr_load_name_data() script not found. Pop names may not generate correctly.", "obj_controller:Create", "red");
+}
+#endregion
+
+// ============================================================================
+// 4.C GLOBAL VARIABLES INITIALIZATION
+// ============================================================================
+#region 4.C.1 Initialize Global Variables
+// Ensure the first_load variable is initialized
+if (!variable_global_exists("first_load")) {
+    global.first_load = true; // Assume it's a new game if not set
+}
+
+// Initialize global life_stage variable
+if (!variable_global_exists("life_stage")) {
+    if (global.first_load) {
+        global.life_stage = PopLifeStage.TRIBAL; // Set to TRIBAL for the first game load
+        debug_log("Global life_stage set to TRIBAL on first load.", "obj_controller:Create", "green");
+    } else {
+        global.life_stage = undefined; // Placeholder for dynamic assignment later
+        debug_log("Global life_stage will be determined dynamically.", "obj_controller:Create", "yellow");
+    }
 }
 #endregion
 
@@ -247,8 +289,29 @@ if (text_layer_id != -1) {
 // 6. DEBUGGING & LOGGING
 // ============================================================================
 #region 6.1 Initial Log
+// Moved to the end for better organization
+if (!variable_global_exists("first_load")) {
+    global.first_load = true; // Assume it's a new game if not set
+}
+
+if (global.first_load) {
+    debug_log("First load detected. Setting initial pop life stage to TRIBAL.", "obj_controller:Create", "green");
+    global.pop_life_stage = PopLifeStage.TRIBAL; // Set the initial life stage for pops
+} else {
+    debug_log("Not the first load. Pop life stage will be determined dynamically.", "obj_controller:Create", "yellow");
+}
+
+if (!variable_global_exists("life_stage")) {
+    if (global.first_load) {
+        global.life_stage = PopLifeStage.TRIBAL; // Set to TRIBAL for the first game load
+        debug_log("Global life_stage set to TRIBAL on first load.", "obj_controller:Create", "green");
+    } else {
+        global.life_stage = undefined; // Placeholder for dynamic assignment later
+        debug_log("Global life_stage will be determined dynamically.", "obj_controller:Create", "yellow");
+    }
+}
+
+// Log initialization success
 debug_log("obj_controller initialized successfully.", "obj_controller:Create", "blue");
 debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
 #endregion
-
-// Overlay toggle logic has been moved to the Step Event for continuous input checking.

@@ -57,4 +57,7 @@
     {"name":"spr_UIborder_stone_1","order":2,"path":"sprites/spr_UIborder_stone_1/spr_UIborder_stone_1.yy",},
     {"name":"spr_UIborder_stone","order":1,"path":"sprites/spr_UIborder_stone/spr_UIborder_stone.yy",},
   ],
-}
+}datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt
+datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt
+datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt
+datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt

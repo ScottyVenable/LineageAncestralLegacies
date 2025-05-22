@@ -76,9 +76,9 @@ global.order_counter        = 0;
 global.initial_pop_count    = 10; // Example
 global.pop_count            = global.initial_pop_count
 global.selected_pops_list   = ds_list_create(); // Create the global list for selected pops ONCE here.
-// Initialize game_speed using the current room's speed (steps per second)
-// This is the recommended way to handle game speed for time-based calculations.
-global.GameSpeed			= room_speed; // Set the game speed to the room's speed
+// Initialize game_speed using the game's configured FPS (steps per second)
+// This is a reliable way to handle game speed for time-based calculations.
+global.game_speed			= game_get_speed(gamespeed_fps); 
 
 global.lineage_food_stock       = 100; // Example starting food
 global.lineage_wood_stock       = 50;  // Example starting wood
@@ -98,12 +98,13 @@ global.formation_spacing        = 48;
 global.formation_notification_text  = "";
 global.formation_notification_alpha = 0;
 global.formation_notification_timer = 0;
-global.formation_notification_stay_time = 1.5 * global.GameSpeed; 
-global.formation_notification_fade_time = 0.5 * global.GameSpeed; 
+global.formation_notification_stay_time = 1.5 * global.game_speed; 
+global.formation_notification_fade_time = 0.5 * global.game_speed; 
 #endregion
 
 #region 4.3 UI Globals & Initialization
 global.mouse_event_consumed_by_ui = false;
+global.show_overlays = false; // Initialize overlay toggle state
 
 
 #endregion

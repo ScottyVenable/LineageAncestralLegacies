@@ -28,10 +28,11 @@ function scr_load_name_data() {
     // 2. CONFIGURATION & CONSTANTS
     // =========================================================================
     #region 2.1 Local Constants
-    var _male_prefixes_path   = "datafiles/namedata/pops/tribal_stage/tribal_male_prefix.json";
-    var _male_suffixes_path   = "datafiles/namedata/pops/tribal_stage/tribal_male_suffix.json";
-    var _female_prefixes_path = "datafiles/namedata/pops/tribal_stage/tribal_female_prefix.json";
-    var _female_suffixes_path = "datafiles/namedata/pops/tribal_stage/tribal_female_suffix.json";
+    // Corrected paths to the .txt name data files
+    var _male_prefixes_path   = "data/names/male_name_prefixes.txt";
+    var _male_suffixes_path   = "data/names/male_name_suffixes.txt";
+    var _female_prefixes_path = "data/names/female_name_prefixes.txt";
+    var _female_suffixes_path = "data/names/female_name_suffixes.txt";
     #endregion
     // =========================================================================
     // 3. INITIALIZATION & STATE SETUP
@@ -43,10 +44,11 @@ function scr_load_name_data() {
     // 4. CORE LOGIC
     // =========================================================================
     #region 4.1. Main Behavior / Utility Logic
-    global.male_prefixes    = scr_load_json_array_from_file(_male_prefixes_path);
-    global.male_suffixes    = scr_load_json_array_from_file(_male_suffixes_path);
-    global.female_prefixes  = scr_load_json_array_from_file(_female_prefixes_path);
-    global.female_suffixes  = scr_load_json_array_from_file(_female_suffixes_path);
+    // Load name data from text files
+    global.male_prefixes    = scr_load_text_file_lines(_male_prefixes_path);
+    global.male_suffixes    = scr_load_text_file_lines(_male_suffixes_path);
+    global.female_prefixes  = scr_load_text_file_lines(_female_prefixes_path);
+    global.female_suffixes  = scr_load_text_file_lines(_female_suffixes_path);
     #endregion
     // =========================================================================
     // 5. CLEANUP & RETURN
@@ -63,13 +65,29 @@ function scr_load_name_data() {
     #endregion
 }
 
-function scr_load_json_array_from_file(_path) {
-    var arr = [];
-    if (file_exists(_path)) {
-        var buffer = buffer_load(_path);
-        var json_str = buffer_read(buffer, buffer_string);
-        buffer_delete(buffer);
-        arr = json_parse(json_str);
+// New helper function to load lines from a text file into an array
+function scr_load_text_file_lines(_path) {
+    var _list = ds_list_create();
+    var _file = file_text_open_read(_path);
+    var _array = []; // Initialize an empty array
+
+    if (_file != -1) {
+        while (!file_text_eof(_file)) {
+            var _line = file_text_readln(_file);
+            // Add non-empty lines and ignore comment lines (starting with //)
+            if (string_trim(_line) != "" && !string_starts_with(string_trim(_line), "//")) {
+                ds_list_add(_list, _line);
+            }
+        }
+        file_text_close(_file);
     }
-    return arr;
+
+    // Convert ds_list to array by iterating
+    for (var i = 0; i < ds_list_size(_list); i++) {
+        array_push(_array, _list[| i]);
+    }
+
+    ds_list_destroy(_list); // Destroy the DS list to prevent memory leaks
+
+    return _array;
 }

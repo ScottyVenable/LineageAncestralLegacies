@@ -164,6 +164,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             if (_item_harvested_this_tick) {
                 scr_inventory_struct_add("berry", 1); // Assumes "berry" is the item ID
                 // show_debug_message($"{pop_identifier_string} foraged a 'berry'.");
+				global.lineage_food_stock = scr_get_item_stats()
             }
 
             // Check if task is complete (target depleted)

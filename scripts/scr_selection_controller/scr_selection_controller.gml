@@ -35,7 +35,7 @@ function scr_selection_controller(_selected_pop_id_arg) {
     #region 3.1 Panel Configuration
     var _panel_target_pop_id = _selected_pop_id_arg;
     var _panel_title_text = (variable_instance_exists(_panel_target_pop_id, "pop_identifier_string")) ? _panel_target_pop_id.pop_identifier_string : "Pop Info (" + string(_panel_target_pop_id) + ")";
-    var _panel_bg_sprite = spr_UIborder_bone; 
+    var _panel_bg_sprite = spr_UIborder_bone_1; 
     if (!sprite_exists(_panel_bg_sprite)) { show_debug_message($"CRITICAL DEBUG: spr_UIborder_bone MISSING!"); }
 
     var _panel_desired_width = 360;  

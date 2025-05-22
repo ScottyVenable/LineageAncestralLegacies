@@ -1,11 +1,11 @@
 {
   "$GMObject":"",
-  "%Name":"obj_top_status_bar_bone",
+  "%Name":"obj_window_bone",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":64,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"obj_top_status_bar_bone",
+  "name":"obj_window_bone",
   "overriddenProperties":[],
   "parent":{
     "name":"UI",
@@ -30,8 +30,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_UIborder_bone_1",
-    "path":"sprites/spr_UIborder_bone_1/spr_UIborder_bone_1.yy",
+    "name":"spr_UIborder_bone_2",
+    "path":"sprites/spr_UIborder_bone_2/spr_UIborder_bone_2.yy",
   },
   "spriteMaskId":null,
   "visible":true,

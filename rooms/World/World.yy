@@ -21,7 +21,11 @@
     {"name":"inst_7B8B7F97","path":"rooms/World/World.yy",},
     {"name":"inst_8357F30","path":"rooms/World/World.yy",},
     {"name":"inst_6697B68C","path":"rooms/World/World.yy",},
-    {"name":"inst_2E4DB6BF","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"messages_panel","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"command_panel","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"inspector_panel","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"status_bar_panel","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"inst_7D01F6DC","path":"roomui/RoomUI/RoomUI.yy",},
   ],
   "isDnd":false,
   "layers":[

@@ -37,7 +37,7 @@ sel_start_y         = 0;     // GUI Y where drag selection box started
 is_dragging         = false; // True when actively dragging a selection box
 click_start_world_x = 0;     // World X where a click/drag input began
 click_start_world_y = 0;     // World Y where a click/drag input began
-audio_play_sound(music1, 1, true)
+
 show_debug_message($"DEBUG CREATE: click_start_world_x initialized to: {click_start_world_x}");
 #endregion
 
@@ -58,6 +58,7 @@ drag_start_x    = 0;     // Mouse x when camera drag started
 drag_start_y    = 0;     // Mouse y when camera drag started
 #endregion
 
+
 // ============================================================================
 // 3. CAMERA SETUP (Initial camera configuration)
 // ============================================================================
@@ -75,6 +76,7 @@ if (is_real(_active_cam) && _active_cam >= 0) {
 // 4. GLOBAL GAME STATE & UI
 // ============================================================================
 #region 4.1 Gameplay Globals
+global.musicplaying			= false
 global.order_counter        = 0;
 global.initial_pop_count    = 10; // Example
 global.pop_count            = global.initial_pop_count
@@ -83,6 +85,7 @@ global.selected_pops_list   = ds_list_create(); // Create the global list for se
 global.lineage_food_stock       = 100; // Example starting food
 global.lineage_wood_stock       = 50;  // Example starting wood
 global.lineage_stone_stock      = 30;  // Example starting stone
+global.lineage_metal_stock		= 0
 global.lineage_housing_capacity = 5;   // How many pops can be housed
 
 // Pop count will be dynamic: instance_number(obj_pop)
@@ -114,7 +117,7 @@ if (!layer_exists(_ui_layer_name)) {
 #endregion
 
 // ============================================================================
-// 5. SPAWN INITIAL POPS
+// 5. SET THE GAME START
 // ============================================================================
 #region 5.1 Spawn Initial Pops
 var _pop_spawn_layer = "Entities"; // Ensure this layer exists or is created with appropriate depth (e.g., below UILayer)
@@ -177,9 +180,60 @@ if (object_exists(obj_pop)) {
 }
 #endregion
 
+#region 5.2 Initialize & Play Sounds/Music
+if (global.musicplaying == true){
+	audio_play_sound(music1, 1, true)
+}
+#endregion
+
+#region 5.3 Set UI Elements
+text_layer_id = layer_get_id("UI_Main_Text");
+if (text_layer_id == -1) {
+    show_debug_message("ERROR: Text layer not found!");
+    // Handle error
+}
+
+
+// In obj_controller Create or a UI init script
+global.ui_text_elements = {}; // A struct to store references
+
+if (text_layer_id != -1) {
+    elements_on_layer = layer_get_all_elements(text_layer_id);
+    for (var i = 0; i < array_length(elements_on_layer); i++) {
+        var element_id = elements_on_layer[i];
+        if (layer_get_element_type(element_id) == layerelementtype_text) {
+
+            var initial_text = layer_text_get_text(element_id); // Get its current text
+            show_debug_message($"Found text element {element_id} with text: '{initial_text}'");
+
+            // Example: Identify by a unique placeholder text you put in the room editor
+            if (string_pos("F0", initial_text) > 0) { // If its initial text was "FOOD_COUNT_PLACEHOLDER"
+                global.ui_text_elements.food = element_id;
+                show_debug_message($"Assigned food text element: {element_id}");
+				layer_text_text(global.ui_text_elements.food, global.lineage_food_stock)
+            } else if (string_pos("W1", initial_text) > 0) {
+                global.ui_text_elements.wood = element_id;
+				show_debug_message($"Assigned wood text element: {element_id}");
+				layer_text_text(global.ui_text_elements.wood, global.lineage_wood_stock)
+            } else if (string_pos("S2", initial_text) > 0) {
+                global.ui_text_elements.stone = element_id;
+				show_debug_message($"Assigned stone text element: {element_id}");
+				layer_text_text(global.ui_text_elements.stone, global.lineage_stone_stock)
+            } else if (string_pos("M3", initial_text) > 0) {
+                global.ui_text_elements.metal = element_id;
+				show_debug_message($"Assigned metal text element: {element_id}");
+				layer_text_text(global.ui_text_elements.metal, global.lineage_metal_stock)
+            }
+            // You'd also need placeholders or identification for the static labels "Food", "Wood" etc.
+            // if you ever wanted to change them, but for counts this is key.
+        }
+    }
+}
+#endregion
 // ============================================================================
 // 6. DEBUGGING & LOGGING
 // ============================================================================
 #region 6.1 Initial Log
 show_debug_message("obj_controller initialized successfully.");
+show_debug_message($"Music playing set to: {global.musicplaying}")
 #endregion

@@ -146,5 +146,5 @@ function scr_generate_pop_details() {
     // The UI panel calls scr_inventory_struct_draw, so a struct is more likely.
     #endregion
 
-    show_debug_message($"Pop Details Generated for ID {id}: Name='{pop_name}', Sex={sex}, Age={age}, Scale={image_xscale}. All UI panel vars should be set.");
+    show_debug_message($"	- Pop Details Generated for ID {id}: Name='{pop_name}', Sex={sex}, Age={age}, Scale={image_xscale}. All UI panel vars should be set.");
 }

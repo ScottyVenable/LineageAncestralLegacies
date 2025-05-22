@@ -32,6 +32,11 @@ if (!variable_global_exists("life_stage")) {
         debug_log("Global life_stage will be determined dynamically.", "obj_controller:Create", "yellow");
     }
 }
+
+// Initialize hover detection distance for pops
+if (!variable_global_exists("hover_detection_distance")) {
+    global.hover_detection_distance = 50; // Default hover detection distance in pixels
+}
 #endregion
 
 // ============================================================================
@@ -94,7 +99,7 @@ if (is_real(_active_cam) && _active_cam >= 0) {
 #region 4.1 Gameplay Globals
 global.musicplaying			= false
 global.order_counter        = 0;
-global.initial_pop_count    = 10; // Example
+global.initial_pop_count    = 40; // Example
 global.pop_count            = global.initial_pop_count
 global.selected_pops_list   = ds_list_create(); // Create the global list for selected pops ONCE here.
 // Initialize game_speed using the game's configured FPS (steps per second)
@@ -184,7 +189,7 @@ if (object_exists(obj_pop)) {
     
     var _spawn_center_x = room_width / 2;
     var _spawn_center_y = room_height / 2;
-    var _spawn_radius = 100; // Example
+    var _spawn_radius = 250; // Example
     var _spawn_attempts_max_per_pop = 10; // Max attempts to find a free spot for one pop
     var _spawned_count = 0;
 

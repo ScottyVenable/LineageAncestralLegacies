@@ -46,7 +46,11 @@ if (ds_exists(global.selected_pops_list, ds_type_list)) {
 
 if (instance_exists(obj_pop)) {
     with (obj_pop) {
-        selected = false;
+        // Adjust deselection logic to use the actual sprite dimensions
+        // Use custom function scr_point_in_sprite for accurate sprite-based selection
+        if (!scr_point_in_sprite(mouse_x, mouse_y, id)) {
+            selected = false;; // Check if the point is within the sprite
+        }
     }
 } else {
     show_debug_message("DEBUG GLR: Region 1.1 No obj_pop instances found to deselect.");

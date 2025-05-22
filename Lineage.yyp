@@ -111,6 +111,7 @@
     {"id":{"name":"scr_item_definitions","path":"scripts/scr_item_definitions/scr_item_definitions.yy",},},
     {"id":{"name":"scr_items","path":"scripts/scr_items/scr_items.yy",},},
     {"id":{"name":"scr_load_name_data","path":"scripts/scr_load_name_data/scr_load_name_data.yy",},},
+    {"id":{"name":"scr_point_in_sprite","path":"scripts/scr_point_in_sprite/scr_point_in_sprite.yy",},},
     {"id":{"name":"scr_pop_behavior","path":"scripts/scr_pop_behavior/scr_pop_behavior.yy",},},
     {"id":{"name":"scr_pop_commanded","path":"scripts/scr_pop_commanded/scr_pop_commanded.yy",},},
     {"id":{"name":"scr_pop_foraging","path":"scripts/scr_pop_foraging/scr_pop_foraging.yy",},},

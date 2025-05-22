@@ -28,8 +28,8 @@ max_berries = berry_count
 #region 1.2 Regrowth Timing
 BERRY_REGROW_DURATION_SECONDS = 3;
 BERRY_DELAY_DURATION_SECONDS  = 20.0;
-berry_regrow_time   = BERRY_REGROW_DURATION_SECONDS * global.GameSpeed;
-berry_delay_time    = BERRY_DELAY_DURATION_SECONDS * global.GameSpeed;
+berry_regrow_time   = BERRY_REGROW_DURATION_SECONDS * global.game_speed;
+berry_delay_time    = BERRY_DELAY_DURATION_SECONDS * global.game_speed;
 berry_regrow_timer  = 0;
 berry_delay_timer   = 0;
 delay_active        = false;

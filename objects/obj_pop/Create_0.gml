@@ -93,10 +93,12 @@ inventory = {}; // Initialize as an empty struct for scr_inventory_struct_add
 
 // SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.
 
-// SAFETY: Ensure global.GameSpeed is set before using it
-if (!variable_global_exists("GameSpeed")) {
-    global.GameSpeed = room_speed; // Fallback to room_speed if not set
+// SAFETY: Ensure global.game_speed is set before using it
+if (!variable_global_exists("game_speed")) {
+    // Fallback to room_get_speed(room) if not set, which is the standard
+    global.game_speed = room_get_speed(room); 
 }
+forage_rate = global.game_speed;
 
 // Post-generation debug message is intentionally disabled for production.
 // Uncomment the line below for debugging purposes during development.

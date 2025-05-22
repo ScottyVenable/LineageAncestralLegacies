@@ -76,6 +76,9 @@ global.order_counter        = 0;
 global.initial_pop_count    = 10; // Example
 global.pop_count            = global.initial_pop_count
 global.selected_pops_list   = ds_list_create(); // Create the global list for selected pops ONCE here.
+// Initialize game_speed using the current room's speed (steps per second)
+// This is the recommended way to handle game speed for time-based calculations.
+global.game_speed			= room_get_speed(room); 
 
 global.lineage_food_stock       = 100; // Example starting food
 global.lineage_wood_stock       = 50;  // Example starting wood
@@ -95,8 +98,8 @@ global.formation_spacing        = 48;
 global.formation_notification_text  = "";
 global.formation_notification_alpha = 0;
 global.formation_notification_timer = 0;
-global.formation_notification_stay_time = 1.5 * global.GameSpeed; 
-global.formation_notification_fade_time = 0.5 * global.GameSpeed; 
+global.formation_notification_stay_time = 1.5 * global.game_speed; 
+global.formation_notification_fade_time = 0.5 * global.game_speed; 
 #endregion
 
 #region 4.3 UI Globals & Initialization
@@ -234,13 +237,4 @@ debug_log("obj_controller initialized successfully.", "obj_controller:Create", "
 debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
 #endregion
 
-// ============================================================================
-// 7. OVERLAY TOGGLE LOGIC
-// ============================================================================
-#region 7.1 Overlay Toggle
-// Overlay toggle: Press Ctrl+S to show/hide overlays for sight lines and radii
-if (keyboard_check(vk_control) && keyboard_check_pressed(ord("S"))) {
-    global.show_overlays = !global.show_overlays;
-    debug_log("Toggled overlays (sight lines, radii)", "OverlayToggle", "yellow");
-}
-#endregion
+// Overlay toggle logic has been moved to the Step Event for continuous input checking.

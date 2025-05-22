@@ -149,3 +149,18 @@ if (is_struct(global.ui_text_elements)) {
 	}
 }
 #endregion
+
+// ==========================================================================
+// X. INPUT HANDLING (Example Section - Add to your Step Event structure)
+// ==========================================================================
+#region X.1 Overlay Toggle
+// Overlay toggle: Press Ctrl+S to show/hide overlays for sight lines and radii
+if (keyboard_check(vk_control) && keyboard_check_pressed(ord("S"))) {
+    // Initialize global.show_overlays if it doesn't exist
+    if (!variable_global_exists("show_overlays")) {
+        global.show_overlays = false;
+    }
+    global.show_overlays = !global.show_overlays;
+    debug_log($"Toggled overlays to: {global.show_overlays}", "OverlayToggle", "yellow");
+}
+#endregion

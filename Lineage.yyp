@@ -99,6 +99,7 @@
     {"id":{"name":"RoomUI","path":"roomui/RoomUI/RoomUI.yy",},},
     {"id":{"name":"scr_camera_controller","path":"scripts/scr_camera_controller/scr_camera_controller.yy",},},
     {"id":{"name":"scr_constants","path":"scripts/scr_constants/scr_constants.yy",},},
+    {"id":{"name":"scr_debug_log","path":"scripts/scr_debug_log/scr_debug_log.yy",},},
     {"id":{"name":"scr_draw_selection_box","path":"scripts/scr_draw_selection_box/scr_draw_selection_box.yy",},},
     {"id":{"name":"scr_entities","path":"scripts/scr_entities/scr_entities.yy",},},
     {"id":{"name":"scr_formations","path":"scripts/scr_formations/scr_formations.yy",},},

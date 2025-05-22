@@ -84,7 +84,7 @@ spr_empty           = spr_bush_empty;
 if (sprite_exists(spr_full) && sprite_exists(spr_empty)) {
     sprite_index    = (berry_count > 0) ? spr_full : spr_empty;
 } else {
-    show_debug_message($"ERROR (obj_redBerryBush Create): Bush sprites (spr_full or spr_empty) not found for ID {id}!");
+    debug_log($"ERROR (Bush sprites (spr_full or spr_empty) not found for ID {id}!)", "obj_redBerryBush:Create", "red");
 }
 #endregion
 
@@ -104,5 +104,5 @@ depth = -y;
 // ============================================================================
 #region 6.1 Debug Log
 // Corrected debug message line:
-show_debug_message($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {berry_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.");
+debug_log($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {berry_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.", "obj_redBerryBush:Create", "green");
 #endregion

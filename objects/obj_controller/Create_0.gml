@@ -33,7 +33,7 @@ is_dragging         = false; // True when actively dragging a selection box
 click_start_world_x = 0;     // World X where a click/drag input began
 click_start_world_y = 0;     // World Y where a click/drag input began
 
-show_debug_message($"DEBUG CREATE: click_start_world_x initialized to: {click_start_world_x}");
+debug_log($"click_start_world_x initialized to: {click_start_world_x}", "obj_controller:Create", "cyan");
 #endregion
 
 #region 2.2 Zoom Variables
@@ -60,10 +60,10 @@ drag_start_y    = 0;     // Mouse y when camera drag started
 #region 3.1 Active Camera Setup
 var _active_cam = view_camera[0];
 if (is_real(_active_cam) && _active_cam >= 0) {
-    show_debug_message($"obj_controller: Initial active camera ID {_active_cam} appears valid.");
+    debug_log($"Initial active camera ID {_active_cam} appears valid.", "obj_controller:Create", "green");
     // camera_set_view_pos(_active_cam, cam_x - (camera_get_view_width(_active_cam)/2), cam_y - (camera_get_view_height(_active_cam)/2)); // Center camera
 } else {
-    show_debug_message($"ERROR (obj_controller Create): Initial camera ID from view_camera[0] is invalid or 'noone' (Value: {_active_cam}). Camera setup might fail.");
+    debug_log($"ERROR (Initial camera ID from view_camera[0] is invalid or 'noone' (Value: {_active_cam})). Camera setup might fail.", "obj_controller:Create", "red");
 }
 #endregion
 
@@ -112,7 +112,7 @@ global.mouse_event_consumed_by_ui = false;
 var _pop_spawn_layer = "Entities"; // Ensure this layer exists or is created with appropriate depth (e.g., below UILayer)
 if (!layer_exists(_pop_spawn_layer)) { 
     layer_create(0, _pop_spawn_layer); // Create layer if it doesn't exist (depth 0 is common for instances)
-    show_debug_message($"Dynamically created Pop Spawn layer: '{_pop_spawn_layer}' at depth 0.");
+    debug_log($"Dynamically created Pop Spawn layer: '{_pop_spawn_layer}' at depth 0.", "obj_controller:Create", "cyan");
 }
 
 if (object_exists(obj_pop)) {
@@ -153,10 +153,10 @@ if (object_exists(obj_pop)) {
             var _new_pop = instance_create_layer(_spawn_x, _spawn_y, _pop_spawn_layer, obj_pop, _new_pop_vars);
             _spawned_count++;
         } else { 
-            show_debug_message($"Warning: Could not find valid spawn spot for pop {i+1} after {_spawn_attempts_max_per_pop} attempts.");
+            debug_log($"Warning: Could not find valid spawn spot for pop {i+1} after {_spawn_attempts_max_per_pop} attempts.", "obj_controller:Create", "yellow");
         }
     }
-    show_debug_message($"Total initial pops spawned: {_spawned_count}/{global.initial_pop_count}.");
+    debug_log($"Total initial pops spawned: {_spawned_count}/{global.initial_pop_count}.", "obj_controller:Create", "green");
 
     // Center camera on spawn area (optional)
     if (is_real(view_camera[0]) && view_camera[0] >= 0) {
@@ -172,7 +172,7 @@ if (object_exists(obj_pop)) {
         cam_y = _spawn_center_y;
     }
 } else { 
-    show_debug_message("ERROR (obj_controller Create): obj_pop object asset does not exist. Cannot spawn initial pops."); 
+    debug_log("ERROR (obj_pop object asset does not exist. Cannot spawn initial pops.)", "obj_controller:Create", "red");
 }
 #endregion
 
@@ -185,7 +185,7 @@ if (global.musicplaying == true){
 #region 5.3 Set UI Text Elements
 text_layer_id = layer_get_id("UI");
 if (text_layer_id == -1) {
-    show_debug_message("ERROR: Text layer not found!");
+    debug_log("ERROR: Text layer not found!", "obj_controller:Create", "red");
     // Handle error
 }
 
@@ -200,24 +200,24 @@ if (text_layer_id != -1) {
         if (layer_get_element_type(element_id) == layerelementtype_text) {
 
             var initial_text = layer_text_get_text(element_id); // Get its current text
-            show_debug_message($"Found text element {element_id} with text: '{initial_text}'");
+            debug_log($"Found text element {element_id} with text: '{initial_text}'", "obj_controller:Create:UI", "cyan");
 
             // Example: Identify by a unique placeholder text you put in the room editor
             if (string_pos("F0", initial_text) > 0) { // If its initial text was "FOOD_COUNT_PLACEHOLDER"
                 global.ui_text_elements.food = element_id;
-                show_debug_message($"Assigned food text element: {element_id}");
+                debug_log($"Assigned food text element: {element_id}", "obj_controller:Create:UI", "green");
 				layer_text_text(global.ui_text_elements.food, global.lineage_food_stock)
             } else if (string_pos("W1", initial_text) > 0) {
                 global.ui_text_elements.wood = element_id;
-				show_debug_message($"Assigned wood text element: {element_id}");
+				debug_log($"Assigned wood text element: {element_id}", "obj_controller:Create:UI", "green");
 				layer_text_text(global.ui_text_elements.wood, global.lineage_wood_stock)
             } else if (string_pos("S2", initial_text) > 0) {
                 global.ui_text_elements.stone = element_id;
-				show_debug_message($"Assigned stone text element: {element_id}");
+				debug_log($"Assigned stone text element: {element_id}", "obj_controller:Create:UI", "green");
 				layer_text_text(global.ui_text_elements.stone, global.lineage_stone_stock)
             } else if (string_pos("M3", initial_text) > 0) {
                 global.ui_text_elements.metal = element_id;
-				show_debug_message($"Assigned metal text element: {element_id}");
+				debug_log($"Assigned metal text element: {element_id}", "obj_controller:Create:UI", "green");
 				layer_text_text(global.ui_text_elements.metal, global.lineage_metal_stock)
             }
             // You'd also need placeholders or identification for the static labels "Food", "Wood" etc.
@@ -230,6 +230,6 @@ if (text_layer_id != -1) {
 // 6. DEBUGGING & LOGGING
 // ============================================================================
 #region 6.1 Initial Log
-show_debug_message("obj_controller initialized successfully.");
-show_debug_message($"Music playing set to: {global.musicplaying}")
+debug_log("obj_controller initialized successfully.", "obj_controller:Create", "blue");
+debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
 #endregion

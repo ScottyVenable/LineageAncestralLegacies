@@ -93,6 +93,11 @@ inventory = {}; // Initialize as an empty struct for scr_inventory_struct_add
 
 // SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.
 
+// SAFETY: Ensure global.GameSpeed is set before using it
+if (!variable_global_exists("GameSpeed")) {
+    global.GameSpeed = room_speed; // Fallback to room_speed if not set
+}
+
 // Post-generation debug message is intentionally disabled for production.
 // Uncomment the line below for debugging purposes during development.
-// show_debug_message($"Pop {pop_identifier_string} fully created. State: {state}");
+// debug_log($"Pop {pop_identifier_string} fully created. State: {state}", "obj_pop:Create", "blue"); // Enable for detailed pop creation debug

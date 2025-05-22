@@ -9,7 +9,7 @@
 ///    Summary:         Master setup for game systems, UI, and initial world state.
 ///    Usage:           obj_controller Create Event.
 ///    Tags:            [controller][init][global][ui][camera][spawn][formation][notification][selection]
-///    Version:         1.7 - 2024-05-19 // Scotty's Current Date - Consolidated selection vars, added click_start_world
+///    Version:         1.8 - 2024-05-19 // Scotty's Current Date - Added overlay toggle logic
 ///    Dependencies:  scr_item_definitions_init, obj_UIPanel_Generic, obj_pop,
 ///                     Formation (enum from scr_constants.gml), room_speed
 
@@ -232,4 +232,15 @@ if (text_layer_id != -1) {
 #region 6.1 Initial Log
 debug_log("obj_controller initialized successfully.", "obj_controller:Create", "blue");
 debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
+#endregion
+
+// ============================================================================
+// 7. OVERLAY TOGGLE LOGIC
+// ============================================================================
+#region 7.1 Overlay Toggle
+// Overlay toggle: Press Ctrl+S to show/hide overlays for sight lines and radii
+if (keyboard_check(vk_control) && keyboard_check_pressed(ord("S"))) {
+    global.show_overlays = !global.show_overlays;
+    debug_log("Toggled overlays (sight lines, radii)", "OverlayToggle", "yellow");
+}
 #endregion

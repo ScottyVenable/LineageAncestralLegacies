@@ -196,6 +196,23 @@ if (_state_current == PopState.COMMANDED &&
 #endregion
 
 // ============================================================================
+// ================= OVERLAY: Sight Lines & Radii =====================
+if (global.show_overlays) {
+    // Draw pop's sight radius (for learning: helps visualize perception)
+    var sight_radius = 150; // Example value, or use pop.base_perception_radius if available
+    draw_set_color(c_aqua);
+    draw_set_alpha(0.25);
+    draw_circle(x, y, sight_radius, false);
+    draw_set_alpha(1);
+    // Optionally, draw a line to the current target (foraging, hauling, etc.)
+    if (variable_instance_exists(id, "target_object_id") && target_object_id != noone && instance_exists(target_object_id)) {
+        draw_set_color(c_yellow);
+        draw_line(x, y, target_object_id.x, target_object_id.y);
+    }
+}
+
+
+// ============================================================================
 // X. FINAL RESET (Good practice for all draw events)
 // ============================================================================
 #region X.1 Reset Draw Settings

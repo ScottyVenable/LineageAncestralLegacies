@@ -97,6 +97,33 @@ function scr_pop_hauling() {
                 image_index = 0;
             }
 
+            // --- Find and claim a unique drop-off slot at the hut ---
+    var slot_found = false;
+    var slot_index = -1;
+    if (variable_instance_exists(target_object_id, "dropoff_slots")) {
+        for (var i = 0; i < target_object_id.max_dropoff_slots; i++) {
+            var slot = target_object_id.dropoff_slots[i];
+            if (slot.claimed_by == noone) {
+                target_object_id.dropoff_slots[i].claimed_by = id;
+                slot_index = i;
+                slot_found = true;
+                break;
+            }
+        }
+    }
+    if (slot_found) {
+        // Move to the slot's world position
+        var slot = target_object_id.dropoff_slots[slot_index];
+        travel_point_x = target_object_id.x + slot.rel_x;
+        travel_point_y = target_object_id.y + slot.rel_y;
+        self._hauling_slot_index = slot_index; // Remember for release
+    } else {
+        // No free slot, wait nearby
+        travel_point_x = target_object_id.x + irandom_range(-48,48);
+        travel_point_y = target_object_id.y + irandom_range(-48,48);
+        self._hauling_slot_index = -1;
+    }
+
             // Iterate through pop's inventory and add to global stock
             if (variable_instance_exists(id, "inventory_items") && !ds_list_empty(inventory_items)) {
                 for (var i = ds_list_size(inventory_items) - 1; i >= 0; i--) { // Iterate backwards if removing
@@ -137,6 +164,12 @@ function scr_pop_hauling() {
                 show_debug_message($"Pop {id} ({pop_name}) inventory cleared after hauling.");
             }
 
+            // --- Release claimed slot after drop-off ---
+            if (_hauling_slot_index != -1 && variable_instance_exists(target_object_id, "dropoff_slots")) {
+                target_object_id.dropoff_slots[_hauling_slot_index].claimed_by = noone;
+                self._hauling_slot_index = -1;
+            }
+
             // Hauling complete, reset target and change state
             target_object_id = noone;
 			var _new_travel_x = x + 100; 
@@ -159,4 +192,30 @@ function scr_pop_hauling() {
         target_object_id = noone; // Force re-evaluation on next HAULING step or switch state
         state = PopState.IDLE;    // Or WAITING
     }
+			// --- Resume previous task if possible ---
+            if (variable_instance_exists(id, "previous_state") && previous_state != undefined) {
+                // Example: If previous state was FORAGING, check for nearby foragables
+                if (previous_state == PopState.FORAGING) {
+                    var found_bush = noone;
+                    var search_radius = 200; // Adjust as needed
+                    with (obj_redBerryBush) {
+                        if (berry_count > 0 && point_distance(other.x, other.y, x, y) < search_radius) {
+                            found_bush = id;
+                            break;
+                        }
+                    }
+                    if (found_bush != noone) {
+                        state = PopState.FORAGING;
+                        target_object_id = found_bush;
+                        debug_log("Resuming foraging after hauling.", "obj_pop:Hauling", "green");
+                    } else {
+                        state = PopState.WANDERING;
+                    }
+                } else {
+                    state = previous_state;
+                }
+                previous_state = undefined;
+            } else {
+                state = PopState.WANDERING;
+            }
 }

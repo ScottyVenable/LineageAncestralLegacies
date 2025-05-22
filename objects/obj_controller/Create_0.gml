@@ -95,8 +95,8 @@ global.formation_spacing        = 48;
 global.formation_notification_text  = "";
 global.formation_notification_alpha = 0;
 global.formation_notification_timer = 0;
-global.formation_notification_stay_time = 1.5 * room_speed; 
-global.formation_notification_fade_time = 0.5 * room_speed; 
+global.formation_notification_stay_time = 1.5 * global.GameSpeed; 
+global.formation_notification_fade_time = 0.5 * global.GameSpeed; 
 #endregion
 
 #region 4.3 UI Globals & Initialization

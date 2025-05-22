@@ -65,7 +65,7 @@ wander_max_dist = 150;
 #region 3.3 Foraging State Variables
 target_bush = noone;
 forage_timer = 0;
-forage_rate = room_speed;
+forage_rate = global.GameSpeed;
 #endregion
 
 #region 3.4 Interaction Variables

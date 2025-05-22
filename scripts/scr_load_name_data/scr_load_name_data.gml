@@ -67,7 +67,7 @@ function scr_load_json_array_from_file(_path) {
     var arr = [];
     if (file_exists(_path)) {
         var buffer = buffer_load(_path);
-        var json_str = buffer_read(buffer, buffer_string, buffer_get_size(buffer));
+        var json_str = buffer_read(buffer, buffer_string);
         buffer_delete(buffer);
         arr = json_parse(json_str);
     }

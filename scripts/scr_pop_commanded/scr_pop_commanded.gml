@@ -61,7 +61,7 @@ function scr_pop_commanded() {
 
     if (_dist_to_target > 2) { // Threshold for movement (e.g., 2 pixels)
         direction = point_direction(x, y, travel_point_x, travel_point_y);
-        speed = 2.0; // Commanded movement speed (adjust as needed)
+        speed = pop.base_speed * 2; // Commanded movement speed (adjust as needed)
         // scr_update_walk_sprite(); // Called above already
     } else {
         // Close enough to snap to target

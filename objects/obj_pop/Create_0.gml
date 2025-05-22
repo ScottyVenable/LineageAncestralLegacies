@@ -21,13 +21,15 @@ sprite_index = spr_man_idle;
 image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
+
+pop = get_entity_data(EntityType.POP_HOMINID)
 #endregion
 
 // =========================================================================
 // 2. MOVEMENT & COMMAND RELATED
 // =========================================================================
 #region 2.1 Movement & Command Vars
-speed = 0;
+speed = pop.base_speed;
 direction = random(360);
 travel_point_x = x;
 travel_point_y = y;
@@ -61,6 +63,12 @@ wander_max_dist = 150;
 target_bush = noone;
 forage_timer = 0;
 forage_rate = room_speed;
+#endregion
+
+#region 3.4 Interaction Variables
+target_interaction_object_id = noone;
+_slot_index = -1; // Initialize to -1 (meaning no slot claimed)
+_interaction_type_tag = "";
 #endregion
 
 // =========================================================================

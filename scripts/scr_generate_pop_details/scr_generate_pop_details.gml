@@ -79,6 +79,9 @@ function scr_generate_pop_details() {
     thirst = irandom_range(20, max_thirst - 20);
     max_energy = 100;
     energy = irandom_range(70, max_energy);
+	
+
+	
     // mood, etc. can be added here later
     #endregion
     
@@ -134,16 +137,9 @@ function scr_generate_pop_details() {
     // H. INITIALIZE INVENTORY (as a struct for UI Panel - if scr_inventory_struct_draw expects it)
     // =========================================================================
     #region H. Inventory Struct
-    inventory = {
-        // items : ds_map_create() // Example if your inventory struct uses a ds_map internally
-        // For scr_inventory_struct_draw, it might just iterate struct members if items are directly keys
-        // e.g., inventory.berry = 5, inventory.stone = 10
-        // For now, an empty struct is a safe start.
-        // If scr_inventory_struct_draw expects specific fields, add them here.
-    }; 
-    // Or, if your inventory is a ds_map:
-    // inventory = ds_map_create();
-    // The UI panel calls scr_inventory_struct_draw, so a struct is more likely.
+	inventory_items = ds_list_create(); // Initialize as an empty ds_list
+	inventory_capacity_weight = 10.0; // Example: Max weight pop can carry
+	current_inventory_weight = 0.0;   // Current weight of items in inventory
     #endregion
 
     show_debug_message($"	- Pop Details Generated for ID {id}: Name='{pop_name}', Sex={sex}, Age={age}, Scale={image_xscale}. All UI panel vars should be set.");

@@ -22,11 +22,6 @@ display_set_gui_size(room_width, room_height);
 scr_item_definitions_init(); // Assuming this defines items
 #endregion
 
-#region 1.2 Create Status Bar
-// Create Top Status Bar instance
-var _top_bar_layer = "UILayer"; // Use the same UI layer as your panel
-#endregion
-
 // ============================================================================
 // 2. CORE INSTANCE VARIABLES (Selection, Camera, Click Tracking)
 // ============================================================================
@@ -107,12 +102,6 @@ global.formation_notification_fade_time = 0.5 * room_speed;
 #region 4.3 UI Globals & Initialization
 global.mouse_event_consumed_by_ui = false;
 
-// UI Panel Instance
-var _ui_layer_name = "UILayer"; // Ensure this layer exists or is created with appropriate depth
-if (!layer_exists(_ui_layer_name)) { 
-    layer_create(10000, _ui_layer_name); // Create layer if it doesn't exist (depth 10000 is high, good for UI)
-    show_debug_message($"Dynamically created UI layer: '{_ui_layer_name}' at depth 10000.");
-}
 
 #endregion
 
@@ -186,8 +175,8 @@ if (global.musicplaying == true){
 }
 #endregion
 
-#region 5.3 Set UI Elements
-text_layer_id = layer_get_id("UI_Main_Text");
+#region 5.3 Set UI Text Elements
+text_layer_id = layer_get_id("UI");
 if (text_layer_id == -1) {
     show_debug_message("ERROR: Text layer not found!");
     // Handle error

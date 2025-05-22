@@ -134,16 +134,16 @@ if (global.formation_notification_alpha > 0) {
 #region 3.1 Update Status Bar Info
 
 if (is_struct(global.ui_text_elements)) {
-    if (struct_exists(global.ui_text_elements, "food") && layer_exists(text_layer_id) && layer_has_instance("UI_Main_Text", global.ui_text_elements.food) ) {
+    if (struct_exists(global.ui_text_elements, "food") && layer_exists(text_layer_id) && layer_has_instance("UI", global.ui_text_elements.food) ) {
         layer_text_text(global.ui_text_elements.food, string(global.lineage_food_stock));
     }
-	if (struct_exists(global.ui_text_elements, "wood") && layer_exists(text_layer_id) && layer_has_instance("UI_Main_Text", global.ui_text_elements.wood) ) {
+	if (struct_exists(global.ui_text_elements, "wood") && layer_exists(text_layer_id) && layer_has_instance("UI", global.ui_text_elements.wood) ) {
     layer_text_text(global.ui_text_elements.wood, string(global.lineage_wood_stock));
 	}
-	if (struct_exists(global.ui_text_elements, "stone") && layer_exists(text_layer_id) && layer_has_instance("UI_Main_Text", global.ui_text_elements.stone) ) {
+	if (struct_exists(global.ui_text_elements, "stone") && layer_exists(text_layer_id) && layer_has_instance("UI", global.ui_text_elements.stone) ) {
     layer_text_text(global.ui_text_elements.stone, string(global.lineage_stone_stock));
 	}
-	if (struct_exists(global.ui_text_elements, "metal") && layer_exists(text_layer_id) && layer_has_instance("UI_Main_Text", global.ui_text_elements.metal) ) {
+	if (struct_exists(global.ui_text_elements, "metal") && layer_exists(text_layer_id) && layer_has_instance("UI", global.ui_text_elements.metal) ) {
     layer_text_text(global.ui_text_elements.metal, string(global.lineage_metal_stock));
 	}
 }

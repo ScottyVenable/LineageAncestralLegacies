@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_pop_hauling",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_pop_hauling",
+  "parent":{
+    "name":"Behaviors",
+    "path":"folders/Scripts/Pop/Behaviors.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

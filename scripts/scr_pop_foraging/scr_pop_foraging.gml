@@ -40,7 +40,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
         is_waiting = true; 
         depth = -y; 
         has_arrived = true; // Since it's waiting at its current spot
-        speed = 0;
+        speed = pop.base_speed;
         image_speed = 1.0; 
         sprite_index = spr_man_idle; // Default to idle sprite
         show_debug_message($"Pop {pop_identifier_string} (ID: {id}) has invalid interaction target/slot. Reverting to WAITING.");
@@ -146,6 +146,27 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
                 if (target_interaction_object_id.berry_count > 0) {
                     target_interaction_object_id.berry_count -= 1;
                     _item_harvested_this_tick = true;
+					
+					var berries_gathered_this_cycle = 1; // Or more, depending on skill/tool/bush yield
+					var item_enum_to_add = Item.FOOD_RED_BERRY; // The enum for red berries
+
+					// 'self' here refers to the obj_pop instance running this script
+					if (!variable_instance_exists(id, "inventory_items")) {
+					    // Safety: Initialize inventory if it somehow doesn't exist (should be in Create)
+					    inventory_items = ds_list_create(); 
+					    show_debug_message($"Warning: Pop {id} inventory_items not found, created new list.");
+					}
+
+					show_debug_message($"Pop {id} ({pop_name}) gathered {berries_gathered_this_cycle} berries. Attempting to add to inventory.");
+
+					var berries_not_added = scr_inventory_add_item(self.inventory_items, item_enum_to_add, berries_gathered_this_cycle);
+
+					if (berries_not_added > 0) {
+					    show_debug_message($"Pop {id} inventory full or issue, {berries_not_added} berries dropped/lost.");
+					    // TODO: Implement logic for dropping items on the ground if inventory is full
+					}
+					
+					
                     if (target_interaction_object_id.berry_count == 0) {
                         target_interaction_object_id.is_harvestable = false;
                         if (sprite_exists(target_interaction_object_id.spr_empty)) { // Check sprite exists before assigning
@@ -202,4 +223,27 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
     } 
     // else if (target_interaction_type_tag == "some_other_task") { /* Handle other tasks */ }
     #endregion
+	#region 2.2 Dropping off Load
+		var total_items_in_inventory = 0;
+		for (var i = 0; i < ds_list_size(inventory_items); i++) {
+		    total_items_in_inventory += inventory_items[| i].quantity;
+		}
+		var hauling_threshold = 5; // Example: Haul if carrying 5 or more items
+
+		if (total_items_in_inventory >= hauling_threshold) {
+		    show_debug_message($"Pop {id} ({pop_name}) inventory has {total_items_in_inventory} items. Triggering HAULING.");
+		    // Release current interaction slot from foraging
+		    if (instance_exists(target_interaction_object_id) && _slot_index != -1) {
+		        if (script_exists(scr_interaction_slot_release)) {
+		            scr_interaction_slot_release(target_interaction_object_id, _slot_index, id);
+		        }
+		        _slot_index = -1; // Mark slot as released by this pop
+		    }
+		    target_interaction_object_id = noone; // Clear foraging target
+
+		    state = PopState.HAULING;
+		    target_object_id = noone; // Hauling script will find a new target (the hut)
+		    exit; // Exit foraging script as state has changed
+		}
+	#endregion
 }

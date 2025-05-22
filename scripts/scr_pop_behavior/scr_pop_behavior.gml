@@ -15,5 +15,13 @@ function scr_pop_behavior() {
         case PopState.FORAGING:   
             scr_pop_foraging();   
             break;  // ← new
+		case PopState.HAULING:
+		    if (script_exists(scr_pop_hauling)) {
+		        scr_pop_hauling();
+		    } else {
+		        show_debug_message_once($"ERROR: scr_pop_hauling script missing for pop {id}!");
+		        state = PopState.IDLE; // Fallback
+		    }
+		    break;
     }
 }

@@ -5,7 +5,7 @@
 function scr_pop_wandering() {
     // 0) Ensure we’re using the walking sprite
     scr_update_walk_sprite();
-    speed = 1.25;
+    speed = pop.base_speed / 2;
 
     // 1) If we've just entered WANDERING, initialize our stop count
     if (wander_pts == 0 && state == PopState.WANDERING) {

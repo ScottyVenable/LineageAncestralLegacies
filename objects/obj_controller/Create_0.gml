@@ -116,6 +116,13 @@ if (!layer_exists(_pop_spawn_layer)) {
 }
 
 if (object_exists(obj_pop)) {
+    // SAFETY CHECK: Ensure pop entity data is valid before spawning pops
+    var _pop_entity_data = get_entity_data(EntityType.POP_HOMINID);
+    if (_pop_entity_data == undefined) {
+        show_error("ERROR: EntityType.POP_HOMINID is not defined in the entity database. Cannot spawn pops!", true);
+        // Optionally: exit or return to prevent further errors
+    }
+    
     var _spawn_center_x = room_width / 2;
     var _spawn_center_y = room_height / 2;
     var _spawn_radius = 100; // Example

@@ -29,10 +29,10 @@ function scr_load_name_data() {
     // =========================================================================
     #region 2.1 Local Constants
     // Corrected paths to the .txt name data files
-    var _male_prefixes_path   = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt";
-    var _male_suffixes_path   = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt";
-    var _female_prefixes_path = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt";
-    var _female_suffixes_path = working_directory + "datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt";
+    var _male_prefixes_path   = "data/names/male_name_prefixes.txt";
+    var _male_suffixes_path   = "data/names/male_name_suffixes.txt";
+    var _female_prefixes_path = "data/names/female_name_prefixes.txt";
+    var _female_suffixes_path = "data/names/female_name_suffixes.txt";
     #endregion
     // =========================================================================
     // 3. INITIALIZATION & STATE SETUP
@@ -77,7 +77,7 @@ function scr_load_name_data() {
 
 // Updated helper function to load lines from a text file into an array
 function scr_load_text_file_lines(_path) {
-    var _list = ds_list_create();
+    var _list = ds_list_create(); // Initialize the DS list at the start
     var _array = []; // Initialize an empty array
 
     // Check if the file exists before attempting to open it
@@ -91,22 +91,21 @@ function scr_load_text_file_lines(_path) {
 
     if (_file != -1) {
         while (!file_text_eof(_file)) {
-            var _line = file_text_readln(_file);
-            // Add non-empty lines and ignore comment lines (starting with //)
-            if (string_trim(_line) != "" && !string_starts_with(string_trim(_line), "//")) {
-                ds_list_add(_list, _line);
+            var _line = file_text_read_string(_file); // Read the entire line
+            var _split_values = string_split(_line, ","); // Split by commas
+            for (var i = 0; i < array_length(_split_values); i++) {
+                ds_list_add(_list, string_trim(_split_values[i])); // Trim and add each value
             }
+            file_text_readln(_file);
         }
         file_text_close(_file);
     } else {
         show_debug_message("Error: Unable to open file - " + _path);
+        ds_list_destroy(_list); // Clean up the DS list
+        return _array; // Return an empty array as fallback
     }
 
-    // Convert ds_list to array by iterating
-    for (var i = 0; i < ds_list_size(_list); i++) {
-        array_push(_array, _list[| i]);
-    }
-
+    _array = scr_ds_list_to_array(_list); // Use the custom function to convert ds_list to array
     ds_list_destroy(_list); // Destroy the DS list to prevent memory leaks
 
     return _array;

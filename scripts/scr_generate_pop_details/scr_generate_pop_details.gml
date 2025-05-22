@@ -32,11 +32,11 @@ function scr_generate_pop_details(life_stage) {
     // Check if the pop is in the TRIBAL life stage
     if (life_stage == PopLifeStage.TRIBAL) {
         if (sex == PopSex.MALE) {
-            _prefixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt");
-            _suffixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt");
+            _prefixes_list = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
+            _suffixes_list = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
         } else { // FEMALE
-            _prefixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt");
-            _suffixes_list = scr_load_text_file_lines("datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt");
+            _prefixes_list = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
+            _suffixes_list = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
         }
     } else {
         // Default to global prefixes and suffixes
@@ -51,17 +51,25 @@ function scr_generate_pop_details(life_stage) {
         }
     }
 
-    var _prefix = (_prefixes_list != undefined && array_length(_prefixes_list) > 0) ? _prefixes_list[irandom(array_length(_prefixes_list) - 1)] : "";
-    var _suffix = (_suffixes_list != undefined && array_length(_suffixes_list) > 0) ? _suffixes_list[irandom(array_length(_suffixes_list) - 1)] : "";
+    // Generate a prefix and suffix for the name
+    // Ensure prefix and suffix are concatenated without unintended characters
+    var _prefix = (_prefixes_list != undefined && array_length(_prefixes_list) > 0) ? string(_prefixes_list[irandom(array_length(_prefixes_list) - 1)]) : "";
+    var _suffix = (_suffixes_list != undefined && array_length(_suffixes_list) > 0) ? string(_suffixes_list[irandom(array_length(_suffixes_list) - 1)]) : "";
+
+    // Combine prefix and suffix into a single name
     var _generated_name = _prefix + _suffix;
 
+    // Assign the combined name to pop_identifier_string
+    pop_identifier_string = _generated_name;
+
+    // Ensure a fallback name is used if no prefix or suffix is available
     if (_generated_name == "") {
         _generated_name = _name_base + string(id); // Use instance id for fallback
         show_debug_message("Fallback name used for pop: " + _generated_name);
     }
-    
+
+    // Assign the generated name to the pop
     pop_name = _generated_name;
-    pop_identifier_string = pop_name; // UI Panel uses this
     #endregion
 
     // =========================================================================
@@ -156,4 +164,5 @@ function scr_generate_pop_details(life_stage) {
     #endregion
 
     show_debug_message($"	- Pop Details Generated for ID {id}: Name='{pop_name}', Sex={sex}, Age={age}, Scale={image_xscale}. All UI panel vars should be set.");
+	show_debug_message("Working directory: " + working_directory);
 }

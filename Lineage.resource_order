@@ -20,7 +20,9 @@
     {"name":"obj_window_bone","order":3,"path":"objects/obj_window_bone/obj_window_bone.yy",},
     {"name":"par_slot_provider","order":1,"path":"objects/par_slot_provider/par_slot_provider.yy",},
     {"name":"RoomUI","order":1,"path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"scr_custom_functions","order":3,"path":"scripts/scr_custom_functions/scr_custom_functions.yy",},
     {"name":"scr_debug_log","order":3,"path":"scripts/scr_debug_log/scr_debug_log.yy",},
+    {"name":"scr_draw_selection_box","order":1,"path":"scripts/scr_draw_selection_box/scr_draw_selection_box.yy",},
     {"name":"scr_entities","order":3,"path":"scripts/scr_entities/scr_entities.yy",},
     {"name":"scr_formations","order":3,"path":"scripts/scr_formations/scr_formations.yy",},
     {"name":"scr_generate_pop_details","order":1,"path":"scripts/scr_generate_pop_details/scr_generate_pop_details.yy",},
@@ -29,6 +31,7 @@
     {"name":"scr_load_name_data","order":2,"path":"scripts/scr_load_name_data/scr_load_name_data.yy",},
     {"name":"scr_pop_hauling","order":3,"path":"scripts/scr_pop_hauling/scr_pop_hauling.yy",},
     {"name":"scr_resources","order":5,"path":"scripts/scr_resources/scr_resources.yy",},
+    {"name":"scr_selection_controller","order":2,"path":"scripts/scr_selection_controller/scr_selection_controller.yy",},
     {"name":"scr_traits","order":4,"path":"scripts/scr_traits/scr_traits.yy",},
     {"name":"scr_trigger_formation_notification","order":1,"path":"scripts/scr_trigger_formation_notification/scr_trigger_formation_notification.yy",},
     {"name":"snd_man_commanded_10","order":9,"path":"sounds/snd_man_commanded_10/snd_man_commanded_10.yy",},
@@ -57,7 +60,4 @@
     {"name":"spr_UIborder_stone_1","order":2,"path":"sprites/spr_UIborder_stone_1/spr_UIborder_stone_1.yy",},
     {"name":"spr_UIborder_stone","order":1,"path":"sprites/spr_UIborder_stone/spr_UIborder_stone.yy",},
   ],
-}datafiles/namedata/pops/tribal_stage/tribal_male_prefixes.txt
-datafiles/namedata/pops/tribal_stage/tribal_male_suffixes.txt
-datafiles/namedata/pops/tribal_stage/tribal_female_prefixes.txt
-datafiles/namedata/pops/tribal_stage/tribal_female_suffixes.txt
+}

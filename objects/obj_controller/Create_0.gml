@@ -315,3 +315,17 @@ if (!variable_global_exists("life_stage")) {
 debug_log("obj_controller initialized successfully.", "obj_controller:Create", "blue");
 debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
 #endregion
+
+// Initialize global name data variables
+if (!variable_global_exists("male_prefixes")) {
+    global.male_prefixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
+}
+if (!variable_global_exists("male_suffixes")) {
+    global.male_suffixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
+}
+if (!variable_global_exists("female_prefixes")) {
+    global.female_prefixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
+}
+if (!variable_global_exists("female_suffixes")) {
+    global.female_suffixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
+}

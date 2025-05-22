@@ -64,7 +64,12 @@
     {"$GMFolder":"","%Name":"Timelines","folderPath":"folders/Timelines.yy","name":"Timelines","resourceType":"GMFolder","resourceVersion":"2.0",},
   ],
   "ForcedPrefabProjectReferences":[],
-  "IncludedFiles":[],
+  "IncludedFiles":[
+    {"$GMIncludedFile":"","%Name":"female_name_prefixes.txt","CopyToMask":-1,"filePath":"datafiles/namedata/pops","name":"female_name_prefixes.txt","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"female_name_suffixes.txt","CopyToMask":-1,"filePath":"datafiles/namedata/pops","name":"female_name_suffixes.txt","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"male_name_prefixes.txt","CopyToMask":-1,"filePath":"datafiles/namedata/pops","name":"male_name_prefixes.txt","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"male_name_suffixes.txt","CopyToMask":-1,"filePath":"datafiles/namedata/pops","name":"male_name_suffixes.txt","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+  ],
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
@@ -103,6 +108,7 @@
     {"id":{"name":"scr_inventory_functions","path":"scripts/scr_inventory_functions/scr_inventory_functions.yy",},},
     {"id":{"name":"scr_item_definitions","path":"scripts/scr_item_definitions/scr_item_definitions.yy",},},
     {"id":{"name":"scr_items","path":"scripts/scr_items/scr_items.yy",},},
+    {"id":{"name":"scr_load_name_data","path":"scripts/scr_load_name_data/scr_load_name_data.yy",},},
     {"id":{"name":"scr_pop_behavior","path":"scripts/scr_pop_behavior/scr_pop_behavior.yy",},},
     {"id":{"name":"scr_pop_commanded","path":"scripts/scr_pop_commanded/scr_pop_commanded.yy",},},
     {"id":{"name":"scr_pop_foraging","path":"scripts/scr_pop_foraging/scr_pop_foraging.yy",},},

@@ -30,12 +30,12 @@ function scr_generate_pop_details() {
     var _name_base = "";
 
     if (sex == PopSex.MALE) {
-        _prefixes_list = get_male_name_prefixes();
-        _suffixes_list = get_male_name_suffixes();
+        _prefixes_list = global.male_prefixes;
+        _suffixes_list = global.male_suffixes;
         _name_base = "MalePop";
     } else { // FEMALE
-        _prefixes_list = get_female_name_prefixes();
-        _suffixes_list = get_female_name_suffixes();
+        _prefixes_list = global.female_prefixes;
+        _suffixes_list = global.female_suffixes;
         _name_base = "FemalePop";
     }
 

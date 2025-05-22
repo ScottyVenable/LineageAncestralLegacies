@@ -22,7 +22,10 @@ image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
 
-pop = get_entity_data(EntityType.POP_HOMINID)
+pop = get_entity_data(EntityType.POP_HOMINID);
+if (is_undefined(pop) || pop == null) {
+	show_error("Failed to initialize 'pop': Entity data is invalid.", true);
+}
 #endregion
 
 // =========================================================================
@@ -90,5 +93,6 @@ inventory = {}; // Initialize as an empty struct for scr_inventory_struct_add
 
 // SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.
 
-// Post-generation debug message (scr_generate_pop_details already has one that includes scale)
+// Post-generation debug message is intentionally disabled for production.
+// Uncomment the line below for debugging purposes during development.
 // show_debug_message($"Pop {pop_identifier_string} fully created. State: {state}");

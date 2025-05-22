@@ -23,7 +23,7 @@ current_sprite = sprite_index;
 is_mouse_hovering = false;
 
 pop = get_entity_data(EntityType.POP_HOMINID);
-if (is_undefined(pop) || pop == null) {
+if (is_undefined(pop)) {
 	show_error("Failed to initialize 'pop': Entity data is invalid.", true);
 }
 #endregion

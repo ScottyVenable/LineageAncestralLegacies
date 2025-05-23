@@ -1,5 +1,5 @@
 /// scr_pop_foraging.gml (or scr_pop_interaction_work.gml)
-///
+
 /// Purpose:
 ///   Handles the behavior for a pop that is tasked with an interaction
 ///   at a specific slot on a target object (e.g., foraging from a bush).
@@ -7,13 +7,14 @@
 ///   directional sprites, releasing the slot, and then stepping a short distance
 ///   away before transitioning to a commanded move to that spot (which then leads to WAITING).
 ///
+
 /// Metadata:
-///   Summary:       Move to slot, perform work, release slot, step away, then commanded to wait.
-///   Usage:         Called by scr_pop_behavior when state is PopState.FORAGING (or a generic WORKING state).
-///   Version:       1.4 - [Current Date] (Pop steps away from bush after foraging by setting a new commanded move)
-///   Dependencies:  scr_interaction_slot_get_world_pos, scr_interaction_slot_release,
-///                  scr_update_walk_sprite, scr_inventory_struct_add, PopState (enum),
-///                  Instance variables: target_interaction_object_id, target_interaction_slot_index, etc.
+///     Summary:       Move to slot, perform work, release slot, step away, then commanded to wait.
+///     Usage:         Called by scr_pop_behavior when state is PopState.FORAGING (or a generic WORKING state).
+///     Version:       1.4 - [Current Date] (Pop steps away from bush after foraging by setting a new commanded move)
+///     Dependencies:  scr_interaction_slot_get_world_pos, scr_interaction_slot_release,
+///                    scr_update_walk_sprite, scr_inventory_struct_add, PopState (enum),
+///                    Instance variables: target_interaction_object_id, target_interaction_slot_index, etc.
 
 function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interaction() or scr_pop_work_at_slot()
 
@@ -138,57 +139,68 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             var _item_harvested_this_tick = false;
             var _target_is_depleted = false;
 
-            // Interact with the target_interaction_object_id (which is a bush in this case)
+            // --- Modular Interaction with the target_interaction_object_id ---
+            // This section now assumes the target object has:
+            // - is_harvestable (boolean)
+            // - resource_count (integer, e.g., how many berries/sticks are left)
+            // - item_yield_enum (Item enum, e.g., Item.FOOD_RED_BERRY, Item.WOOD_STICK)
+            // - yield_quantity_per_cycle (integer, e.g., 1, 2)
+            // - spr_empty (sprite_index, sprite to show when depleted)
+
             if (instance_exists(target_interaction_object_id) && 
                 variable_instance_exists(target_interaction_object_id, "is_harvestable") &&
                 target_interaction_object_id.is_harvestable &&
-                variable_instance_exists(target_interaction_object_id, "berry_count")) {
+                variable_instance_exists(target_interaction_object_id, "resource_count") &&    // Check for generic resource_count
+                variable_instance_exists(target_interaction_object_id, "item_yield_enum") && // Check for item type to yield
+                variable_instance_exists(target_interaction_object_id, "yield_quantity_per_cycle")) { // Check for yield quantity
 
-                if (target_interaction_object_id.berry_count > 0) {
-                    target_interaction_object_id.berry_count -= 1;
+                if (target_interaction_object_id.resource_count > 0) {
+                    // Determine how many items to actually gather this cycle
+                    var _items_to_gather_this_cycle = min(target_interaction_object_id.yield_quantity_per_cycle, target_interaction_object_id.resource_count);
+                    
+                    target_interaction_object_id.resource_count -= _items_to_gather_this_cycle;
                     _item_harvested_this_tick = true;
 					
-					var berries_gathered_this_cycle = 1; // Or more, depending on skill/tool/bush yield
-					var item_enum_to_add = Item.FOOD_RED_BERRY; // The enum for red berries
+					var _item_enum_to_add = target_interaction_object_id.item_yield_enum; // Get item type from target
 
 					// 'self' here refers to the obj_pop instance running this script
 					if (!variable_instance_exists(id, "inventory_items")) {
-					    // Safety: Initialize inventory if it somehow doesn't exist (should be in Create)
 					    inventory_items = ds_list_create(); 
 					    show_debug_message($"Warning: Pop {id} inventory_items not found, created new list.");
 					}
 
-					show_debug_message($"Pop {id} ({pop_name}) gathered {berries_gathered_this_cycle} berries. Attempting to add to inventory.");
+					show_debug_message($"Pop {id} ({pop_name}) gathered {_items_to_gather_this_cycle} of item enum {_item_enum_to_add}. Attempting to add to inventory.");
 
-					var berries_not_added = scr_inventory_add_item(self.inventory_items, item_enum_to_add, berries_gathered_this_cycle);
+					var _items_not_added = scr_inventory_add_item(self.inventory_items, _item_enum_to_add, _items_to_gather_this_cycle);
 
-					if (berries_not_added > 0) {
-					    show_debug_message($"Pop {id} inventory full or issue, {berries_not_added} berries dropped/lost.");
+					if (_items_not_added > 0) {
+					    show_debug_message($"Pop {id} inventory full or issue, {_items_not_added} of item enum {_item_enum_to_add} dropped/lost.");
 					    // TODO: Implement logic for dropping items on the ground if inventory is full
+					    // This could involve creating a temporary item drop object at the pop's location.
 					}
 					
-					
-                    if (target_interaction_object_id.berry_count == 0) {
+                    if (target_interaction_object_id.resource_count <= 0) { // Check if depleted
                         target_interaction_object_id.is_harvestable = false;
-                        if (sprite_exists(target_interaction_object_id.spr_empty)) { // Check sprite exists before assigning
+                        if (variable_instance_exists(target_interaction_object_id, "spr_empty") && // Ensure spr_empty exists
+                            sprite_exists(target_interaction_object_id.spr_empty)) { 
                              target_interaction_object_id.sprite_index = target_interaction_object_id.spr_empty;
                         }
                         _target_is_depleted = true;
+                        show_debug_message($"Target {target_interaction_object_id} depleted. Resource count: {target_interaction_object_id.resource_count}");
                     }
-                } else { // berry_count is 0 or less
+                } else { // resource_count is 0 or less
                     _target_is_depleted = true;
                     target_interaction_object_id.is_harvestable = false; // Ensure flag is set
+                    show_debug_message($"Target {target_interaction_object_id} already depleted before attempt. Resource count: {target_interaction_object_id.resource_count}");
                 }
-            } else { // Target doesn't exist, isn't harvestable, or doesn't have berry_count
-                 _target_is_depleted = true; 
+            } else { // Target doesn't exist, isn't harvestable, or lacks necessary variables
+                _target_is_depleted = true; 
+                show_debug_message($"Pop {pop_identifier_string} (ID: {id}) found target {target_interaction_object_id} invalid or missing required foraging variables (is_harvestable, resource_count, item_yield_enum, yield_quantity_per_cycle).");
+                // If the target object itself is gone, we can't really do much with it.
+                // If it exists but is missing variables, it's a setup error for that object.
             }
 
-            if (_item_harvested_this_tick) {
-                scr_inventory_struct_add("berry", 1); // Assumes "berry" is the item ID
-                // show_debug_message($"{pop_identifier_string} foraged a 'berry'.");
-            }
-
-            // Check if task is complete (target depleted)
+            // Check if task is complete (target depleted or became invalid)
             if (_target_is_depleted) {
                 show_debug_message($"Pop {pop_identifier_string} (ID: {id}) finished foraging: target {target_interaction_object_id} depleted or invalid.");
                 
@@ -223,27 +235,70 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
     } 
     // else if (target_interaction_type_tag == "some_other_task") { /* Handle other tasks */ }
     #endregion
-	#region 2.2 Dropping off Load
-		var total_items_in_inventory = 0;
-		for (var i = 0; i < ds_list_size(inventory_items); i++) {
-		    total_items_in_inventory += inventory_items[| i].quantity;
-		}
-		var hauling_threshold = pop.base_max_items_carried; // Example: Haul if carrying 5 or more items
 
-		if (total_items_in_inventory >= hauling_threshold) {
-		    show_debug_message($"Pop {id} ({pop_name}) inventory has {total_items_in_inventory} items. Triggering HAULING.");
-		    // Release current interaction slot from foraging
-		    if (instance_exists(target_interaction_object_id) && _slot_index != -1) {
-		        if (script_exists(scr_interaction_slot_release)) {
-		            scr_interaction_slot_release(target_interaction_object_id, _slot_index, id);
-		        }
-		        _slot_index = -1; // Mark slot as released by this pop
-		    }
-		    target_interaction_object_id = noone; // Clear foraging target
+    // =========================================================================
+    // 5. CHECK INVENTORY CAPACITY (Now the sole check for hauling)
+    // =========================================================================
+    #region 5.1 Check if Inventory Reaches Hauling Threshold
+    var hauling_threshold = pop.base_max_items_carried; 
+    var total_items_in_inventory = 0;
+    // Ensure inventory_items list exists before trying to access it
+    if (variable_instance_exists(id, "inventory_items") && ds_exists(inventory_items, ds_type_list)) {
+        for (var i = 0; i < ds_list_size(inventory_items); i++) {
+            var item_struct = inventory_items[| i];
+            if (is_struct(item_struct) && variable_struct_exists(item_struct, "quantity")) {
+                total_items_in_inventory += item_struct.quantity;
+            }
+        }
+    }
 
-		    state = PopState.HAULING;
-		    target_object_id = noone; // Hauling script will find a new target (the hut)
-		    exit; // Exit foraging script as state has changed
-		}
-	#endregion
+    if (total_items_in_inventory >= hauling_threshold) {
+        // This block executes if the pop's inventory has reached the threshold to start hauling.
+
+        // 1. Store details of the current foraging task BEFORE releasing the slot or clearing target variables.
+        // This information is crucial if the pop needs to resume a similar task later.
+        self.previous_state = PopState.FORAGING; // Record that the pop was foraging.
+        self.last_foraged_target_id = target_interaction_object_id; // Store the ID of the object being foraged.
+        self.last_foraged_slot_index = target_interaction_slot_index; // Store the specific slot index used.
+        self.last_foraged_type_tag = target_interaction_type_tag;   // Store the type of interaction (e.g., "forage_left").
+        
+        // For debugging: create a concise identifier string for the pop.
+        var _pop_id_str = pop_identifier_string + " (ID:" + string(id) + ")";
+        
+        // Log detailed information about the transition.
+        // Note: Using string concatenation for compatibility, as GMS 2.3+ f-strings might not be desired here.
+        show_debug_message("Pop " + _pop_id_str + " inventory (" + string(total_items_in_inventory) + "/" + string(hauling_threshold) + 
+                           ") met hauling threshold. Last Foraged Target: " + 
+                           (instance_exists(self.last_foraged_target_id) ? object_get_name(self.last_foraged_target_id.object_index) + "(" + string(self.last_foraged_target_id) + ")" : "noone") + 
+                           ", Slot: " + string(self.last_foraged_slot_index) + ". Transitioning to HAULING.");
+
+        // 2. Release the interaction slot the pop was using at the foraging target.
+        // It's important to free up the slot so other pops can use it.
+        if (instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
+             var _scr_slot_release_idx = asset_get_index("scr_interaction_slot_release"); // Get the script asset for releasing slots.
+             if (_scr_slot_release_idx != -1 && script_exists(_scr_slot_release_idx)) {
+                // Execute the slot release script, passing the target object and the pop's ID.
+                script_execute(_scr_slot_release_idx, target_interaction_object_id, id); 
+             } else {
+                // Log an error if the slot release script cannot be found.
+                show_debug_message("ERROR: scr_interaction_slot_release script not found! Pop " + _pop_id_str + " cannot release slot before hauling.");
+             }
+        }
+
+        // 3. Clean up foraging-specific variables from the pop's instance.
+        // Since the pop is now hauling, it no longer has a foraging target.
+        target_interaction_object_id = noone; // Clear the foraging target ID.
+        target_interaction_slot_index = -1;   // Reset the slot index.
+        target_interaction_type_tag = "";     // Clear the interaction type tag.
+        has_arrived = false; // Reset 'has_arrived' as the pop will need to move for hauling.
+
+        // 4. Set the pop's state to HAULING.
+        // The main behavior script (scr_pop_behavior) will then call scr_pop_hauling in the next step.
+        state = PopState.HAULING;
+        
+        // Exit this script immediately since the state has changed.
+        // Further logic in this script is for foraging, which is no longer relevant.
+        exit; 
+    }
+    #endregion
 }

@@ -99,7 +99,7 @@ if (is_real(_active_cam) && _active_cam >= 0) {
 #region 4.1 Gameplay Globals
 global.musicplaying			= false
 global.order_counter        = 0;
-global.initial_pop_count    = 40; // Example
+global.initial_pop_count    = 5; // Example
 global.pop_count            = global.initial_pop_count
 global.selected_pops_list   = ds_list_create(); // Create the global list for selected pops ONCE here.
 // Initialize game_speed using the game's configured FPS (steps per second)

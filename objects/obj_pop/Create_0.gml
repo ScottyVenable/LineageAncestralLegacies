@@ -70,6 +70,9 @@ forage_rate = global.game_speed;
 
 #region 3.4 Interaction Variables
 target_interaction_object_id = noone;
+// target_object_id is a more generic variable for any targeted object (like a hut for hauling, or a point for commanded move)
+// It should be initialized to 'noone' to prevent errors like the one encountered.
+target_object_id = noone; 
 _slot_index = -1; // Initialize to -1 (meaning no slot claimed)
 _interaction_type_tag = "";
 #endregion
@@ -96,7 +99,25 @@ debug_log("Pop identifier string during creation: " + pop_identifier_string, "ob
 // 5. INVENTORY (Initialize after details)
 // =========================================================================
 #region 5.1 Initialize Inventory
-inventory = {}; // Initialize as an empty struct for scr_inventory_struct_add
+inventory_items = ds_list_create(); // Initialize as an empty list for item stacks
+// inventory = {}; // This was for the old struct-based inventory, replaced by inventory_items list
+max_inventory_capacity = pop.base_max_items_carried; // Initialize max inventory capacity
+hauling_threshold = pop.base_max_items_carried; // Set hauling threshold based on pop's carrying capacity
+
+// Initialize variables for resuming tasks, if not already present from a previous version
+if (!variable_instance_exists(id, "previous_state")) {
+    previous_state = undefined;
+}
+if (!variable_instance_exists(id, "last_foraged_target_id")) {
+    last_foraged_target_id = noone;
+}
+if (!variable_instance_exists(id, "last_foraged_slot_index")) {
+    last_foraged_slot_index = -1;
+}
+if (!variable_instance_exists(id, "last_foraged_type_tag")) {
+    last_foraged_type_tag = "";
+}
+
 #endregion
 
 // SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.

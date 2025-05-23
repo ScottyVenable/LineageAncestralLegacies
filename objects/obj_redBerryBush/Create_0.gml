@@ -11,7 +11,7 @@
 ///    Parameters:    none
 ///    Returns:         void
 ///    Tags:            [world_object][harvestable][resource][init][slot_provider_child]
-///    Version:         1.2 - [Current Date] (Corrected debug message line)
+///    Version:         1.3 - [Current Date] (Updated to use standardized instance variables for foraging)
 ///    Dependencies:  par_slot_provider, room_speed, relevant sprite assets.
 
 event_inherited(); // Inherit from par_slot_provider. This runs parent's Create event.
@@ -20,9 +20,12 @@ event_inherited(); // Inherit from par_slot_provider. This runs parent's Create 
 // 1. BUSH-SPECIFIC HARVESTABLE PROPERTIES
 // ============================================================================
 #region 1.1 Harvestable Stock
-resource = get_resource_data(Resource.RED_BERRY_BUSH)
-berry_count = 10;
-max_berries = berry_count
+// resource = get_resource_data(Resource.RED_BERRY_BUSH) // This can be kept for other uses if needed
+resource_count = 10; // Standardized: How many items are available
+item_yield_enum = Item.FOOD_RED_BERRY; // Standardized: What item this bush yields (ensure Item.FOOD_RED_BERRY is defined in your Item enum)
+yield_quantity_per_cycle = 1; // Standardized: How many items are gathered per foraging cycle
+// berry_count = 10; // Replaced by resource_count
+max_berries = resource_count; // Keep for regrowth logic if needed, or adapt regrowth to use resource_count
 #endregion
 
 #region 1.2 Regrowth Timing
@@ -79,10 +82,10 @@ is_wiggling         = false;
 // ============================================================================
 #region 4.1 Sprites
 spr_full            = spr_redBerryBush_full;
-spr_empty           = spr_bush_empty;      
+spr_empty           = spr_bush_empty;      // Standardized: Sprite to show when depleted
 
 if (sprite_exists(spr_full) && sprite_exists(spr_empty)) {
-    sprite_index    = (berry_count > 0) ? spr_full : spr_empty;
+    sprite_index    = (resource_count > 0) ? spr_full : spr_empty; // Use resource_count
 } else {
     debug_log($"ERROR (Bush sprites (spr_full or spr_empty) not found for ID {id}!)", "obj_redBerryBush:Create", "red");
 }
@@ -92,7 +95,7 @@ if (sprite_exists(spr_full) && sprite_exists(spr_empty)) {
 // 5. INTERACTION FLAGS & DEPTH
 // ============================================================================
 #region 5.1 Interaction Flags
-is_harvestable      = (berry_count > 0);
+is_harvestable      = (resource_count > 0); // Standardized: Is it currently harvestable, based on resource_count
 #endregion
 
 #region 5.2 Depth Sorting
@@ -104,5 +107,5 @@ depth = -y;
 // ============================================================================
 #region 6.1 Debug Log
 // Corrected debug message line:
-debug_log($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {berry_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.", "obj_redBerryBush:Create", "green");
+debug_log($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {resource_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.", "obj_redBerryBush:Create", "green");
 #endregion

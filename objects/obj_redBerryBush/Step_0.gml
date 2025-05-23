@@ -18,7 +18,7 @@
 // ——————————————————————————————————————————————————
 // This logic assumes timers increment by 1 each step, and _time variables are in steps.
 
-if (berry_count <= 0) {
+if (resource_count <= 0) { // Use resource_count instead of berry_count
     // Bush is empty, manage regrowth delay and then regrowth.
     if (!delay_active) {
         // If delay hasn't started yet, activate it and reset its timer.
@@ -38,18 +38,15 @@ if (berry_count <= 0) {
 
         if (berry_delay_timer >= berry_delay_time) {
             // Delay has finished. Now start regrowing berries.
-            // We don't need to set delay_active = false here yet,
-            // as that will happen once berries start appearing or it's fully regrown.
             
             berry_regrow_timer += 1; // Increment regrow timer
             if (berry_regrow_timer >= berry_regrow_time) {
                 berry_regrow_timer = 0; // Reset regrow timer for the next berry
-                berry_count += 1;
-                show_debug_message($"Bush {id}: Regrew 1 berry. Count: {berry_count}/{max_berries}");
+                resource_count += 1; // Use resource_count
+                show_debug_message($"Bush {id}: Regrew 1 item. Count: {resource_count}/{max_berries}"); // Use resource_count
 
-                // As soon as we have any berries, it becomes harvestable and sprite changes.
-                // Also, the initial delay phase is effectively over once regrowth starts.
-                if (berry_count == 1) {
+                // As soon as we have any items, it becomes harvestable and sprite changes.
+                if (resource_count == 1) { // Use resource_count
                     sprite_index   = spr_full;
                     is_harvestable = true;
                     delay_active   = false; // Delay is over, now in active regrowth or full.
@@ -57,30 +54,24 @@ if (berry_count <= 0) {
                 }
 
                 // If fully regrown, reset all relevant flags and timers.
-                if (berry_count >= max_berries) {
-                    berry_count        = max_berries; // Cap at max
+                if (resource_count >= max_berries) { // Use resource_count
+                    resource_count     = max_berries; // Cap at max, using resource_count
                     is_harvestable     = true;      // Ensure it's harvestable
                     delay_active       = false;     // No longer in delay
-                    // berry_delay_timer is already 0 or will be reset if it enters delay again
-                    // berry_regrow_timer is already 0
-                    show_debug_message($"Bush {id}: Fully regrown with {berry_count} berries.");
+                    show_debug_message($"Bush {id}: Fully regrown with {resource_count} items."); // Use resource_count
                 }
             }
         }
     }
 } else {
-    // If berries exist (berry_count > 0), ensure it's harvestable and not in delay.
-    // This state is typically reached if it was harvested but not fully, or after regrowing some.
+    // If items exist (resource_count > 0), ensure it's harvestable and not in delay.
     if (!is_harvestable) {
         is_harvestable = true;
     }
     if (sprite_index != spr_full && sprite_exists(spr_full)) {
         sprite_index = spr_full;
     }
-    // If it has berries, any active delay or specific regrowth timing should be reset.
-    // This part might be redundant if the logic above correctly transitions out of delay_active.
-    // However, ensuring these are reset if berries > 0 and it wasn't caught by the above logic is safe.
-    if (delay_active) { // If it somehow has berries but delay_active is true, fix it.
+    if (delay_active) { 
         delay_active = false;
         berry_delay_timer = 0;
         berry_regrow_timer = 0;

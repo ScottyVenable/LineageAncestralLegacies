@@ -74,27 +74,35 @@ function scr_pop_commanded() {
     // =========================================================================
     // 2. ARRIVAL CHECK & STATE TRANSITION
     // =========================================================================
-    #region 2.1 Arrival and Transition to WAITING
+    #region 2.1 Arrival and Transition
     // Check if pop is exactly at the travel point and speed is 0 (meaning snapped or arrived)
     if (x == travel_point_x && y == travel_point_y && speed == 0) {
         // Arrived at the commanded destination
-        show_debug_message($"Pop {pop_identifier_string} (ID: {id}) arrived at commanded point ({travel_point_x},{travel_point_y}). Entering WAITING state.");
+        show_debug_message("Pop " + pop_identifier_string + " (ID: " + string(id) + ") arrived at commanded point (" + string(travel_point_x) + "," + string(travel_point_y) + "). Attempting to resume previous task or idle.");
         
         speed = 0;                      // Ensure speed is zero
         image_speed = 1.0;              // Reset animation speed to default (idle will handle its own)
-        has_arrived = true;             // Set flag indicating arrival at this specific command's target
+        has_arrived = true;             // Set flag indicating arrival at this specific command\'s target
                                         // (This flag should be reset to false when a NEW command is issued)
         
-        state = PopState.WAITING;       // <<<<<----- CHANGED: Transition to WAITING state -----<<<<<
-        is_waiting = true;              // <<<<<----- ADDED: Set the is_waiting flag -----<<<<<
+        // scr_pop_resume_previous_or_idle will set the new state (e.g., FORAGING, IDLE, etc.)
+        // and handle sprite changes as needed for that new state.
+        
+        // More robust check for the script's existence
+        var _resume_script_index = asset_get_index("scr_pop_resume_previous_or_idle");
+        
+        if (_resume_script_index != -1 && script_exists(_resume_script_index)) {
+            script_execute(_resume_script_index); // Execute the script by its index
+        } else {
+            show_debug_message("ERROR: scr_pop_resume_previous_or_idle script (asset name: \"scr_pop_resume_previous_or_idle\") not found or does not exist! Index: " + string(_resume_script_index) + ". Pop " + string(id) + " defaulting to IDLE.");
+            state = PopState.IDLE; // Fallback if the resume script is missing
+        }
 		
-		depth = -y
+		depth = -y; // Update depth based on final position
         
         // Reset state-specific initialization flags
         _commanded_state_initialized = false; 
-        // idle_timer = 0; // Reset idle timer if WAITING state uses it or if IDLE is next
-                           // Your scr_pop_idle handles idle_timer when state becomes IDLE.
-                           // WAITING state typically doesn't progress an idle_timer towards wandering.
+        // idle_timer = 0; // Reset by individual states as needed.
     }
     #endregion
 

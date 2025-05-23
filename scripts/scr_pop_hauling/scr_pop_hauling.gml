@@ -29,14 +29,14 @@ function scr_pop_hauling() {
     // This script runs in the context of an obj_pop instance (self)
 
     // =========================================================================
-    // 0. INITIAL CHECKS & SETUP (If entering state for the first time)
+    // 0. TARGET ACQUISITION
     // =========================================================================
     // If target_object_id is noone, it means we just entered HAULING state or lost our target.
     // We need to find a drop-off point.
     if (target_object_id == noone || !instance_exists(target_object_id) || target_object_id.object_index != obj_structure_gatheringHut) {
         // Check if pop has anything to haul
         if (!variable_instance_exists(id, "inventory_items") || ds_list_empty(inventory_items)) {
-            show_debug_message($"Pop {id} ({pop_name}) in HAULING state but has empty inventory. Switching to IDLE.");
+            show_debug_message("Pop " + string(id) + " (" + pop_name + ") in HAULING state but has empty inventory. Switching to IDLE.");
             state = PopState.IDLE;
             exit; // Nothing to haul
         }
@@ -45,21 +45,25 @@ function scr_pop_hauling() {
         target_object_id = instance_nearest(x, y, obj_structure_gatheringHut);
 
         if (!instance_exists(target_object_id)) {
-            show_debug_message($"Pop {id} ({pop_name}) in HAULING state: No obj_structure_gatheringHut found. Waiting or Idling.");
+            show_debug_message("Pop " + string(id) + " (" + pop_name + ") in HAULING state: No obj_structure_gatheringHut found. Waiting or Idling.");
             // What to do if no hut exists? For now, switch to WAITING.
             // Could also make them wander or try again later.
             state = PopState.WAITING;
             is_waiting = true; // Ensure it waits
             exit;
         } else {
-            show_debug_message($"Pop {id} ({pop_name}) found gathering hut {target_object_id} to haul to.");
-            // Set travel point to the hut's location (or an interaction slot if it had one)
+            show_debug_message("Pop " + string(id) + " (" + pop_name + ") found gathering hut " + string(target_object_id) + " to haul to.");
+            // Set travel point to the hut's location
             travel_point_x = target_object_id.x;
             travel_point_y = target_object_id.y;
-            // Ensure sprite is walking
-            if (script_exists(scr_update_walk_sprite)) { // Assuming you have this script
-                scr_update_walk_sprite(direction); // Set correct walking sprite based on movement direction
-            } else if (sprite_index != spr_man_walk) { // Fallback if scr_update_walk_sprite doesn't exist
+            has_arrived = false; // CRITICAL: Pop needs to move to this new travel_point
+            speed = pop.base_speed / 1.2; // Set speed for hauling
+            
+            // Ensure sprite is walking and direction is towards the hut
+            direction = point_direction(x, y, travel_point_x, travel_point_y);
+            if (script_exists(scr_update_walk_sprite)) {
+                scr_update_walk_sprite(); // Update walking animation based on new direction
+            } else if (sprite_index != spr_man_walk) { 
                 sprite_index = spr_man_walk;
                 image_speed = 1;
             }
@@ -69,153 +73,181 @@ function scr_pop_hauling() {
     // =========================================================================
     // 1. MOVEMENT TO TARGET DROP-OFF (Gathering Hut)
     // =========================================================================
-    // If we have a target hut, move towards it.
-    if (instance_exists(target_object_id)) {
+    // This section should only run if the pop has not yet arrived at the travel_point_x, travel_point_y
+    if (!has_arrived && instance_exists(target_object_id)) { // Check has_arrived and if target still exists
         var _dist_to_target = point_distance(x, y, travel_point_x, travel_point_y);
-        var _arrival_threshold = 64; // How close to get before considering "arrived"
+        // Arrival threshold should be small enough to ensure pop is at the hut
+        // but large enough to prevent overshooting or getting stuck.
+        var _arrival_threshold = pop.base_speed / 1.2 + 2; // e.g. slightly more than one step
 
         if (_dist_to_target > _arrival_threshold) {
-            // Move towards the target
-            // mp_linear_step or move_towards_point can be used.
-            // Simple movement:
+            // Still moving to the hut
             var _dir = point_direction(x, y, travel_point_x, travel_point_y);
-            var _move_speed = pop.base_speed / 1.2 ; // TODO: Make weight adjust this to be slower?
+            // Speed is already set when target was acquired, or should be if state is HAULING
+            // Ensure speed is not zero if it was reset by another state
+            if (speed == 0) speed = pop.base_speed / 1.2;
 
-            x += lengthdir_x(_move_speed, _dir);
-            y += lengthdir_y(_move_speed, _dir);
+            x += lengthdir_x(speed, _dir);
+            y += lengthdir_y(speed, _dir);
             
-            // Update sprite direction
-            direction = _dir; // Update instance direction for sprite
-			scr_update_walk_sprite()
-             
+            direction = _dir; 
+			scr_update_walk_sprite();
+            
+            exit; // IMPORTANT: Still moving, so exit script for this step. State remains HAULING.
         } else {
-            // --- Arrived at the Gathering Hut: Perform Drop-off ---
-            show_debug_message($"Pop {id} ({pop_name}) arrived at gathering hut {target_object_id}. Dropping off items.");
+            // Arrived at the hut's vicinity
+            x = travel_point_x; // Snap to exact position
+            y = travel_point_y;
+            has_arrived = true; // Mark as arrived at the hut
             speed = 0; // Stop moving
-            if (sprite_index != spr_man_idle) { // Switch to idle/working animation
-                sprite_index = spr_man_idle; // Or a specific "depositing" animation
-                image_index = 0;
-            }
-
-            // --- Find and claim a unique drop-off slot at the hut ---
-    var slot_found = false;
-    var slot_index = -1;
-    if (variable_instance_exists(target_object_id, "dropoff_slots")) {
-        for (var i = 0; i < target_object_id.max_dropoff_slots; i++) {
-            var slot = target_object_id.dropoff_slots[i];
-            if (slot.claimed_by == noone) {
-                target_object_id.dropoff_slots[i].claimed_by = id;
-                slot_index = i;
-                slot_found = true;
-                break;
-            }
+            show_debug_message("Pop " + string(id) + " (" + pop_name + ") arrived at gathering hut " + string(target_object_id) + ". Preparing to drop off items.");
+            // Sprite will be set to idle/depositing in the next block
         }
     }
-    if (slot_found) {
-        // Move to the slot's world position
-        var slot = target_object_id.dropoff_slots[slot_index];
-        travel_point_x = target_object_id.x + slot.rel_x;
-        travel_point_y = target_object_id.y + slot.rel_y;
-        self._hauling_slot_index = slot_index; // Remember for release
-    } else {
-        // No free slot, wait nearby
-        travel_point_x = target_object_id.x + irandom_range(-48,48);
-        travel_point_y = target_object_id.y + irandom_range(-48,48);
-        self._hauling_slot_index = -1;
-    }
 
-            // Iterate through pop's inventory and add to global stock
-            if (variable_instance_exists(id, "inventory_items") && !ds_list_empty(inventory_items)) {
-                for (var i = ds_list_size(inventory_items) - 1; i >= 0; i--) { // Iterate backwards if removing
-                    var item_stack_struct = inventory_items[| i];
-                    var item_enum = item_stack_struct.item_id_enum;
-                    var item_qty = item_stack_struct.quantity;
-                    var item_data = get_item_data(item_enum);
-                    
-                    if (item_data != undefined) {
-                        show_debug_message($"Pop {id} dropping off {item_qty} of {item_data.name}.");
-                        // Add to appropriate global stock based on item type or specific enum
-                        // This part needs to be robust based on your global variable names and item categories
-                        switch (item_enum) {
-                            case Item.FOOD_RED_BERRY:
-                                global.lineage_food_stock += item_qty;
-                                break;
-                            case Item.MATERIAL_WOOD:
-                                global.lineage_wood_stock += item_qty;
-                                break;
-                            case Item.MATERIAL_STONE:
-                                global.lineage_stone_stock += item_qty;
-                                break;
-                            case Item.MATERIAL_METAL_ORE: // Assuming you added this global
-                                global.lineage_metal_stock += item_qty;
-                                break;
-                            // Add cases for other haulable items
-                            default:
-                                show_debug_message($"Item {item_data.name} is not designated for global stock in hauling script.");
-                                // Optionally, don't remove it from inventory if it's not stockable
-                                // For now, we assume all items in inventory are being hauled to general stock
-                                break;
-                        }
+    // =========================================================================
+    // 2. PERFORM DROP-OFF (Only if arrived at the hut)
+    // =========================================================================
+    if (has_arrived && instance_exists(target_object_id) && target_object_id.object_index == obj_structure_gatheringHut) {
+        // --- Perform Drop-off Logic (Sprite, Slot, Inventory) ---
+        if (sprite_index != spr_man_idle) { 
+            sprite_index = spr_man_idle; 
+            image_index = 0;
+        }
+
+        // --- Find and claim a unique drop-off slot at the hut ---
+        // This slot logic might need refinement if pops are to move to specific slots for dropping off
+        // For now, it seems to be more about managing access rather than precise positioning for drop-off itself.
+        // If _hauling_slot_index is not yet set, or was lost, try to get one.
+        if (!variable_instance_exists(id, "_hauling_slot_index") || _hauling_slot_index == -1) {
+            var slot_found = false;
+            if (variable_instance_exists(target_object_id, "dropoff_slots")) {
+                for (var i = 0; i < target_object_id.max_dropoff_slots; i++) {
+                    var slot = target_object_id.dropoff_slots[i];
+                    if (slot.claimed_by == noone) {
+                        target_object_id.dropoff_slots[i].claimed_by = id;
+                        _hauling_slot_index = i;
+                        slot_found = true;
+                        // Optional: if slots have positions, pop could move to slot.x, slot.y
+                        // travel_point_x = target_object_id.x + slot.rel_x;
+                        // travel_point_y = target_object_id.y + slot.rel_y;
+                        // has_arrived = false; // Would require another movement step to the slot
+                        // exit; // If moving to a specific slot position
+                        break;
                     }
                 }
-                // Clear the pop's inventory after dropping everything off
-                ds_list_clear(inventory_items); 
-                // self.current_inventory_weight = 0; // Reset if using weight system
-                show_debug_message($"Pop {id} ({pop_name}) inventory cleared after hauling.");
             }
-
-            // --- Release claimed slot after drop-off ---
-            if (_hauling_slot_index != -1 && variable_instance_exists(target_object_id, "dropoff_slots")) {
-                target_object_id.dropoff_slots[_hauling_slot_index].claimed_by = noone;
-                self._hauling_slot_index = -1;
+            if (!slot_found) {
+                // No free slot, maybe wait or drop nearby? For now, proceed with drop-off at hut center.
+                show_debug_message("Pop " + string(id) + " (" + pop_name + ") could not claim a drop-off slot at " + string(target_object_id) + ". Dropping items anyway.");
+                _hauling_slot_index = -1; // Ensure it's marked as no slot claimed
             }
-
-            // Hauling complete, reset target and change state
-            target_object_id = noone;
-			var _new_travel_x = x + 100; 
-            var _new_travel_y = y + 100;
-			
-			                // Set pop to move to this new "waiting spot"
-            travel_point_x = _new_travel_x;
-            travel_point_y = _new_travel_y;
-			
-			state = PopState.COMMANDED; // Go to COMMANDED to execute the small move
-            is_waiting = false;         // Not waiting yet, it's moving
-            has_arrived = false;        // Needs to arrive at this new step-away spot
-			
-            state = PopState.WANDERING; // Or PopState.WAITING if you prefer
-            show_debug_message($"Pop {id} ({pop_name}) finished hauling, switching to {state}.");
         }
-    } else {
-        // Target hut was destroyed or became invalid mid-transit
-        show_debug_message($"Pop {id} ({pop_name}) lost target gathering hut. Resetting HAULING state.");
-        target_object_id = noone; // Force re-evaluation on next HAULING step or switch state
-        state = PopState.IDLE;    // Or WAITING
-    }
-			// --- Resume previous task if possible ---
-            if (variable_instance_exists(id, "previous_state") && previous_state != undefined) {
-                // Example: If previous state was FORAGING, check for nearby foragables
-                if (previous_state == PopState.FORAGING) {
-                    var found_bush = noone;
-                    var search_radius = 200; // Adjust as needed
-                    with (obj_redBerryBush) {
-                        if (berry_count > 0 && point_distance(other.x, other.y, x, y) < search_radius) {
-                            found_bush = id;
+
+        // Iterate through pop's inventory and add to global stock
+        if (variable_instance_exists(id, "inventory_items") && !ds_list_empty(inventory_items)) {
+            for (var i = ds_list_size(inventory_items) - 1; i >= 0; i--) { // Iterate backwards if removing
+                var item_stack_struct = inventory_items[| i];
+                var item_enum = item_stack_struct.item_id_enum;
+                var item_qty = item_stack_struct.quantity;
+                var item_data = get_item_data(item_enum);
+                
+                if (item_data != undefined) {
+                    show_debug_message("Pop " + string(id) + " dropping off " + string(item_qty) + " of " + item_data.name + ".");
+                    // Add to appropriate global stock based on item type or specific enum
+                    // This part needs to be robust based on your global variable names and item categories
+                    switch (item_enum) {
+                        case Item.FOOD_RED_BERRY:
+                            global.lineage_food_stock += item_qty;
                             break;
-                        }
+                        case Item.MATERIAL_WOOD:
+                            global.lineage_wood_stock += item_qty;
+                            break;
+                        case Item.MATERIAL_STONE:
+                            global.lineage_stone_stock += item_qty;
+                            break;
+                        case Item.MATERIAL_METAL_ORE: // Assuming you added this global
+                            global.lineage_metal_stock += item_qty;
+                            break;
+                        // Add cases for other haulable items
+                        default:
+                            show_debug_message("Item " + item_data.name + " is not designated for global stock in hauling script.");
+                            // Optionally, don't remove it from inventory if it's not stockable
+                            // For now, we assume all items in inventory are being hauled to general stock
+                            break;
                     }
-                    if (found_bush != noone) {
-                        state = PopState.FORAGING;
-                        target_object_id = found_bush;
-                        debug_log("Resuming foraging after hauling.", "obj_pop:Hauling", "green");
-                    } else {
-                        state = PopState.WANDERING;
-                    }
-                } else {
-                    state = previous_state;
                 }
-                previous_state = undefined;
-            } else {
-                state = PopState.WANDERING;
             }
+            // Clear the pop's inventory after dropping everything off
+            ds_list_clear(inventory_items); 
+            // self.current_inventory_weight = 0; // Reset if using weight system
+            show_debug_message("Pop " + string(id) + " (" + pop_name + ") inventory cleared after hauling.");
+        }
+
+        // --- Release claimed slot after drop-off ---
+        if (_hauling_slot_index != -1 && instance_exists(target_object_id) && variable_instance_exists(target_object_id, "dropoff_slots")) {
+            // Ensure the slot index is valid before trying to access it
+            if (_hauling_slot_index >= 0 && _hauling_slot_index < array_length(target_object_id.dropoff_slots)) {
+                target_object_id.dropoff_slots[_hauling_slot_index].claimed_by = noone;
+            } else {
+                // Log if the slot index was somehow invalid, though it shouldn't be if claimed properly.
+                show_debug_message("Pop " + string(id) + " (" + pop_name + ") had an invalid _hauling_slot_index (" + string(_hauling_slot_index) + ") when trying to release slot at " + string(target_object_id));
+            }
+            self._hauling_slot_index = -1; // Clear the pop's record of the slot.
+        }
+
+        // Hauling complete, reset target.
+        target_object_id = noone;
+        has_arrived = false; // Reset has_arrived as it's no longer relevant to the completed hauling task.
+        
+        show_debug_message("Pop " + string(id) + " (" + pop_name + ") finished hauling. Attempting to resume previous task or idle directly.");
+
+        // Directly call the resume/idle script instead of a commanded step-away move.
+        var _resume_script_idx = asset_get_index("scr_pop_resume_previous_or_idle");
+        if (_resume_script_idx != -1 && script_exists(_resume_script_idx)) {
+            script_execute(_resume_script_idx);
+        } else {
+            // Fallback if the resume script is missing for some reason.
+            show_debug_message("ERROR: scr_pop_resume_previous_or_idle script not found! Pop " + string(id) + " (" + pop_name + ") defaulting to IDLE after hauling.");
+            state = PopState.IDLE;
+        }
+        
+        exit; // Exit to allow the new state (set by resume/idle script) to take over in the next step.
+
+    } else if (has_arrived && !instance_exists(target_object_id)) {
+        // Target hut was lost AFTER arriving but BEFORE finishing drop-off (unlikely but possible)
+        show_debug_message("Pop " + string(id) + " (" + pop_name + ") lost target hut " + string(target_object_id) + " after arriving. Switching to resume/idle.");
+        // Release slot if held (important to prevent deadlocks)
+        if (variable_instance_exists(id, "_hauling_slot_index") && _hauling_slot_index != -1) {
+            // Attempt to find the original hut instance if it was just destroyed this step.
+            // This is a bit of a guess. If target_object_id was stored, we might use it.
+            // For now, we assume we can't reliably get the hut instance back to release the slot.
+            // Consider a global slot manager or more robust cleanup if this becomes an issue.
+            self._hauling_slot_index = -1; // Mark slot as free on the pop's side
+        }
+        target_object_id = noone;
+        if (script_exists(scr_pop_resume_previous_or_idle)) {
+            scr_pop_resume_previous_or_idle(); // Try to resume or idle
+        } else {
+            state = PopState.IDLE; // Fallback
+        }
+        exit;
+    } else if (!instance_exists(target_object_id) && target_object_id != noone) { 
+        // This case handles if the target_object_id was set (not noone), but the instance got destroyed
+        // before the pop arrived at it.
+        show_debug_message("Pop " + string(id) + " (" + pop_name + ") target hut " + string(target_object_id) + " lost before arrival. Switching to resume/idle.");
+        target_object_id = noone; // Clear the lost target
+        // Release slot if held (though unlikely to be held if not arrived)
+        if (variable_instance_exists(id, "_hauling_slot_index") && _hauling_slot_index != -1) {
+             self._hauling_slot_index = -1;
+        }
+        if (script_exists(scr_pop_resume_previous_or_idle)) {
+            scr_pop_resume_previous_or_idle(); // Try to resume or idle
+        } else {
+            state = PopState.IDLE; // Fallback
+        }
+        exit;
+    }
+    // If none of the above conditions are met (e.g., still moving to hut, or some other edge case),
+    // the script will naturally exit, and scr_pop_hauling will be called again in the next step.
 }

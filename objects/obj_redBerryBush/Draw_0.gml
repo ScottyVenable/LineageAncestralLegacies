@@ -16,7 +16,8 @@ draw_set_color(make_color_rgb(60, 60, 60));  // dark gray
 draw_rectangle(bar_x, bar_y, bar_x + bar_w, bar_y + bar_h, false);
 
 // 4) Draw filled portion
-var fill_pct = clamp(berry_count / max_berries, 0, 1);
+// Use resource_count instead of berry_count
+var fill_pct = clamp(resource_count / max_berries, 0, 1); 
 var fill_w   = bar_w * fill_pct;
 draw_set_color(make_color_rgb(100, 200, 100));  // green
 draw_rectangle(bar_x, bar_y, bar_x + fill_w, bar_y + bar_h, false);

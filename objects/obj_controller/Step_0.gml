@@ -154,38 +154,60 @@ if (is_struct(global.ui_text_elements)) {
 // 4. SELECTED POP UI UPDATE (Inspector Panel)
 // ============================================================================
 #region 4.1 Continuously Update Selected Pop Details
-// If a pop is selected, refresh its details in the UI every step.
-// This ensures that if a pop's displayed attributes (e.g., age, status) change,
-// the Inspector panel reflects this immediately.
+// This region handles updating the Inspector Panel UI based on the currently selected pop.
+// It ensures that if a pop's details change, the UI reflects this.
+// It also handles clearing the UI when no pop is selected, but only when the selection state *changes* to noone.
+
+// Get the script ID for scr_selection_controller once to avoid repeated calls to asset_get_index.
+var _selection_script = asset_get_index("scr_selection_controller");
+
+// --- Update UI if a pop is selected ---
+// This block executes if global.selected_pop refers to a valid instance.
 if (global.selected_pop != noone && global.selected_pop != undefined) {
-    // Check if the scr_selection_controller script exists to prevent errors
-    var _selection_script = asset_get_index("scr_selection_controller");
+    // A pop is currently selected.
     if (script_exists(_selection_script)) {
-        // Call the script to update the UI elements with the selected pop's data.
-        // scr_selection_controller handles fetching name, sex, age, etc., and updating text elements.
+        // Call the selection controller script to update the UI elements with the selected pop's data.
+        // This script is responsible for fetching details like name, age, status, etc.
         script_execute(_selection_script, global.selected_pop);
     } else {
-        // Log an error if the script is missing, which would be a critical issue.
-        if (!global.logged_missing_selection_script) { // Log only once to avoid spam
+        // If scr_selection_controller is missing, log an error.
+        // The global.logged_missing_selection_script flag prevents spamming the console with this error.
+        if (!global.logged_missing_selection_script) {
             show_debug_message("ERROR: scr_selection_controller not found. Pop details UI will not update.");
-            global.logged_missing_selection_script = true; // Set flag to prevent repeated logging
+            global.logged_missing_selection_script = true; // Set flag to true after logging once.
         }
     }
-} else {
-    // If no pop is selected, or selection is invalid, ensure the UI is cleared (or set to "N/A")
-    // This is typically handled by scr_selection_controller when passed 'noone' or an invalid ID,
-    // but we can explicitly call it here if needed, or ensure Create event sets initial "N/A" state.
-    // For now, we assume scr_selection_controller handles the 'noone' case correctly to clear/reset UI fields.
-    // If global.selected_pop was just cleared, scr_selection_controller would have been called with 'noone' already.
-    // This continuous call ensures that if it becomes 'noone' for other reasons, UI is also reset.
-    var _selection_script = asset_get_index("scr_selection_controller");
-    if (script_exists(_selection_script)) {
-        // Call with 'noone' to ensure UI fields are reset if no pop is selected.
-        script_execute(_selection_script, noone);
-    }
+    // Store the ID of the currently selected pop in our instance variable _last_known_selected_pop.
+    // This helps us detect when the selection changes from this pop to 'noone' in a future step.
+    _last_known_selected_pop = global.selected_pop;
 }
-// Initialize the logging flag in the Create event of obj_controller if it's not already there.
-// (This comment is a reminder for where global.logged_missing_selection_script should be initialized)
+// --- Handle UI when no pop is selected (or selection is cleared) ---
+// This block executes if global.selected_pop is 'noone' or 'undefined'.
+else {
+    // We only want to tell the UI to clear itself (by calling scr_selection_controller with 'noone')
+    // IF a pop WAS selected in the previous step (_last_known_selected_pop is a valid ID)
+    // AND NOW no pop is selected (current global.selected_pop is 'noone').
+    // This prevents calling the script every single step when nothing is selected, which was causing the log spam.
+    if (_last_known_selected_pop != noone && _last_known_selected_pop != undefined) {
+        // This condition means a pop *was* selected, but now it's not. The selection has just been cleared.
+        if (script_exists(_selection_script)) {
+            // Call the selection controller script with 'noone'.
+            // This tells the script to reset or clear the UI fields in the Inspector panel.
+            script_execute(_selection_script, noone);
+        }
+        // After clearing the UI, update _last_known_selected_pop to 'noone'.
+        // This is crucial! It ensures that in the next step (if no pop is still selected),
+        // this block won't execute again, thus preventing the repeated calls.
+        _last_known_selected_pop = noone; // Reflect that the UI has been reset for 'no selection'.
+    }
+    // If _last_known_selected_pop was already 'noone', it means either:
+    // 1. No pop was selected in the previous step either.
+    // 2. The UI was already cleared in a previous step when the selection changed from a pop to 'noone'.
+    // In either of these cases, no action is needed here, avoiding redundant calls to scr_selection_controller.
+}
+// Reminder: The instance variable `_last_known_selected_pop` must be initialized in obj_controller's Create event.
+// Example: _last_known_selected_pop = noone;
+// Also, ensure `global.logged_missing_selection_script` is initialized (e.g., to `false`) in the Create event.
 #endregion
 
 // ==========================================================================

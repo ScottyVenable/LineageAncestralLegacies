@@ -133,6 +133,9 @@ global.mouse_event_consumed_by_ui = false;
 global.show_overlays = false; // Initialize overlay toggle state
 global.logged_missing_selection_script = false; // Initialize flag for missing selection script log
 
+// NOTE: The logic for finding the inspector panel has been moved to Region 5.3
+// after the UI layer ID is obtained. The old logic for 
+// global.inspector_panel_instance (referring to obj_window_bone) is removed from here.
 
 #endregion
 
@@ -247,24 +250,49 @@ if (global.musicplaying == true){
 }
 #endregion
 
-#region 5.3 Set UI Text Elements
-text_layer_id = layer_get_id("UI");
+#region 5.3 Set UI Text Elements & Inspector Panel Visibility
+// Get the ID of the layer where UI elements are placed.
+// This is crucial for finding both text elements and the Inspector Flex Panel.
+text_layer_id = layer_get_id("UI"); 
+
 if (text_layer_id == -1) {
-    debug_log("ERROR: Text layer not found!", "obj_controller:Create", "red");
-    // Handle error
-}
+    // Log an error if the UI layer isn't found, as UI functionality will be broken.
+    debug_log("ERROR: UI layer named 'UI' not found! Inspector Panel and text elements cannot be initialized.", "obj_controller:Create:UI", "red");
+} else {
+    // --- Initialize Inspector Panel Element ---
+    // This is the Flex Panel that contains all inspector content.
+    // We will find it by its name on the UI layer.
+    global.inspector_panel_element_id = noone; // Use 'noone' or another suitable indicator for "not found"
 
+    // Attempt to get the element ID of the Inspector Flex Panel by its name.
+    // LEARNING POINT: layer_get_element_by_name is useful for accessing named UI elements
+    // placed in the Room Editor directly on a layer.
+    var _panel_id = layer_get_element_by_name(text_layer_id, "FlexPanel_Inspector");
 
-// In obj_controller Create or a UI init script
-global.ui_text_elements = {}; // A struct to store references
+    // Validate the retrieved panel ID.
+    // layer_get_element_by_name returns undefined if not found, or an ID.
+    // We also check if the element type is valid.
+    if (_panel_id != undefined && layer_get_element_type(_panel_id) != layerelementtype_undefined) {
+        global.inspector_panel_element_id = _panel_id;
+        // Initially hide the entire Inspector Flex Panel.
+        // scr_selection_controller will make it visible when a single pop is selected.
+        layer_element_visible(global.inspector_panel_element_id, false);
+        debug_log("Found Inspector Flex Panel element (ID: " + string(global.inspector_panel_element_id) + ") by name 'FlexPanel_Inspector' on UI layer. Initial visibility set to false.", "obj_controller:Create:UI", "green");
+    } else {
+        // Log a warning if the panel isn't found. This is critical for debugging UI setup.
+        debug_log("WARNING: Inspector Flex Panel element named 'FlexPanel_Inspector' NOT FOUND on the 'UI' layer. Panel visibility cannot be managed. " +
+                  "To fix: Ensure a Panel element (likely a Flex Panel) with the exact name 'FlexPanel_Inspector' exists on the 'UI' layer in your Room Editor.", "obj_controller:Create:UI", "red");
+    }
 
-if (text_layer_id != -1) {
-    elements_on_layer = layer_get_all_elements(text_layer_id);
+    // --- Initialize UI Text Elements (existing logic) ---
+    // This struct will store references to individual text elements for quick updates.
+    global.ui_text_elements = {}; 
+
+    var elements_on_layer = layer_get_all_elements(text_layer_id);
     for (var i = 0; i < array_length(elements_on_layer); i++) {
         var element_id = elements_on_layer[i];
         if (layer_get_element_type(element_id) == layerelementtype_text) {
-
-            var initial_text = layer_text_get_text(element_id); // Get its current text
+            var initial_text = layer_text_get_text(element_id);
             debug_log($"Found text element {element_id} with text: '{initial_text}'", "obj_controller:Create:UI", "cyan");
 
             // Example: Identify by a unique placeholder text you put in the room editor
@@ -301,8 +329,6 @@ if (text_layer_id != -1) {
                 debug_log($"Assigned Pop Age Display text element: {element_id}", "obj_controller:Create:UI", "green");
                 layer_text_text(global.ui_text_elements.pop_age_display, "N/A"); // Default to N/A
             }
-            // You'd also need placeholders or identification for the static labels "Food", "Wood" etc.
-            // if you ever wanted to change them, but for counts this is key.
         }
     }
 }
@@ -351,3 +377,11 @@ if (!variable_global_exists("female_prefixes")) {
 if (!variable_global_exists("female_suffixes")) {
     global.female_suffixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
 }
+
+// Initialize the variable to track the last known selected pop for UI updates.
+// This is used in the Step event (region 4.1) to optimize UI refresh calls.
+_last_known_selected_pop = noone;
+
+// Initialize the flag for logging missing selection script errors.
+// This prevents spamming the console if the script is not found.
+global.logged_missing_selection_script = false;

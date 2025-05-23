@@ -51,9 +51,8 @@ if (instance_exists(obj_pop)) {
         if (!scr_point_in_sprite(mouse_x, mouse_y, id)) {
             selected = false;; // Check if the point is within the sprite
         }
-    } 
-}
-else {
+    }
+} else {
     show_debug_message("DEBUG GLR: Region 1.1 No obj_pop instances found to deselect.");
 }
 
@@ -101,30 +100,6 @@ if (is_dragging) { // This instance variable 'is_dragging' was set in GLP
                     ds_list_add(global.selected_pops_list, id);
                 }
             }
-
-            // --- BEGIN ADDED LOGIC for DRAG SELECTION UI UPDATE ---
-            // After processing drag selection, determine what to show in the inspector panel.
-            var _num_selected_in_drag = ds_list_size(global.selected_pops_list);
-            show_debug_message($"DEBUG GLR: Drag selection resulted in {_num_selected_in_drag} pops.");
-
-            if (_num_selected_in_drag == 1) {
-                // If exactly one pop was selected by the drag, make it the primary selected_pop.
-                // The instance variable 'selected_pop' of obj_controller is used by Region 3.1.
-                selected_pop = global.selected_pops_list[| 0]; // Get the ID of the first (and only) pop in the list.
-                show_debug_message($"DEBUG GLR: Drag selected 1 pop (ID: {selected_pop}). Set as primary for UI.");
-            } else {
-                // If multiple pops or zero pops were selected by the drag,
-                // ensure 'selected_pop' is 'noone' so the inspector panel clears or shows N/A.
-                // 'selected_pop' should already be 'noone' from Region 1.1 if zero were selected.
-                // If multiple were selected, explicitly set it to noone for clarity for the inspector.
-                selected_pop = noone;
-                if (_num_selected_in_drag > 1) {
-                    show_debug_message("DEBUG GLR: Drag selected multiple pops. Inspector will show N/A.");
-                } else {
-                    show_debug_message("DEBUG GLR: Drag selected zero pops. Inspector will show N/A.");
-                }
-            }
-            // --- END ADDED LOGIC for DRAG SELECTION UI UPDATE ---
         } else {
             show_debug_message("CRITICAL DEBUG GLR: Region 2.1 click_start_world_x NOT DEFINED just before drag box min/max calculations!");
             // This case should ideally not be reached if Create and GLP are working
@@ -152,45 +127,6 @@ if (is_dragging) { // This instance variable 'is_dragging' was set in GLP
 // =========================================================================
 // 3. UPDATE UI / SELECTION CONTROLLER
 // =========================================================================
-#region 3.1 Call Selection Controller
-// After all selection logic (drag or click) is complete, update the UI immediately.
-// This section ensures that `scr_selection_controller` is called with the correct pop ID
-// (or `noone`) to refresh the Inspector Panel as soon as a selection changes.
-
-// Get the asset index of the selection controller script.
-var _selection_script = asset_get_index("scr_selection_controller");
-
-// Check if the script actually exists to prevent errors.
-if (script_exists(_selection_script)) {
-    // The `selected_pop` instance variable of `obj_controller` should now hold the ID of the
-    // primarily selected pop (if any, from a single click or the first in a drag selection)
-    // or `noone` if the selection was cleared or no single pop is primary.
-
-    if (selected_pop != noone && instance_exists(selected_pop)) {
-        // If a valid pop is selected, call the script with its ID.
-        script_execute(_selection_script, selected_pop);
-        // Ensure the global selected pop variable is also updated to reflect this primary selection.
-        global.selected_pop = selected_pop;
-        // Update `_last_known_selected_pop` as well, so the Step event logic
-        // correctly understands the current selection state for subsequent updates or changes.
-        _last_known_selected_pop = selected_pop;
-    } else {
-        // If no single pop is selected (e.g., drag selected multiple and `selected_pop` is `noone`,
-        // or if all pops were deselected), call the script with `noone` to clear the UI.
-        script_execute(_selection_script, noone);
-        // Ensure the global selected pop variable is also set to `noone`.
-        global.selected_pop = noone;
-        // Update `_last_known_selected_pop` to `noone` for the Step event.
-        _last_known_selected_pop = noone;
-    }
-} else {
-    // If the selection controller script is missing, log an error (if not already logged by the Step event).
-    // This check is a fallback; the Step event also has a similar check.
-    if (!global.logged_missing_selection_script) {
-        show_debug_message("ERROR (obj_controller GLR): scr_selection_controller not found. Pop details UI will not update immediately from GLR event.");
-    }
-}
-#endregion
 
 if (ds_exists(global.selected_pops_list, ds_type_list)) {
     show_debug_message($"DEBUG GLR: Selection finalized. {ds_list_size(global.selected_pops_list)} pops selected.");

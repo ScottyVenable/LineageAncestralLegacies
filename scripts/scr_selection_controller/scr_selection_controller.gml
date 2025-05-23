@@ -31,7 +31,7 @@ function scr_selection_controller(_selected_pop_id_arg) {
         // Update Pop Name
         if (variable_global_exists("ui_text_elements") && struct_exists(global.ui_text_elements, "pop_name_display")) {
             var _name_element_id = global.ui_text_elements.pop_name_display;
-            if (layer_has_instance("UI", _name_element_id)) { // Assuming text elements are on "UI" layer
+            if (layer_element_exists(layer_get_id("UI"), _name_element_id)) { // Assuming text elements are on "UI" layer
                 // The pop_name variable should exist on your obj_pop instances, set by scr_generate_pop_details
                 var _name_to_display = variable_instance_get(_selected_pop_id_arg, "pop_name");
                 if (is_string(_name_to_display)) {
@@ -51,7 +51,7 @@ function scr_selection_controller(_selected_pop_id_arg) {
         // Update Pop Sex
         if (variable_global_exists("ui_text_elements") && struct_exists(global.ui_text_elements, "pop_sex_display")) {
             var _sex_element_id = global.ui_text_elements.pop_sex_display;
-            if (layer_has_instance("UI", _sex_element_id)) {
+            if (layer_element_exists(layer_get_id("UI"), _sex_element_id)) {
                 // The sex variable should exist, set by scr_generate_pop_details (e.g., PopSex.MALE or PopSex.FEMALE)
                 var _sex_value = variable_instance_get(_selected_pop_id_arg, "sex");
                 var _sex_string = "Unknown"; // Default string
@@ -70,7 +70,7 @@ function scr_selection_controller(_selected_pop_id_arg) {
         // Update Pop Age
         if (variable_global_exists("ui_text_elements") && struct_exists(global.ui_text_elements, "pop_age_display")) {
             var _age_element_id = global.ui_text_elements.pop_age_display;
-            if (layer_has_instance(layer_get_id("UI"), _age_element_id)) {
+            if (layer_element_exists(layer_get_id("UI"), _age_element_id)) {
                 // The age variable should exist, set by scr_generate_pop_details
                 var _age_value = variable_instance_get(_selected_pop_id_arg, "age");
                 if (is_real(_age_value)) {
@@ -90,13 +90,13 @@ function scr_selection_controller(_selected_pop_id_arg) {
     } else {
         // If no pop is selected (or becomes invalid), clear the display fields or set to N/A
         if (variable_global_exists("ui_text_elements")) {
-            if (struct_exists(global.ui_text_elements, "pop_name_display") && layer_has_instance(layer_get_id("UI"), global.ui_text_elements.pop_name_display)) {
+            if (struct_exists(global.ui_text_elements, "pop_name_display") && layer_element_exists(layer_get_id("UI"), global.ui_text_elements.pop_name_display)) {
                 layer_text_text(global.ui_text_elements.pop_name_display, "N/A");
             }
-            if (struct_exists(global.ui_text_elements, "pop_sex_display") && layer_has_instance(layer_get_id("UI"), global.ui_text_elements.pop_sex_display)) {
+            if (struct_exists(global.ui_text_elements, "pop_sex_display") && layer_element_exists(layer_get_id("UI"), global.ui_text_elements.pop_sex_display)) {
                 layer_text_text(global.ui_text_elements.pop_sex_display, "N/A");
             }
-            if (struct_exists(global.ui_text_elements, "pop_age_display") && layer_has_instance(layer_get_id("UI"), global.ui_text_elements.pop_age_display)) {
+            if (struct_exists(global.ui_text_elements, "pop_age_display") && layer_element_exists(layer_get_id("UI"), global.ui_text_elements.pop_age_display)) {
                 layer_text_text(global.ui_text_elements.pop_age_display, "N/A");
             }
             show_debug_message("DEBUG (scr_selection_controller): No valid pop selected, cleared/reset inspector fields.");

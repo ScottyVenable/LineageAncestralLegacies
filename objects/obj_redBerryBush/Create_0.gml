@@ -21,7 +21,7 @@ event_inherited(); // Inherit from par_slot_provider. This runs parent's Create 
 // ============================================================================
 #region 1.1 Harvestable Stock
 // resource = get_resource_data(Resource.RED_BERRY_BUSH) // This can be kept for other uses if needed
-resource_count = 40; // Standardized: How many items are available
+resource_count = 10; // Standardized: How many items are available
 item_yield_enum = Item.FOOD_RED_BERRY; // Standardized: What item this bush yields (ensure Item.FOOD_RED_BERRY is defined in your Item enum)
 yield_quantity_per_cycle = 1; // Standardized: How many items are gathered per foraging cycle
 // berry_count = 10; // Replaced by resource_count

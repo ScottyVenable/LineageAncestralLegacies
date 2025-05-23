@@ -150,6 +150,44 @@ if (is_struct(global.ui_text_elements)) {
 }
 #endregion
 
+// ============================================================================
+// 4. SELECTED POP UI UPDATE (Inspector Panel)
+// ============================================================================
+#region 4.1 Continuously Update Selected Pop Details
+// If a pop is selected, refresh its details in the UI every step.
+// This ensures that if a pop's displayed attributes (e.g., age, status) change,
+// the Inspector panel reflects this immediately.
+if (global.selected_pop != noone && global.selected_pop != undefined) {
+    // Check if the scr_selection_controller script exists to prevent errors
+    var _selection_script = asset_get_index("scr_selection_controller");
+    if (script_exists(_selection_script)) {
+        // Call the script to update the UI elements with the selected pop's data.
+        // scr_selection_controller handles fetching name, sex, age, etc., and updating text elements.
+        script_execute(_selection_script, global.selected_pop);
+    } else {
+        // Log an error if the script is missing, which would be a critical issue.
+        if (!global.logged_missing_selection_script) { // Log only once to avoid spam
+            show_debug_message("ERROR: scr_selection_controller not found. Pop details UI will not update.");
+            global.logged_missing_selection_script = true; // Set flag to prevent repeated logging
+        }
+    }
+} else {
+    // If no pop is selected, or selection is invalid, ensure the UI is cleared (or set to "N/A")
+    // This is typically handled by scr_selection_controller when passed 'noone' or an invalid ID,
+    // but we can explicitly call it here if needed, or ensure Create event sets initial "N/A" state.
+    // For now, we assume scr_selection_controller handles the 'noone' case correctly to clear/reset UI fields.
+    // If global.selected_pop was just cleared, scr_selection_controller would have been called with 'noone' already.
+    // This continuous call ensures that if it becomes 'noone' for other reasons, UI is also reset.
+    var _selection_script = asset_get_index("scr_selection_controller");
+    if (script_exists(_selection_script)) {
+        // Call with 'noone' to ensure UI fields are reset if no pop is selected.
+        script_execute(_selection_script, noone);
+    }
+}
+// Initialize the logging flag in the Create event of obj_controller if it's not already there.
+// (This comment is a reminder for where global.logged_missing_selection_script should be initialized)
+#endregion
+
 // ==========================================================================
 // X. INPUT HANDLING (Example Section - Add to your Step Event structure)
 // ==========================================================================

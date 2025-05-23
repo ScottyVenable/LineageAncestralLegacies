@@ -200,23 +200,50 @@ function scr_pop_hauling() {
         target_object_id = noone;
         has_arrived = false; // Reset has_arrived as it's no longer relevant to the completed hauling task.
         
-        show_debug_message("Pop " + string(id) + " (" + pop_name + ") finished hauling. Attempting to resume previous task or idle directly.");
+        var _pop_id_str_haul_finish = pop_identifier_string + " (ID:" + string(id) + ")"; // For logging
+        show_debug_message("Pop " + _pop_id_str_haul_finish + " finished hauling. Attempting to resume previous task or idle directly.");
+
+        // DEBUG LOG: Check context before calling resume script
+        var _log_prev_state = variable_instance_exists(id, "previous_state") ? scr_get_state_name(previous_state) : "UNDEFINED";
+        var _log_last_target = variable_instance_exists(id, "last_foraged_target_id") ? string(last_foraged_target_id) : "N/A";
+        var _log_last_slot = variable_instance_exists(id, "last_foraged_slot_index") ? string(last_foraged_slot_index) : "N/A";
+        var _log_last_type = variable_instance_exists(id, "last_foraged_type_tag") ? last_foraged_type_tag : "N/A";
+        show_debug_message("Pop " + _pop_id_str_haul_finish + " PRE-RESUME CHECK (from Hauling): previous_state=" + _log_prev_state + 
+                           ", last_foraged_target_id=" + _log_last_target + 
+                           ", last_foraged_slot_index=" + _log_last_slot +
+                           ", last_foraged_type_tag=" + _log_last_type + ".");
 
         // Directly call the resume/idle script instead of a commanded step-away move.
         var _resume_script_idx = asset_get_index("scr_pop_resume_previous_or_idle");
-        if (_resume_script_idx != -1 && script_exists(_resume_script_idx)) {
-            script_execute(_resume_script_idx);
-        } else {
-            // Fallback if the resume script is missing for some reason.
-            show_debug_message("ERROR: scr_pop_resume_previous_or_idle script not found! Pop " + string(id) + " (" + pop_name + ") defaulting to IDLE after hauling.");
+        
+        if (_resume_script_idx == -1) {
+            // Log if asset_get_index failed
+            // This means GameMaker cannot find any asset (script, object, sprite, etc.) with this name.
+            // Check for typos in "scr_pop_resume_previous_or_idle".
+            // Ensure the script asset exists in the asset browser and is named correctly.
+            // Try cleaning the project cache (Run -> Clean in GameMaker).
+            show_debug_message($"CRITICAL ERROR (Hauling): asset_get_index(scr_pop_resume_previous_or_idle) returned -1. Asset not found by name. Pop " + _pop_id_str_haul_finish + " defaulting to IDLE.");
             state = PopState.IDLE;
+        } else if (!script_exists(_resume_script_idx)) {
+            // Log if script_exists failed for the found asset index
+            // This means an asset with the name "scr_pop_resume_previous_or_idle" was found, but it's not recognized as a script.
+            // This can happen if the script file has syntax errors preventing it from compiling,
+            // or if the asset type is somehow incorrect.
+            // Check the script file itself for errors.
+            show_debug_message("CRITICAL ERROR (Hauling): script_exists(" + string(_resume_script_idx) + ") returned false for asset 'scr_pop_resume_previous_or_idle'. Asset found but not a script? Pop " + _pop_id_str_haul_finish + " defaulting to IDLE.");
+            state = PopState.IDLE;
+        } else {
+            // Both checks passed, execute the script
+            show_debug_message("Pop " + _pop_id_str_haul_finish + " successfully found scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx) + "). Executing.");
+            script_execute(_resume_script_idx);
         }
         
         exit; // Exit to allow the new state (set by resume/idle script) to take over in the next step.
 
     } else if (has_arrived && !instance_exists(target_object_id)) {
         // Target hut was lost AFTER arriving but BEFORE finishing drop-off (unlikely but possible)
-        show_debug_message("Pop " + string(id) + " (" + pop_name + ") lost target hut " + string(target_object_id) + " after arriving. Switching to resume/idle.");
+        var _pop_id_str_lost_hut_post_arrive = pop_identifier_string + " (ID:" + string(id) + ")"; // For logging
+        show_debug_message("Pop " + _pop_id_str_lost_hut_post_arrive + " lost target hut " + string(target_object_id) + " after arriving. Attempting to resume/idle.");
         // Release slot if held (important to prevent deadlocks)
         if (variable_instance_exists(id, "_hauling_slot_index") && _hauling_slot_index != -1) {
             // Attempt to find the original hut instance if it was just destroyed this step.
@@ -226,24 +253,35 @@ function scr_pop_hauling() {
             self._hauling_slot_index = -1; // Mark slot as free on the pop's side
         }
         target_object_id = noone;
-        if (script_exists(scr_pop_resume_previous_or_idle)) {
-            scr_pop_resume_previous_or_idle(); // Try to resume or idle
+        
+        var _resume_script_idx_lost_hut = asset_get_index("scr_pop_resume_previous_or_idle");
+        if (_resume_script_idx_lost_hut != -1 && script_exists(_resume_script_idx_lost_hut)) {
+            show_debug_message("Pop " + _pop_id_str_lost_hut_post_arrive + " (lost hut post-arrival) calling scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx_lost_hut) + ").");
+            script_execute(_resume_script_idx_lost_hut);
         } else {
+            var _error_reason = (_resume_script_idx_lost_hut == -1) ? "asset_get_index failed" : "script_exists failed";
+            show_debug_message("ERROR (Hauling - lost hut post-arrival): scr_pop_resume_previous_or_idle script not found (" + _error_reason + ")! Pop " + _pop_id_str_lost_hut_post_arrive + " defaulting to IDLE.");
             state = PopState.IDLE; // Fallback
         }
         exit;
     } else if (!instance_exists(target_object_id) && target_object_id != noone) { 
         // This case handles if the target_object_id was set (not noone), but the instance got destroyed
         // before the pop arrived at it.
-        show_debug_message("Pop " + string(id) + " (" + pop_name + ") target hut " + string(target_object_id) + " lost before arrival. Switching to resume/idle.");
+        var _pop_id_str_lost_hut_pre_arrive = pop_identifier_string + " (ID:" + string(id) + ")"; // For logging
+        show_debug_message("Pop " + _pop_id_str_lost_hut_pre_arrive + " target hut " + string(target_object_id) + " lost before arrival. Attempting to resume/idle.");
         target_object_id = noone; // Clear the lost target
         // Release slot if held (though unlikely to be held if not arrived)
         if (variable_instance_exists(id, "_hauling_slot_index") && _hauling_slot_index != -1) {
              self._hauling_slot_index = -1;
         }
-        if (script_exists(scr_pop_resume_previous_or_idle)) {
-            scr_pop_resume_previous_or_idle(); // Try to resume or idle
+        
+        var _resume_script_idx_lost_hut_pre = asset_get_index("scr_pop_resume_previous_or_idle");
+        if (_resume_script_idx_lost_hut_pre != -1 && script_exists(_resume_script_idx_lost_hut_pre)) {
+            show_debug_message("Pop " + _pop_id_str_lost_hut_pre_arrive + " (lost hut pre-arrival) calling scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx_lost_hut_pre) + ").");
+            script_execute(_resume_script_idx_lost_hut_pre);
         } else {
+            var _error_reason_pre = (_resume_script_idx_lost_hut_pre == -1) ? "asset_get_index failed" : "script_exists failed";
+            show_debug_message("ERROR (Hauling - lost hut pre-arrival): scr_pop_resume_previous_or_idle script not found (" + _error_reason_pre + ")! Pop " + _pop_id_str_lost_hut_pre_arrive + " defaulting to IDLE.");
             state = PopState.IDLE; // Fallback
         }
         exit;

@@ -52,7 +52,7 @@ scr_item_definitions_init(); // Assuming this defines items
 // 2. CORE INSTANCE VARIABLES (Selection, Camera, Click Tracking)
 // ============================================================================
 #region 2.1 Selection Variables (for GUI drag box & single selection tracking)
-selected_pop        = noone; // Tracks a single primarily selected pop (optional if relying solely on list)
+global.selected_pop   = noone; // Tracks a single primarily selected pop (optional if relying solely on list) // MODIFIED: Made global
 sel_start_x         = 0;     // GUI X where drag selection box started
 sel_start_y         = 0;     // GUI Y where drag selection box started
 is_dragging         = false; // True when actively dragging a selection box
@@ -131,6 +131,7 @@ global.formation_notification_fade_time = 0.5 * global.game_speed;
 #region 4.3 UI Globals & Initialization
 global.mouse_event_consumed_by_ui = false;
 global.show_overlays = false; // Initialize overlay toggle state
+global.logged_missing_selection_script = false; // Initialize flag for missing selection script log
 
 
 #endregion
@@ -283,6 +284,22 @@ if (text_layer_id != -1) {
                 global.ui_text_elements.metal = element_id;
 				debug_log($"Assigned metal text element: {element_id}", "obj_controller:Create:UI", "green");
 				layer_text_text(global.ui_text_elements.metal, global.lineage_metal_stock)
+            }
+            // --- Pop Inspector Panel Elements ---
+            // Ensure your text elements in the Room Editor for the Pop Details panel
+            // have these exact placeholder strings as their initial text.
+            else if (string_pos("POP_NAME_PLACEHOLDER", initial_text) > 0) {
+                global.ui_text_elements.pop_name_display = element_id;
+                debug_log($"Assigned Pop Name Display text element: {element_id}", "obj_controller:Create:UI", "green");
+                layer_text_text(global.ui_text_elements.pop_name_display, "N/A"); // Default to N/A
+            } else if (string_pos("POP_SEX_PLACEHOLDER", initial_text) > 0) {
+                global.ui_text_elements.pop_sex_display = element_id;
+                debug_log($"Assigned Pop Sex Display text element: {element_id}", "obj_controller:Create:UI", "green");
+                layer_text_text(global.ui_text_elements.pop_sex_display, "N/A"); // Default to N/A
+            } else if (string_pos("POP_AGE_PLACEHOLDER", initial_text) > 0) {
+                global.ui_text_elements.pop_age_display = element_id;
+                debug_log($"Assigned Pop Age Display text element: {element_id}", "obj_controller:Create:UI", "green");
+                layer_text_text(global.ui_text_elements.pop_age_display, "N/A"); // Default to N/A
             }
             // You'd also need placeholders or identification for the static labels "Food", "Wood" etc.
             // if you ever wanted to change them, but for counts this is key.

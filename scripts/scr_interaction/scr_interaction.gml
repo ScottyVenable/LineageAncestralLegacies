@@ -130,6 +130,59 @@ function scr_interaction_slot_get_world_pos(_target_object_id, _slot_index) {
 }
 
 // ============================================================================
+// FUNCTION: scr_interaction_slot_has_available
+// ============================================================================
+/// @function scr_interaction_slot_has_available(_target_object_id)
+/// @description Checks if a given target object (which is expected to be a slot provider)
+///              has at least one unoccupied interaction slot.
+/// @param {Id.Instance} _target_object_id   The instance ID of the slot provider object.
+/// @returns {Bool} True if at least one slot is available, false otherwise.
+function scr_interaction_slot_has_available(_target_object_id) {
+    // --- Validate Target Object --- 
+    // First, ensure the target object actually exists.
+    if (!instance_exists(_target_object_id)) {
+        show_debug_message("ERROR (scr_interaction_slot_has_available): Target object " + string(_target_object_id) + " does not exist.");
+        return false; // Cannot check slots on a non-existent object.
+    }
+
+    // Second, check if the target object has the necessary array for tracking pop IDs in slots.
+    // This array is crucial for determining if a slot is occupied.
+    if (!variable_instance_exists(_target_object_id, "interaction_slots_pop_ids")) {
+        show_debug_message("ERROR (scr_interaction_slot_has_available): Target object " + object_get_name(_target_object_id.object_index) + "(" + string(_target_object_id) + ") is missing 'interaction_slots_pop_ids' array.");
+        return false; // If the array is missing, we can't determine slot availability.
+    }
+
+    // --- Check for Available Slots --- 
+    // Get a direct reference to the array that stores which pop is in which slot.
+    var _slots_pop_ids = _target_object_id.interaction_slots_pop_ids;
+    var _num_slots = array_length(_slots_pop_ids);
+
+    // If there are no slots defined at all, then none are available.
+    if (_num_slots == 0) {
+        show_debug_message("WARNING (scr_interaction_slot_has_available): Target object " + object_get_name(_target_object_id.object_index) + "(" + string(_target_object_id) + ") has an empty 'interaction_slots_pop_ids' array (0 slots defined).");
+        return false;
+    }
+
+    // LEARNING POINT: We iterate through the `interaction_slots_pop_ids` array.
+    // Each element in this array should store the ID of the pop occupying that slot,
+    // or a value like 'noone' or -1 if the slot is free.
+    for (var i = 0; i < _num_slots; i++) {
+        // If an element in the array is 'noone' (or your chosen indicator for an empty slot),
+        // it means this slot is available.
+        if (_slots_pop_ids[i] == noone) { 
+            // For debugging, you could uncomment this:
+            // show_debug_message("Slot " + string(i) + " on target " + string(_target_object_id) + " is available.");
+            return true; // Found an available slot, no need to check further.
+        }
+    }
+
+    // If the loop completes without finding any slot marked as 'noone',
+    // it means all slots are currently occupied.
+    // show_debug_message("Target " + object_get_name(_target_object_id.object_index) + "(" + string(_target_object_id) + ") has no available interaction slots."); // This can be noisy, consider removing or conditionalizing
+    return false; // No available slots found.
+}
+
+// ============================================================================
 // SCRIPT INITIALIZATION CONFIRMATION (Optional)
 // ============================================================================
 // This show_debug_message will run once when the script is first compiled.

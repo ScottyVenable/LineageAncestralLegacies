@@ -1,45 +1,89 @@
-/// scr_draw_selection_box.gml
-///
-/// Purpose:
-///   Draws the translucent GUI‐space selection rectangle while dragging.
-///
-/// Metadata:
-///   Summary:       Render selection box from sel_start to current mouse position  
-///   Usage:         obj_controller Draw GUI Event: scr_draw_selection_box();  
-///   Parameters:    none  
-///   Returns:       void  
-///   Tags:          [ui]  
-///   Version:       1.0 — 2025-05-18  
-///   Dependencies:  device_mouse_x_to_gui(), draw_rectangle()
+// Script Name: scr_draw_selection_box
+// Purpose: Draws the translucent GUI-space selection rectangle while dragging.
+//
+// Metadata:
+//   Summary: Render selection box from sel_start to current mouse position.
+//   Usage: obj_controller Draw GUI Event: draw_selection_box(); // Assuming function is renamed
+//   Parameters: none
+//   Returns: void
+//   Tags: [ui][selection][drawing]
+//   Version: 1.1 — 2025-05-23 // Updated to conform to TEMPLATE_SCRIPT
+//   Dependencies: device_mouse_x_to_gui(), draw_rectangle(), draw_set_color(), draw_set_alpha()
+//   Created: 2025-05-18 (Assumed, based on previous version)
+//   Modified: 2025-05-23 // Conformed to template
+//
+// ---
 
-function scr_draw_selection_box() {
+/// @function draw_selection_box()
+/// @description Draws the translucent GUI-space selection rectangle if the user is dragging.
+///              Intended for use in a Draw GUI event.
+/// @usage obj_controller Draw GUI Event: draw_selection_box();
+// No parameters for this function
+/// @return {void}
+function draw_selection_box() {
     // =========================================================================
-    // 1. DRAW GUI SELECTION BOX
+    // 0. IMPORTS & CACHES (Function-local)
     // =========================================================================
-    #region Selection Box
-    if (is_dragging) {
-        // GUI‐space mouse coordinates
-        var gx = device_mouse_x_to_gui(0);
-        var gy = device_mouse_y_to_gui(0);
+    #region 0. IMPORTS & CACHES
+    // No specific imports or cached locals needed for this function beyond instance variables.
+    // Assumes `is_dragging`, `sel_start_x`, and `sel_start_y` are accessible instance variables
+    // from the calling object (e.g., obj_controller).
+    #endregion
 
-        // Draw translucent rectangle from drag start to current
-        draw_set_color(c_lime);
-        draw_set_alpha(0.25);
-        draw_rectangle(
-            min(sel_start_x, gx),
-            min(sel_start_y, gy),
-            max(sel_start_x, gx),
-            max(sel_start_y, gy),
-            false
-        );
-        draw_set_alpha(1);
+    // =========================================================================
+    // 1. VALIDATION & EARLY RETURNS (Function-local)
+    // =========================================================================
+    #region 1. VALIDATION & EARLY RETURNS
+    // Only proceed if a drag operation is currently active.
+    if (!is_dragging) {
+        return; // Exit early if not dragging, nothing to draw.
     }
     #endregion
 
     // =========================================================================
-    // 2. CLEANUP & RETURN
+    // 2. CONFIGURATION & CONSTANTS (Function-local)
     // =========================================================================
-    #region Cleanup
+    #region 2. CONFIGURATION & CONSTANTS
+    var _selection_color = c_lime; // The color of the selection box.
+    var _selection_alpha = 0.25;   // The transparency of the selection box (0.0 to 1.0).
+    #endregion
+
+    // =========================================================================
+    // 3. CORE LOGIC: DRAW SELECTION BOX (Function-local)
+    // =========================================================================
+    #region 3. CORE LOGIC: DRAW SELECTION BOX
+    // Get current mouse coordinates in GUI space.
+    // These are used as the second corner of the selection rectangle.
+    var _gui_mouse_x = device_mouse_x_to_gui(0);
+    var _gui_mouse_y = device_mouse_y_to_gui(0);
+
+    // Set drawing properties for the selection box.
+    draw_set_color(_selection_color);
+    draw_set_alpha(_selection_alpha);
+
+    // Draw the rectangle.
+    // min() and max() are used to ensure the rectangle is drawn correctly
+    // regardless of the direction the mouse is dragged.
+    draw_rectangle(
+        min(sel_start_x, _gui_mouse_x), // Leftmost x-coordinate
+        min(sel_start_y, _gui_mouse_y), // Topmost y-coordinate
+        max(sel_start_x, _gui_mouse_x), // Rightmost x-coordinate
+        max(sel_start_y, _gui_mouse_y), // Bottommost y-coordinate
+        false // false = not an outline, true = outline only
+    );
+
+    // It's good practice to reset drawing properties if they were changed,
+    // especially alpha, to avoid affecting other draw calls.
+    draw_set_alpha(1); // Reset alpha to fully opaque.
+    // draw_set_color(c_white); // Optionally reset color if it affects other drawing.
+    #endregion
+
+    // =========================================================================
+    // 4. CLEANUP & RETURN (Function-local)
+    // =========================================================================
+    #region 4. CLEANUP & RETURN
+    // No specific cleanup actions are needed beyond resetting alpha.
+    // The function implicitly returns undefined (void).
     return;
     #endregion
 }

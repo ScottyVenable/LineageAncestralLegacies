@@ -213,29 +213,37 @@ function scr_pop_hauling() {
                            ", last_foraged_slot_index=" + _log_last_slot +
                            ", last_foraged_type_tag=" + _log_last_type + ".");
 
-        // Directly call the resume/idle script instead of a commanded step-away move.
-        var _resume_script_idx = asset_get_index("scr_pop_resume_previous_or_idle");
+        // New method: Robust dynamic script call
+        // LEARNING POINT: Always get the asset index for a script name first
+        // before using it with script_exists or script_execute.
+        var _resume_script_name = "scr_pop_resume_previous_or_idle";
+        var _resume_script_asset_index = asset_get_index(_resume_script_name);
         
-        if (_resume_script_idx == -1) {
-            // Log if asset_get_index failed
-            // This means GameMaker cannot find any asset (script, object, sprite, etc.) with this name.
-            // Check for typos in "scr_pop_resume_previous_or_idle".
-            // Ensure the script asset exists in the asset browser and is named correctly.
-            // Try cleaning the project cache (Run -> Clean in GameMaker).
-            show_debug_message($"CRITICAL ERROR (Hauling): asset_get_index(scr_pop_resume_previous_or_idle) returned -1. Asset not found by name. Pop " + _pop_id_str_haul_finish + " defaulting to IDLE.");
-            state = PopState.IDLE;
-        } else if (!script_exists(_resume_script_idx)) {
-            // Log if script_exists failed for the found asset index
-            // This means an asset with the name "scr_pop_resume_previous_or_idle" was found, but it's not recognized as a script.
-            // This can happen if the script file has syntax errors preventing it from compiling,
-            // or if the asset type is somehow incorrect.
-            // Check the script file itself for errors.
-            show_debug_message("CRITICAL ERROR (Hauling): script_exists(" + string(_resume_script_idx) + ") returned false for asset 'scr_pop_resume_previous_or_idle'. Asset found but not a script? Pop " + _pop_id_str_haul_finish + " defaulting to IDLE.");
-            state = PopState.IDLE;
+        show_debug_message("Pop " + _pop_id_str_haul_finish + ": (Hauling) Preparing to call " + _resume_script_name + ". Asset index: " + string(_resume_script_asset_index));
+
+        // Check if the script asset was found and actually exists
+        if (_resume_script_asset_index != -1 && script_exists(_resume_script_asset_index)) {
+            show_debug_message("Pop " + _pop_id_str_haul_finish + ": (Hauling) Script '" + _resume_script_name + "' exists. Executing now.");
+            script_execute(_resume_script_asset_index); // Execute the script by its asset index
+            show_debug_message("Pop " + _pop_id_str_haul_finish + ": (Hauling) Finished executing '" + _resume_script_name + "'. New state: " + scr_get_state_name(state));
         } else {
-            // Both checks passed, execute the script
-            show_debug_message("Pop " + _pop_id_str_haul_finish + " successfully found scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx) + "). Executing.");
-            script_execute(_resume_script_idx);
+            // Fallback if the script is somehow missing
+            // This provides more specific error information.
+            var _error_reason_msg = "Unknown error.";
+            if (_resume_script_asset_index == -1) {
+                _error_reason_msg = "asset_get_index(\'" + _resume_script_name + "\') returned -1 (script name not found in assets).";
+            } else if (!script_exists(_resume_script_asset_index)) {
+                _error_reason_msg = "script_exists(" + string(_resume_script_asset_index) + ") returned false (asset exists but is not a script or is invalid).";
+            }
+            show_debug_message("CRITICAL ERROR (Hauling Pop " + _pop_id_str_haul_finish + "): Script '" + _resume_script_name + "' (Index: " + string(_resume_script_asset_index) + ") not found or does not exist! Reason: " + _error_reason_msg + ". Defaulting to IDLE state.");
+            state = PopState.IDLE;
+            // Reset relevant variables for IDLE state if necessary
+            target_object_id = noone;
+            target_interaction_object_id = noone;
+            // Ensure last_foraged details are cleared if defaulting from a failed resume
+            last_foraged_target_id = noone;
+            last_foraged_slot_index = -1;
+            last_foraged_type_tag = "";
         }
         
         exit; // Exit to allow the new state (set by resume/idle script) to take over in the next step.
@@ -254,13 +262,15 @@ function scr_pop_hauling() {
         }
         target_object_id = noone;
         
-        var _resume_script_idx_lost_hut = asset_get_index("scr_pop_resume_previous_or_idle");
+        // Robustly call scr_pop_resume_previous_or_idle
+        var _resume_script_name_lost_hut_post = "scr_pop_resume_previous_or_idle";
+        var _resume_script_idx_lost_hut = asset_get_index(_resume_script_name_lost_hut_post);
         if (_resume_script_idx_lost_hut != -1 && script_exists(_resume_script_idx_lost_hut)) {
-            show_debug_message("Pop " + _pop_id_str_lost_hut_post_arrive + " (lost hut post-arrival) calling scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx_lost_hut) + ").");
+            show_debug_message("Pop " + _pop_id_str_lost_hut_post_arrive + " (lost hut post-arrival) calling " + _resume_script_name_lost_hut_post + " (index: " + string(_resume_script_idx_lost_hut) + ").");
             script_execute(_resume_script_idx_lost_hut);
         } else {
-            var _error_reason = (_resume_script_idx_lost_hut == -1) ? "asset_get_index failed" : "script_exists failed";
-            show_debug_message("ERROR (Hauling - lost hut post-arrival): scr_pop_resume_previous_or_idle script not found (" + _error_reason + ")! Pop " + _pop_id_str_lost_hut_post_arrive + " defaulting to IDLE.");
+            var _error_reason_lost_hut_post = (_resume_script_idx_lost_hut == -1) ? "asset_get_index failed for " + _resume_script_name_lost_hut_post : "script_exists failed for index " + string(_resume_script_idx_lost_hut);
+            show_debug_message("ERROR (Hauling - lost hut post-arrival): " + _resume_script_name_lost_hut_post + " script not found (" + _error_reason_lost_hut_post + ")! Pop " + _pop_id_str_lost_hut_post_arrive + " defaulting to IDLE.");
             state = PopState.IDLE; // Fallback
         }
         exit;
@@ -275,13 +285,15 @@ function scr_pop_hauling() {
              self._hauling_slot_index = -1;
         }
         
-        var _resume_script_idx_lost_hut_pre = asset_get_index("scr_pop_resume_previous_or_idle");
+        // Robustly call scr_pop_resume_previous_or_idle
+        var _resume_script_name_lost_hut_pre = "scr_pop_resume_previous_or_idle";
+        var _resume_script_idx_lost_hut_pre = asset_get_index(_resume_script_name_lost_hut_pre);
         if (_resume_script_idx_lost_hut_pre != -1 && script_exists(_resume_script_idx_lost_hut_pre)) {
-            show_debug_message("Pop " + _pop_id_str_lost_hut_pre_arrive + " (lost hut pre-arrival) calling scr_pop_resume_previous_or_idle (index: " + string(_resume_script_idx_lost_hut_pre) + ").");
+            show_debug_message("Pop " + _pop_id_str_lost_hut_pre_arrive + " (lost hut pre-arrival) calling " + _resume_script_name_lost_hut_pre + " (index: " + string(_resume_script_idx_lost_hut_pre) + ").");
             script_execute(_resume_script_idx_lost_hut_pre);
         } else {
-            var _error_reason_pre = (_resume_script_idx_lost_hut_pre == -1) ? "asset_get_index failed" : "script_exists failed";
-            show_debug_message("ERROR (Hauling - lost hut pre-arrival): scr_pop_resume_previous_or_idle script not found (" + _error_reason_pre + ")! Pop " + _pop_id_str_lost_hut_pre_arrive + " defaulting to IDLE.");
+            var _error_reason_pre_lost_hut = (_resume_script_idx_lost_hut_pre == -1) ? "asset_get_index failed for " + _resume_script_name_lost_hut_pre : "script_exists failed for index " + string(_resume_script_idx_lost_hut_pre);
+            show_debug_message("ERROR (Hauling - lost hut pre-arrival): " + _resume_script_name_lost_hut_pre + " script not found (" + _error_reason_pre_lost_hut + ")! Pop " + _pop_id_str_lost_hut_pre_arrive + " defaulting to IDLE.");
             state = PopState.IDLE; // Fallback
         }
         exit;

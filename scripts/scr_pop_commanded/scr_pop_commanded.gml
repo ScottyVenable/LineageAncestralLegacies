@@ -78,24 +78,35 @@ function scr_pop_commanded() {
     // Check if pop is exactly at the travel point and speed is 0 (meaning snapped or arrived)
     if (x == travel_point_x && y == travel_point_y && speed == 0) {
         // Arrived at the commanded destination
-        show_debug_message("Pop " + pop_identifier_string + " (ID: " + string(id) + ") arrived at commanded point (" + string(travel_point_x) + "," + string(travel_point_y) + "). Attempting to resume previous task or idle.");
+        var _pop_id_str = pop_identifier_string; // Assuming pop_identifier_string is available
+        show_debug_message("Pop " + _pop_id_str + " (ID: " + string(id) + ") arrived at commanded point (" + string(travel_point_x) + "," + string(travel_point_y) + "). Attempting to resume or idle.");
         
         speed = 0;                      // Ensure speed is zero
         image_speed = 1.0;              // Reset animation speed to default (idle will handle its own)
-        has_arrived = true;             // Set flag indicating arrival at this specific command\'s target
-                                        // (This flag should be reset to false when a NEW command is issued)
+        has_arrived = true;             // Set flag indicating arrival at this specific command's target
         
-        // scr_pop_resume_previous_or_idle will set the new state (e.g., FORAGING, IDLE, etc.)
-        // and handle sprite changes as needed for that new state.
+        // --- Call scr_pop_resume_previous_or_idle ---
+        // LEARNING POINT: To call a script dynamically, first get its asset index,
+        // then check if it exists, then execute it.
+        show_debug_message("Pop " + _pop_id_str + ": Preparing to call scr_pop_resume_previous_or_idle.");
+        var _resume_script_name = "scr_pop_resume_previous_or_idle";
+        var _resume_script_asset_index = asset_get_index(_resume_script_name);
         
-        // More robust check for the script's existence
-        var _resume_script_index = asset_get_index("scr_pop_resume_previous_or_idle");
-        
-        if (_resume_script_index != -1 && script_exists(_resume_script_index)) {
-            script_execute(_resume_script_index); // Execute the script by its index
+        show_debug_message("Pop " + _pop_id_str + ": Asset index for '" + _resume_script_name + "' is " + string(_resume_script_asset_index) + ".");
+
+        if (_resume_script_asset_index != -1 && script_exists(_resume_script_asset_index)) {
+            show_debug_message("Pop " + _pop_id_str + ": Script '" + _resume_script_name + "' exists. Executing now.");
+            script_execute(_resume_script_asset_index); // Execute the script by its asset index
+            show_debug_message("Pop " + _pop_id_str + ": Finished executing '" + _resume_script_name + "'.");
         } else {
-            show_debug_message("ERROR: scr_pop_resume_previous_or_idle script (asset name: \"scr_pop_resume_previous_or_idle\") not found or does not exist! Index: " + string(_resume_script_index) + ". Pop " + string(id) + " defaulting to IDLE.");
-            state = PopState.IDLE; // Fallback if the resume script is missing
+            // Fallback if the script is somehow missing
+            show_debug_message("CRITICAL ERROR (Pop " + _pop_id_str + "): Script '" + _resume_script_name + "' (Index: " + string(_resume_script_asset_index) + ") not found or does not exist! Defaulting to IDLE state.");
+            state = PopState.IDLE;
+            // Reset relevant variables for IDLE state if necessary
+            target_object_id = noone;
+            target_interaction_object_id = noone;
+            target_interaction_slot_index = -1;
+            // Add any other necessary resets for a clean IDLE state
         }
 		
 		depth = -y; // Update depth based on final position

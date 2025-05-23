@@ -63,7 +63,10 @@ wander_max_dist = 150;
 #endregion
 
 #region 3.3 Foraging State Variables
-target_bush = noone;
+// target_bush = noone; // Commented out: Replaced by last_foraged_target_id for resumption logic
+last_foraged_target_id = noone; // Stores the ID of the last bush this pop foraged from
+last_foraged_slot_index = -1;   // Stores the slot index on the last_foraged_target_id
+last_foraged_type_tag = "";     // Stores the type tag of the slot on the last_foraged_target_id
 forage_timer = 0;
 forage_rate = global.game_speed;
 #endregion

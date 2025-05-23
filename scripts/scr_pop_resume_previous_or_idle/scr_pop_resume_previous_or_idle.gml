@@ -1,223 +1,241 @@
-\
 /// scr_pop_resume_previous_or_idle.gml
 ///
 /// Purpose:
-///   Attempts to resume the pop's 'previous_state' if it was a complex task (e.g., FORAGING).
-///   If resumption fails or 'previous_state' was simple or undefined, sets an appropriate
-///   fallback state (like IDLE or the simple previous_state).
+///   Called when a pop finishes a temporary state (like COMMANDED move, or after satisfying a need)
+///   and needs to decide whether to resume its `previous_state` or default to IDLE/WANDERING.
+///   It handles logic for re-evaluating and potentially re-engaging with previous tasks like foraging.
 ///
-/// Usage:
-///   Called when a pop completes an action (like a commanded move or failed hauling)
-///   and needs to decide its next state based on prior context.
-///   Operates on 'self' (the pop instance).
-///
-/// Dependencies:
-///   Pop instance variables: previous_state, last_foraged_target_id, state, target_object_id, etc.
-///   Interaction scripts: scr_interaction_slot_get_available, scr_interaction_slot_claim
-///   Objects: obj_redBerryBush
-///   Enums: PopState
-///   Utility: scr_get_state_name (for logging)
+/// Metadata:
+///   Summary:       Resumes a pop's previous task or defaults to idle/wander.
+///   Usage:         Called by other pop behavior scripts (e.g., scr_pop_commanded, scr_pop_satisfy_need)
+///                  when a pop completes an overriding action.\ Executed in the context of the pop instance.
+///   Parameters:    None (operates on the calling pop instance's variables).
+///   Returns:       void (directly modifies the pop's state).
+///   Tags:          [pop][ai][state][behavior][core]
+///   Version:       1.1 - 2025-05-23 // Updated to full TEMPLATE_SCRIPT structure
+///   Dependencies:  PopState (enum), scr_get_state_name, scr_pop_find_foraging_target, scr_interaction_slot_acquire,
+///                  Instance variables: previous_state, last_foraged_target_id, last_foraged_slot_index,
+///                                      last_foraged_type_tag, state, target_interaction_object_id, etc.,
+///                                      pop_identifier_string (for debug), spr_man_idle.
 
 function scr_pop_resume_previous_or_idle() {
-    // This script runs in the context of an obj_pop instance (self)
-    var _pop_id_str = pop_identifier_string + " (ID:" + string(id) + ")"; // For logging
+    // =========================================================================
+    // 0. IMPORTS & CACHES
+    // =========================================================================
+    #region 0.1 Imports & Cached Locals
+    // Cache script functions for slightly better performance if called very frequently.
+    var _scr_get_state_name = scr_get_state_name;
+    var _scr_pop_find_foraging_target = scr_pop_find_foraging_target;
+    var _scr_interaction_slot_acquire = scr_interaction_slot_acquire;
+    
+    // Cache instance variables if they are accessed multiple times from 'self' or 'id'
+    // For this script, direct access is generally fine due to GML's optimization, but this is an option.
+    var _pop_id_str = self.pop_identifier_string + " (ID:" + string(self.id) + ")"; // For debug messages
+    #endregion
 
-    if (variable_instance_exists(id, "previous_state") && previous_state != undefined) {
-        var _task_resumed = false;
-        var _original_previous_state_for_log = previous_state;
-        var _attempt_foraging_resume = (previous_state == PopState.FORAGING);
+    // =========================================================================
+    // 1. VALIDATION & EARLY RETURNS
+    // =========================================================================
+    #region 1.1 Parameter Validation
+    // No direct parameters to validate for this script as it operates on the calling instance.
+    // However, we can check for essential instance variables if needed, though it might be overkill here.
+    // Example: if (!variable_instance_exists(id, "previous_state")) { show_debug_message("ERROR..."); return; }
+    #endregion
 
-        debug_log("Pop " + _pop_id_str + " entering resume script. Previous state: " + scr_get_state_name(_original_previous_state_for_log) + 
-                  ". Last Foraged Target: " + (variable_instance_exists(id, "last_foraged_target_id") ? string(last_foraged_target_id) : "N/A") +
-                  ", Slot: " + (variable_instance_exists(id, "last_foraged_slot_index") ? string(last_foraged_slot_index) : "N/A") +
-                  ", Type: " + (variable_instance_exists(id, "last_foraged_type_tag") ? last_foraged_type_tag : "N/A"),
-                  "scr_pop_resume", "blue");
+    // =========================================================================
+    // 2. CONFIGURATION & CONSTANTS
+    // =========================================================================
+    #region 2.1 Local Constants
+    // No specific local constants needed for this logic.
+    #endregion
 
-        // --- Attempt to resume FORAGING ---
-        if (_attempt_foraging_resume) {
-            debug_log("Pop " + _pop_id_str + " attempting to resume FORAGING.", "scr_pop_resume", "blue");
-            var _pop_instance = id;
+    // =========================================================================
+    // 3. INITIALIZATION & STATE SETUP
+    // =========================================================================
+    #region 3.1 One-Time Setup / State Variables
+    // Debug: Log entry into this script
+    show_debug_message("Pop " + _pop_id_str + " executing scr_pop_resume_previous_or_idle. Previous state: " + _scr_get_state_name(self.previous_state));
+    #endregion
 
-            // 1. Check the last specific resource the pop was foraging from
-            if (variable_instance_exists(_pop_instance, "last_foraged_target_id") &&
-                _pop_instance.last_foraged_target_id != noone &&
-                instance_exists(_pop_instance.last_foraged_target_id)) {
-                
-                var _specific_target_id = _pop_instance.last_foraged_target_id;
-                var _target_object_name = object_get_name(_specific_target_id.object_index);
-                debug_log("Pop " + _pop_id_str + " checking last specific target: " + _target_object_name + "(" + string(_specific_target_id) + ")", "scr_pop_resume", "blue");
+    // =========================================================================
+    // 4. CORE LOGIC
+    // =========================================================================
+    #region 4.1 Main Behavior / Utility Logic
+    // --- Attempt to Resume Previous State ---
+    switch (self.previous_state) {
+        case PopState.FORAGING:
+            show_debug_message("Pop " + _pop_id_str + " attempting to resume FORAGING.");
+            // Try to resume foraging the last target if it's still valid and has resources
+            if (instance_exists(self.last_foraged_target_id) &&
+                variable_instance_exists(self.last_foraged_target_id, "is_harvestable") &&
+                self.last_foraged_target_id.is_harvestable &&
+                variable_instance_exists(self.last_foraged_target_id, "resource_count") &&
+                self.last_foraged_target_id.resource_count > 0 &&
+                self.last_foraged_slot_index != -1) { // Also ensure we had a specific slot
 
-                // Ensure the last_foraged_target_id is actually a resource provider (e.g. obj_redBerryBush)
-                // This check might need to be more generic if pops can forage from different object types.
-                // For now, we assume it's something like obj_redBerryBush which has these variables.
-                if (!object_is_ancestor(_specific_target_id.object_index, par_slot_provider)) {
-                     debug_log("Pop " + _pop_id_str + " last_foraged_target_id " + _target_object_name + "(" + string(_specific_target_id) + ") is not a par_slot_provider. Cannot resume foraging at it.", "scr_pop_resume", "orange");
+                show_debug_message("Pop " + _pop_id_str + " last_foraged_target_id " + string(self.last_foraged_target_id) + " seems valid. Attempting to reacquire slot " + string(self.last_foraged_slot_index));
+
+                // Attempt to re-acquire the *same* slot first
+                var _slot_acquired_details = _scr_interaction_slot_acquire(self.last_foraged_target_id, self.id, self.last_foraged_slot_index);
+
+                if (_slot_acquired_details != undefined) {
+                    // Successfully re-acquired the previous slot
+                    self.target_interaction_object_id = self.last_foraged_target_id;
+                    self.target_interaction_slot_index = _slot_acquired_details.slot_index; // Should be same as last_foraged_slot_index
+                    self.target_interaction_type_tag = _slot_acquired_details.type_tag; // Get the type tag for this slot
+                    
+                    self.state = PopState.FORAGING;
+                    self.has_arrived = false; // Will need to move to slot (or confirm arrival if already there)
+                    self.forage_timer = 0; // Reset forage timer
+                    
+                    // LEARNING POINT: It's good practice to reset task-specific timers and flags
+                    // when resuming a task to ensure it starts cleanly.
+                    
+                    show_debug_message("Pop " + _pop_id_str + " re-acquired previous slot " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
+                    self.previous_state = PopState.NONE; // Clear previous_state as we've acted on it
+                    exit; // Successfully resumed foraging
                 } else {
-                    // Attempt to reclaim the *exact* same slot if possible and sensible, or any slot if not.
-                    // For simplicity, we'll try to get *any* available slot on this specific target first.
-                    // The 'last_foraged_slot_index' and 'last_foraged_type_tag' could be used for more precise resumption.
-                    
-                    with (_specific_target_id) { // Scope to the specific target instance
-                        if (variable_instance_exists(id, "is_harvestable") && is_harvestable &&
-                            variable_instance_exists(id, "resource_count") && resource_count > 0) {
-                            
-                            if (script_exists(asset_get_index("scr_interaction_slot_get_available")) && script_exists(asset_get_index("scr_interaction_slot_claim"))) {
-                                var _slot_get_idx = asset_get_index("scr_interaction_slot_get_available");
-                                var _slot_claim_idx = asset_get_index("scr_interaction_slot_claim");
-
-                                var slot_info = script_execute(_slot_get_idx, id); // 'id' here is _specific_target_id
-                                if (slot_info != undefined) {
-                                    debug_log("Pop " + _pop_id_str + " found available slot " + string(slot_info.slot_index) + " at specific target " + _target_object_name + "(" + string(id) + "). Attempting to claim.", "scr_pop_resume", "blue");
-                                    if (script_execute(_slot_claim_idx, id, slot_info.slot_index, _pop_instance.id, slot_info.type_tag)) { // Pass type_tag
-                                        _pop_instance.target_object_id = id;
-                                        _pop_instance.target_interaction_object_id = id;
-                                        _pop_instance.target_interaction_slot_index = slot_info.slot_index;
-                                        _pop_instance.target_interaction_type_tag = slot_info.type_tag; // Store the type tag from the claimed slot
-                                        _pop_instance.travel_point_x = slot_info.world_x;
-                                        _pop_instance.travel_point_y = slot_info.world_y;
-                                        _pop_instance.state = PopState.FORAGING;
-                                        _pop_instance.has_arrived = false;
-                                        _task_resumed = true;
-                                        debug_log("Pop " + _pop_id_str + " RESUMED FORAGING at previous target " + _target_object_name + "(" + string(id) + ") slot " + string(slot_info.slot_index) + " type: " + slot_info.type_tag, "scr_pop_resume", "green");
-                                    } else {
-                                        debug_log("Pop " + _pop_id_str + " FAILED to claim slot " + string(slot_info.slot_index) + " at specific target " + _target_object_name + "(" + string(id) + ").", "scr_pop_resume", "orange");
-                                    }
-                                } else {
-                                    debug_log("Pop " + _pop_id_str + " found NO available slots at specific target " + _target_object_name + "(" + string(id) + ").", "scr_pop_resume", "orange");
-                                }
-                            } else {
-                                debug_log("Pop " + _pop_id_str + " slot interaction scripts not found for specific target check!", "scr_pop_resume", "red");
-                            }
-                        } else {
-                            debug_log("Pop " + _pop_id_str + " specific target " + _target_object_name + "(" + string(id) + ") is no longer harvestable or has no resources.", "scr_pop_resume", "orange");
-                        }
-                    }
-                }
-            } else {
-                 var reason = "last_foraged_target_id not set";
-                 if (variable_instance_exists(_pop_instance, "last_foraged_target_id")) {
-                     if (_pop_instance.last_foraged_target_id == noone) reason = "last_foraged_target_id is noone";
-                     else if (!instance_exists(_pop_instance.last_foraged_target_id)) reason = "last_foraged_target_id instance (" + string(_pop_instance.last_foraged_target_id) + ") no longer exists";
-                 }
-                 debug_log("Pop " + _pop_id_str + " cannot check specific last target. Reason: " + reason, "scr_pop_resume", "orange");
-            }
-
-            // 2. If not resumed at the specific target, search for any other nearby valid resource
-            //    For now, this specifically searches for obj_redBerryBush. This could be expanded.
-            if (!_task_resumed) {
-                debug_log("Pop " + _pop_id_str + " did not resume at specific target. Searching for NEW nearby obj_redBerryBush.", "scr_pop_resume", "blue");
-                var search_radius = 200; 
-
-                // Find the closest, available, harvestable resource of the type obj_redBerryBush
-                var closest_target_id = noone;
-                var min_dist = search_radius + 1; // Start with a distance greater than search_radius
-
-                with (obj_redBerryBush) { // Iterate through all berry bushes
-                    // Skip if this is the same bush we specifically (and unsuccessfully) checked above
-                    if (variable_instance_exists(_pop_instance, "last_foraged_target_id") && id == _pop_instance.last_foraged_target_id) {
-                        continue; 
-                    }
-
-                    if (variable_instance_exists(id, "is_harvestable") && is_harvestable &&
-                        variable_instance_exists(id, "resource_count") && resource_count > 0) {
-                        
-                        // Check if this bush has any available slot *before* checking distance
-                        // This is slightly less efficient if many bushes, but clearer for now.
-                        var temp_slot_info = undefined;
-                        if (script_exists(asset_get_index("scr_interaction_slot_get_available"))) {
-                            var _slot_get_idx = asset_get_index("scr_interaction_slot_get_available");
-                            temp_slot_info = script_execute(_slot_get_idx, id);
-                        }
-
-                        if (temp_slot_info != undefined) { // Bush has an available slot
-                            var dist_to_target = point_distance(_pop_instance.x, _pop_instance.y, x, y);
-                            if (dist_to_target <= search_radius && dist_to_target < min_dist) {
-                                min_dist = dist_to_target;
-                                closest_target_id = id;
-                            }
-                        }
-                    }
-                } // end with (obj_redBerryBush)
-
-                if (instance_exists(closest_target_id)) {
-                    var _target_object_name = object_get_name(closest_target_id.object_index);
-                    debug_log("Pop " + _pop_id_str + " found closest new target: " + _target_object_name + "(" + string(closest_target_id) + ") at dist " + string(min_dist) + ". Attempting to claim slot.", "scr_pop_resume", "blue");
-                    
-                    // Now, re-get and claim the slot on this chosen closest_target_id
-                    // We re-get because another pop might have claimed it in the interim, though unlikely in a single step.
-                    if (script_exists(asset_get_index("scr_interaction_slot_get_available")) && script_exists(asset_get_index("scr_interaction_slot_claim"))) {
-                        var _slot_get_idx = asset_get_index("scr_interaction_slot_get_available");
-                        var _slot_claim_idx = asset_get_index("scr_interaction_slot_claim");
-
-                        var slot_info = script_execute(_slot_get_idx, closest_target_id);
-                        if (slot_info != undefined) {
-                             if (script_execute(_slot_claim_idx, closest_target_id, slot_info.slot_index, _pop_instance.id, slot_info.type_tag)) { // Pass type_tag
-                                _pop_instance.target_object_id = closest_target_id;
-                                _pop_instance.target_interaction_object_id = closest_target_id;
-                                _pop_instance.target_interaction_slot_index = slot_info.slot_index;
-                                _pop_instance.target_interaction_type_tag = slot_info.type_tag; // Store the type tag
-                                _pop_instance.travel_point_x = slot_info.world_x;
-                                _pop_instance.travel_point_y = slot_info.world_y;
-                                _pop_instance.state = PopState.FORAGING;
-                                _pop_instance.has_arrived = false;
-                                _task_resumed = true;
-                                debug_log("Pop " + _pop_id_str + " RESUMED FORAGING at new nearby target " + _target_object_name + "(" + string(closest_target_id) + ") slot " + string(slot_info.slot_index) + " type: " + slot_info.type_tag, "scr_pop_resume", "green");
-                            } else {
-                                debug_log("Pop " + _pop_id_str + " FAILED to claim slot " + string(slot_info.slot_index) + " at new nearby target " + _target_object_name + "(" + string(closest_target_id) + ").", "scr_pop_resume", "orange");
-                            }
-                        } else {
-                             debug_log("Pop " + _pop_id_str + " found NO available slots at new nearby target " + _target_object_name + "(" + string(closest_target_id) + ") (slot possibly taken between check and claim attempt).", "scr_pop_resume", "orange");
-                        }
+                    // Could not re-acquire the exact same slot, try any available slot on the same target
+                    show_debug_message("Pop " + _pop_id_str + " could not re-acquire specific slot " + string(self.last_foraged_slot_index) + ". Trying any slot on " + string(self.last_foraged_target_id));
+                    _slot_acquired_details = _scr_interaction_slot_acquire(self.last_foraged_target_id, self.id); // Request any slot
+                    if (_slot_acquired_details != undefined) {
+                        self.target_interaction_object_id = self.last_foraged_target_id;
+                        self.target_interaction_slot_index = _slot_acquired_details.slot_index;
+                        self.target_interaction_type_tag = _slot_acquired_details.type_tag;
+                        self.state = PopState.FORAGING;
+                        self.has_arrived = false;
+                        self.forage_timer = 0;
+                        show_debug_message("Pop " + _pop_id_str + " acquired new slot " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
+                        self.previous_state = PopState.NONE;
+                        exit;
                     } else {
-                         debug_log("Pop " + _pop_id_str + " slot interaction scripts not found for new nearby target check!", "scr_pop_resume", "red");
+                        show_debug_message("Pop " + _pop_id_str + " could not acquire any slot on previous target " + string(self.last_foraged_target_id) + ".");
+                        // Fall through to find a new target of the same type
                     }
-                } else {
-                    debug_log("Pop " + _pop_id_str + " found NO suitable new obj_redBerryBush targets within radius " + string(search_radius) + ".", "scr_pop_resume", "orange");
                 }
-            }
-        }
-        // --- End of FORAGING resumption attempt ---
-        // TODO: Add 'else if (previous_state == PopState.OTHER_COMPLEX_TASK_TYPE)' for other resumable tasks
-
-        if (_task_resumed) {
-            // A complex task (like Foraging) was successfully resumed.
-            // State and targets are already set within the resumption logic.
-            debug_log("Pop " + _pop_id_str + " successfully resumed previous task. New state: " + scr_get_state_name(state) + " (was " + scr_get_state_name(_original_previous_state_for_log) + ")", "scr_pop_resume", "green");
-        } else {
-            // Could not resume a complex task, or previous_state was simple.
-            debug_log("Pop " + _pop_id_str + " FAILED to resume complex task or previous state was simple. Original previous state: " + scr_get_state_name(_original_previous_state_for_log), "scr_pop_resume", "orange");
-            // Revert to the generic previous_state if it's safe to do so.
-            if (_original_previous_state_for_log != PopState.FORAGING && // Avoid re-setting to foraging if it failed
-                _original_previous_state_for_log != PopState.HAULING &&  // Avoid looping back to hauling
-                _original_previous_state_for_log != PopState.COMMANDED) { // Avoid issues if COMMANDED was interrupted
-                state = _original_previous_state_for_log;
-                debug_log("Pop " + _pop_id_str + " (" + pop_name + ") reverted to simple previous_state: " + scr_get_state_name(state), "scr_pop_resume", "orange");
             } else {
-                // Default fallback if previous state can't be simply resumed or was a complex one that failed.
-                state = PopState.IDLE;
-                debug_log("Pop " + _pop_id_str + " could not resume complex task (" + scr_get_state_name(_original_previous_state_for_log) + ") or previous state was unsafe. Defaulting to IDLE.", "scr_pop_resume", "orange");
+                 show_debug_message("Pop " + _pop_id_str + " previous forage target " + string(self.last_foraged_target_id) + " is no longer valid, depleted, or no slot info. Will search for new target.");
+                 // Fall through to find a new target of the same type
             }
-        }
-        previous_state = undefined; // Clear/consume the stored previous state in all cases
-        last_foraged_target_id = noone; // Clear last foraged target as it's either been resumed or deemed unsuitable
-        last_foraged_slot_index = -1;
-        last_foraged_type_tag = "";
-        
-        // If we defaulted to IDLE or a simple state without a specific target, clear any lingering interaction targets.
-        if (!_task_resumed && (state == PopState.IDLE || state == PopState.WAITING || state == PopState.WANDERING)) {
-             target_object_id = noone;
-             target_interaction_object_id = noone;
-             target_interaction_slot_index = -1;
-             target_interaction_type_tag = ""; // Clear type tag as well
-        }
 
-    } else {
-        // No previous_state was stored, or it was undefined. Default to IDLE.
-        state = PopState.IDLE;
-        target_object_id = noone; // Ensure no lingering target
-        target_interaction_object_id = noone;
-        target_interaction_slot_index = -1;
-        target_interaction_type_tag = ""; // Clear type tag as well
-        debug_log("Pop " + _pop_id_str + " had no previous_state. Defaulting to IDLE.", "scr_pop_resume", "orange");
+            // If previous target was invalid, or couldn't get a slot, or if last_foraged_target_id was 'noone' (e.g. after depletion without items)
+            // Try to find a *new* foraging target, potentially using last_foraged_type_tag if available, or any forageable.
+            var _search_tag = (self.last_foraged_type_tag != "" && self.last_foraged_type_tag != undefined) ? self.last_foraged_type_tag : "forage"; // Generalize if specific tag is gone
+            var _target_obj_asset = (instance_exists(self.last_foraged_target_id)) ? self.last_foraged_target_id.object_index : obj_redBerryBush; // Default or last known type
+            // TODO: This ^ object_index might not be ideal if last_foraged_target_id is noone. Need a better way to determine what object type to search for.
+            // For now, defaulting to obj_redBerryBush if last target is gone.
+            if (!instance_exists(self.last_foraged_target_id)) _target_obj_asset = obj_redBerryBush; 
+
+            show_debug_message("Pop " + _pop_id_str + " searching for new target of type related to '" + _search_tag + "', considering object asset: " + object_get_name(_target_obj_asset));
+            var _found_target_info = _scr_pop_find_foraging_target(self.id, _search_tag, _target_obj_asset);
+
+            if (_found_target_info != undefined && instance_exists(_found_target_info.target_id)) {
+                // Attempt to acquire a slot at the new target
+                var _new_slot_details = _scr_interaction_slot_acquire(_found_target_info.target_id, self.id, -1, _search_tag); // Pass search_tag to slot acquisition
+                if (_new_slot_details != undefined) {
+                    self.target_interaction_object_id = _found_target_info.target_id;
+                    self.target_interaction_slot_index = _new_slot_details.slot_index;
+                    self.target_interaction_type_tag = _new_slot_details.type_tag; // Use the tag from the acquired slot
+                    
+                    self.state = PopState.FORAGING;
+                    self.has_arrived = false;
+                    self.forage_timer = 0;
+                    
+                    show_debug_message("Pop " + _pop_id_str + " found and acquired slot at NEW foraging target: " + string(self.target_interaction_object_id) + " slot " + string(self.target_interaction_slot_index) + ". Resuming FORAGING.");
+                    self.previous_state = PopState.NONE;
+                    // Clear last_foraged_... variables since we are starting fresh with a new target
+                    self.last_foraged_target_id = noone;
+                    self.last_foraged_slot_index = -1;
+                    self.last_foraged_type_tag = "";
+                    exit;
+                } else {
+                    show_debug_message("Pop " + _pop_id_str + " found new target " + string(_found_target_info.target_id) + " but could not acquire slot for tag '" + _search_tag + "'.");
+                    // Fall through to default behavior if no slot acquired
+                }
+            } else {
+                show_debug_message("Pop " + _pop_id_str + " could not find any new foraging target for tag '" + _search_tag + "' of type " + object_get_name(_target_obj_asset) + ".");
+                // Fall through to default behavior if no new target found
+            }
+            break;
+
+        // case PopState.CONSTRUCTION:
+        //     // TODO: Implement logic to resume construction
+        //     // This would involve checking `last_construction_target_id`, etc.
+        //     show_debug_message("Pop " + _pop_id_str + " previous state was CONSTRUCTION. Resume logic not yet implemented.");
+        //     break;
+
+        // case PopState.HAULING:
+        //     // Typically, hauling completes and then might call this.
+        //     // If a pop was hauling, then got commanded, then finishes command, should it re-evaluate hauling?
+        //     // For now, if previous was hauling, it likely means it was interrupted mid-haul.
+        //     // Let's try to re-trigger hauling state. scr_pop_hauling will check if still necessary.
+        //     show_debug_message("Pop " + _pop_id_str + " previous state was HAULING. Attempting to re-enter HAULING state.");
+        //     self.state = PopState.HAULING;
+        //     // self._hauling_state_initialized = false; // If scr_pop_hauling uses an init flag
+        //     self.previous_state = PopState.NONE;
+        //     exit;
+        //     break;
+            
+        case PopState.NONE: // No specific previous state to resume
+        case PopState.IDLE:
+        case PopState.WANDERING:
+        case PopState.COMMANDED: // If previous was commanded, it means the command finished.
+        case PopState.WAITING:   // If previous was waiting, it means it was interrupted while waiting.
+            show_debug_message("Pop " + _pop_id_str + " previous state (" + _scr_get_state_name(self.previous_state) + ") does not require specific resume action or is a default state. Will proceed to IDLE/WANDER.");
+            break;
+            
+        default:
+            show_debug_message("Pop " + _pop_id_str + " previous state " + _scr_get_state_name(self.previous_state) + " has no resume logic. Defaulting.");
+            break;
     }
+
+    // --- Default to IDLE then WANDER if no specific task was resumed ---
+    // This section is reached if the switch statement doesn't 'exit'
+    
+    show_debug_message("Pop " + _pop_id_str + " did not resume a specific task. Transitioning to IDLE.");
+    
+    // Clear any lingering interaction targets if we are defaulting to idle.
+    // This is important because if we were trying to resume foraging but failed,
+    // these variables might still be set from the failed attempt.
+    self.target_interaction_object_id = noone;
+    self.target_interaction_slot_index = -1;
+    self.target_interaction_type_tag = "";
+    
+    // Also clear last_foraged_... to prevent stale data influencing future decisions if we idle now.
+    self.last_foraged_target_id = noone;
+    self.last_foraged_slot_index = -1;
+    self.last_foraged_type_tag = "";
+
+    self.state = PopState.IDLE;
+    self.is_waiting = false; // Not truly waiting for a specific event, just idling
+    self.has_arrived = true; // Considered "arrived" at its current idle spot
+    self.idle_timer = 0;     // Reset idle timer (defined in obj_pop Create or a constants script)
+    // self.wander_timer will be handled by scr_pop_idle
+    
+    // Ensure sprite is appropriate for idling
+    // LEARNING POINT: Using `self` explicitly can improve clarity when instance variables are being modified,
+    // especially in scripts that could potentially be called by different contexts (though this one is pop-specific).
+    self.sprite_index = spr_man_idle; // Or a generic idle sprite
+    self.image_speed = 0.2 + random(0.1); // Slow, slightly varied idle animation
+    self.speed = 0;
+    
+    self.previous_state = PopState.NONE; // Clear previous_state as we are now defaulting.
+
+    // The scr_pop_idle script will eventually transition to WANDERING if the pop remains idle for too long.
+    // No need to explicitly set WANDERING here unless that's the immediate desired behavior.
+    #endregion
+
+    // =========================================================================
+    // 5. CLEANUP & RETURN
+    // =========================================================================
+    #region 5.1 Cleanup & Return Value
+    // This script modifies the pop's state directly and does not return a value.
+    #endregion
+
+    // =========================================================================
+    // 6. DEBUG/PROFILING (Optional)
+    // =========================================================================
+    #region 6.1 Debug & Profile Hooks
+    // No specific debug/profiling hooks in this version.
+    #endregion
 }

@@ -1,6 +1,7 @@
 {
   "FolderOrderSettings":[
     {"name":"Structures","order":1,"path":"folders/Objects/Structures.yy",},
+    {"name":"Behavior Functions","order":4,"path":"folders/Scripts/Pop/Behaviors/Behavior Functions.yy",},
     {"name":"Formations","order":2,"path":"folders/Scripts/Pop/Behaviors/Formations.yy",},
     {"name":"Music","order":1,"path":"folders/Sounds/Music.yy",},
     {"name":"Pops","order":2,"path":"folders/Sounds/Pops.yy",},
@@ -31,6 +32,7 @@
     {"name":"scr_load_name_data","order":2,"path":"scripts/scr_load_name_data/scr_load_name_data.yy",},
     {"name":"scr_point_in_sprite","order":4,"path":"scripts/scr_point_in_sprite/scr_point_in_sprite.yy",},
     {"name":"scr_pop_hauling","order":3,"path":"scripts/scr_pop_hauling/scr_pop_hauling.yy",},
+    {"name":"scr_pop_resume_previous_or_idle","order":4,"path":"scripts/scr_pop_resume_previous_or_idle/scr_pop_resume_previous_or_idle.yy",},
     {"name":"scr_resources","order":5,"path":"scripts/scr_resources/scr_resources.yy",},
     {"name":"scr_selection_controller","order":2,"path":"scripts/scr_selection_controller/scr_selection_controller.yy",},
     {"name":"scr_traits","order":4,"path":"scripts/scr_traits/scr_traits.yy",},

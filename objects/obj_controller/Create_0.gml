@@ -248,63 +248,70 @@ if (global.musicplaying == true){
 #endregion
 
 #region 5.3 Set UI Text Elements
-text_layer_id = layer_get_id("UI");
+// Get the ID of the layer where UI elements are placed.
+text_layer_id = layer_get_id("UI"); 
+
 if (text_layer_id == -1) {
-    debug_log("ERROR: Text layer not found!", "obj_controller:Create", "red");
-    // Handle error
-}
+    // Log an error if the UI layer isn't found.
+    debug_log("ERROR: UI layer named 'UI' not found! Text elements cannot be initialized.", "obj_controller:Create:UI", "red");
+} else {
+    // Initialize the global struct to store references to UI text elements.
+    // This is crucial for scr_selection_controller to update the correct fields.
+    global.ui_text_elements = {}; 
+    debug_log("DEBUG: Initialized global.ui_text_elements struct.", "obj_controller:Create:UI", "cyan");
 
+    // Get all elements on the UI layer.
+    var _elements_on_layer = layer_get_all_elements(text_layer_id);
+    var _found_pop_name = false, _found_pop_sex = false, _found_pop_age = false; // Flags for debugging
 
-// In obj_controller Create or a UI init script
-global.ui_text_elements = {}; // A struct to store references
+    for (var i = 0; i < array_length(_elements_on_layer); i++) {
+        var _element_id = _elements_on_layer[i];
+        // We are interested only in text elements.
+        if (layer_get_element_type(_element_id) == layerelementtype_text) {
+            var _initial_text = layer_text_get_text(_element_id); // Get the placeholder text
 
-if (text_layer_id != -1) {
-    elements_on_layer = layer_get_all_elements(text_layer_id);
-    for (var i = 0; i < array_length(elements_on_layer); i++) {
-        var element_id = elements_on_layer[i];
-        if (layer_get_element_type(element_id) == layerelementtype_text) {
-
-            var initial_text = layer_text_get_text(element_id); // Get its current text
-            debug_log($"Found text element {element_id} with text: '{initial_text}'", "obj_controller:Create:UI", "cyan");
-
-            // Example: Identify by a unique placeholder text you put in the room editor
-            if (string_pos("F0", initial_text) > 0) { // If its initial text was "FOOD_COUNT_PLACEHOLDER"
-                global.ui_text_elements.food = element_id;
-                debug_log($"Assigned food text element: {element_id}", "obj_controller:Create:UI", "green");
-				layer_text_text(global.ui_text_elements.food, global.lineage_food_stock)
-            } else if (string_pos("W1", initial_text) > 0) {
-                global.ui_text_elements.wood = element_id;
-				debug_log($"Assigned wood text element: {element_id}", "obj_controller:Create:UI", "green");
-				layer_text_text(global.ui_text_elements.wood, global.lineage_wood_stock)
-            } else if (string_pos("S2", initial_text) > 0) {
-                global.ui_text_elements.stone = element_id;
-				debug_log($"Assigned stone text element: {element_id}", "obj_controller:Create:UI", "green");
-				layer_text_text(global.ui_text_elements.stone, global.lineage_stone_stock)
-            } else if (string_pos("M3", initial_text) > 0) {
-                global.ui_text_elements.metal = element_id;
-				debug_log($"Assigned metal text element: {element_id}", "obj_controller:Create:UI", "green");
-				layer_text_text(global.ui_text_elements.metal, global.lineage_metal_stock)
+            // Identify Pop Inspector Panel Text Elements by their placeholder text.
+            // These placeholders must exactly match what you've set in the Room Editor.
+            if (string_pos("POP_NAME_PLACEHOLDER", _initial_text) > 0) {
+                global.ui_text_elements.pop_name_display = _element_id;
+                layer_text_text(_element_id, "N/A"); // Set initial display to N/A
+                _found_pop_name = true;
+                debug_log($"Assigned Pop Name Display text element (ID: {_element_id}) based on placeholder.", "obj_controller:Create:UI", "green");
+            } else if (string_pos("POP_SEX_PLACEHOLDER", _initial_text) > 0) {
+                global.ui_text_elements.pop_sex_display = _element_id;
+                layer_text_text(_element_id, "N/A"); // Set initial display to N/A
+                _found_pop_sex = true;
+                debug_log($"Assigned Pop Sex Display text element (ID: {_element_id}) based on placeholder.", "obj_controller:Create:UI", "green");
+            } else if (string_pos("POP_AGE_PLACEHOLDER", _initial_text) > 0) {
+                global.ui_text_elements.pop_age_display = _element_id;
+                layer_text_text(_element_id, "N/A"); // Set initial display to N/A
+                _found_pop_age = true;
+                debug_log($"Assigned Pop Age Display text element (ID: {_element_id}) based on placeholder.", "obj_controller:Create:UI", "green");
             }
-            // --- Pop Inspector Panel Elements ---
-            // Ensure your text elements in the Room Editor for the Pop Details panel
-            // have these exact placeholder strings as their initial text.
-            else if (string_pos("POP_NAME_PLACEHOLDER", initial_text) > 0) {
-                global.ui_text_elements.pop_name_display = element_id;
-                debug_log($"Assigned Pop Name Display text element: {element_id}", "obj_controller:Create:UI", "green");
-                layer_text_text(global.ui_text_elements.pop_name_display, "N/A"); // Default to N/A
-            } else if (string_pos("POP_SEX_PLACEHOLDER", initial_text) > 0) {
-                global.ui_text_elements.pop_sex_display = element_id;
-                debug_log($"Assigned Pop Sex Display text element: {element_id}", "obj_controller:Create:UI", "green");
-                layer_text_text(global.ui_text_elements.pop_sex_display, "N/A"); // Default to N/A
-            } else if (string_pos("POP_AGE_PLACEHOLDER", initial_text) > 0) {
-                global.ui_text_elements.pop_age_display = element_id;
-                debug_log($"Assigned Pop Age Display text element: {element_id}", "obj_controller:Create:UI", "green");
-                layer_text_text(global.ui_text_elements.pop_age_display, "N/A"); // Default to N/A
+            // ... (any other general UI text elements like F0, W1, S2, M3 would be here) ...
+            else if (string_pos("F0", _initial_text) > 0) { 
+                global.ui_text_elements.food = _element_id;
+                layer_text_text(global.ui_text_elements.food, string(global.lineage_food_stock));
+                debug_log($"Assigned food text element (ID: {_element_id}).", "obj_controller:Create:UI", "green");
+            } else if (string_pos("W1", _initial_text) > 0) {
+                global.ui_text_elements.wood = _element_id;
+                layer_text_text(global.ui_text_elements.wood, string(global.lineage_wood_stock));
+                debug_log($"Assigned wood text element (ID: {_element_id}).", "obj_controller:Create:UI", "green");
+            } else if (string_pos("S2", _initial_text) > 0) {
+                global.ui_text_elements.stone = _element_id;
+                layer_text_text(global.ui_text_elements.stone, string(global.lineage_stone_stock));
+                debug_log($"Assigned stone text element (ID: {_element_id}).", "obj_controller:Create:UI", "green");
+            } else if (string_pos("M3", _initial_text) > 0) {
+                global.ui_text_elements.metal = _element_id;
+                layer_text_text(global.ui_text_elements.metal, string(global.lineage_metal_stock));
+                debug_log($"Assigned metal text element (ID: {_element_id}).", "obj_controller:Create:UI", "green");
             }
-            // You'd also need placeholders or identification for the static labels "Food", "Wood" etc.
-            // if you ever wanted to change them, but for counts this is key.
         }
     }
+    // Debugging: Check if all expected inspector elements were found
+    if (!_found_pop_name) { debug_log("WARNING: POP_NAME_PLACEHOLDER text element not found on UI layer.", "obj_controller:Create:UI", "yellow"); }
+    if (!_found_pop_sex) { debug_log("WARNING: POP_SEX_PLACEHOLDER text element not found on UI layer.", "obj_controller:Create:UI", "yellow"); }
+    if (!_found_pop_age) { debug_log("WARNING: POP_AGE_PLACEHOLDER text element not found on UI layer.", "obj_controller:Create:UI", "yellow"); }
 }
 #endregion
 // ============================================================================

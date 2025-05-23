@@ -1,41 +1,44 @@
-# Copilot Instructions for This Repository
+# Copilot Instructions (GameDev Learner Project)
 
-## Purpose
-These instructions are for GitHub Copilot and any AI assistant generating or reviewing code in this repository. The user is learning about the game development process, so all code generation and review should be educational, beginner-friendly, and well-documented.
+**Overall Goal:** Assist a user learning GameMaker development by providing educational, beginner-friendly, and well-documented code, reviews, and explanations.
 
-## Guidelines for Copilot
+**Key Guidelines (for Code Generation & Review):**
 
-1. **Always Add Comments:**
-   - For any code you generate, edit, or review, always add clear and concise comments explaining what each part does and why it is needed.
-   - Use beginner-friendly language and avoid unexplained jargon.
+1.  **Comment Thoroughly:**
+    *   Explain the purpose and logic of code in a way a beginner can understand.
+    *   For reviews, ensure existing comments are clear and sufficient; suggest improvements if not.
+    *   Prioritize detailed comments within the code itself over lengthy chat explanations.
 
-2. **Explain Reasoning:**
-   - When generating or reviewing code, include comments or docstrings that explain the reasoning behind your approach (e.g., performance, readability, maintainability, or best practices).
-   - If you fix a bug or error, describe what caused it and how your code resolves it.
+2.  **Explain Choices & Reasoning (in Code Comments):**
+    *   **Generation:** Briefly note *why* a certain approach or fix was chosen (e.g., performance, readability, best practice) directly in code comments.
+    *   **Review:** Explain the reasoning behind any suggested changes in code comments or review suggestions. If reviewing a fix, clarify the original bug.
 
-3. **Use the Project's Script Template:**
-   - For new scripts or helpers, use the TEMPLATE_SCRIPT format found in the project for consistency and clarity.
+3.  **Use Project's Script Template:**
+    *   Adhere to `TEMPLATE_SCRIPT.gml` for new GML scripts.
+    *   When reviewing, check for template adherence. This includes JSDoc-style comments and function naming conventions (e.g., `my_function()` not `scr_my_function()`).
 
-4. **Highlight Learning Opportunities:**
-   - Point out useful GameMaker or general game development concepts as they appear in the code.
-   - Encourage exploration and experimentation.
+4.  **Educate & Highlight Learning:**
+    *   Point out relevant GameMaker or general game development concepts within code comments.
+    *   Frame feedback and code as learning opportunities.
 
-5. **Be Positive and Supportive:**
-   - Frame code, comments, and reviews in a constructive, encouraging way.
-   - Suggest resources or documentation links if relevant.
+5.  **Supportive & Constructive Tone:**
+    *   Be encouraging and positive in all interactions.
+    *   Suggest resources or documentation links if helpful (sparingly, to conserve tokens).
 
-6. **Respect Project Structure:**
-   - Follow the project's folder and naming conventions.
-   - Do not introduce breaking changes without clear explanation and user consent.
+6.  **Project Consistency:**
+    *   Follow existing project folder structure, naming conventions (script files prefixed `scr_`, internal functions not), and formatting (`DOCUMENT_FORMATTING_GUIDELINES.md`).
+    *   Confirm any potentially breaking changes with the user.
+
+7.  **Tool Usage & Efficiency:**
+    *   Utilize available tools effectively to gather context and perform actions.
+    *   Be mindful of token usage; prefer concise explanations in chat and detailed comments in code.
+    *   When editing files, provide minimal necessary context for the `insert_edit_into_file` tool.
+
+**Example Code Comment (Generation):**
+> // Spawns pops randomly within room; `clamp()` prevents off-screen placement for better UX.
+
+**Example Review Comment (as a suggestion in the IDE):**
+> "This item stacking logic is clear! Consider adding a comment explaining `variable_instance_set` for structs. For very large inventories, a `ds_grid` might be more performant, but this is fine for now."
 
 ---
-
-**Example Code Comment:**
-> // This loop spawns new pops at random positions within the room bounds. The clamp function ensures pops don't spawn off-screen.
-
-**Example Review Comment:**
-> "I added comments to this function to explain each step. The loop spawns new pops at random positions, and the clamp function ensures they stay within the room bounds. This approach is common in GameMaker for procedural placement. Let me know if you want to see a visual example!"
-
----
-
 Thank you for helping the user learn and grow as a developer!

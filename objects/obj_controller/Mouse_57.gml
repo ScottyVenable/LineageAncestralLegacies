@@ -121,25 +121,48 @@ if (_clicked_interactive_object != noone) {
     with (obj_pop) { 
         if (selected) {
             if ((state == PopState.FORAGING || state == PopState.WORKING) && instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
-                if (target_interaction_object_id != _target_object_for_this_command) { 
-                    scr_interaction_slot_release(target_interaction_object_id, id);
-                    target_interaction_object_id = noone; target_interaction_slot_index = -1; target_interaction_type_tag = "";
-                } else {
-                    scr_interaction_slot_release(target_interaction_object_id, id); 
-                    target_interaction_slot_index = -1; 
+                // If the pop is currently interacting with something, release its slot.
+                // This is important to free up the slot for other pops or if the pop is re-tasked.
+                scr_interaction_slot_release(target_interaction_object_id, id);
+                
+                // Reset the pop's interaction-related variables since it's being re-tasked.
+                target_interaction_object_id = noone; 
+                target_interaction_slot_index = -1; 
+                target_interaction_type_tag = "";
+                
+                // Also, reset last_foraged_target_id if it was the one being released.
+                // This prevents an immediate attempt to re-acquire the same slot in scr_pop_resume_previous_or_idle
+                // if the pop goes idle after this command fails or is superseded quickly.
+                if (variable_instance_exists(id, "last_foraged_target_id") && last_foraged_target_id == target_interaction_object_id) {
+                    last_foraged_target_id = noone;
+                    last_foraged_slot_index = -1;
+                    last_foraged_type_tag = "";
                 }
             }
             var _slot_index = scr_interaction_slot_get_free(_target_object_for_this_command); 
             if (_slot_index != -1) {
+                // Attempt to claim the new slot.
                 if (scr_interaction_slot_claim(_target_object_for_this_command, _slot_index, id)) { 
                     var _slot_details = scr_interaction_slot_get_world_pos(_target_object_for_this_command, _slot_index); 
                     if (_slot_details != undefined) {
+                        // Successfully claimed a slot, set up the pop for the interaction.
                         target_interaction_object_id = _target_object_for_this_command; 
                         target_interaction_slot_index = _slot_index;
                         target_interaction_type_tag = _slot_details.type_tag;
-                        travel_point_x = _slot_details.x; travel_point_y = _slot_details.y;
+                        travel_point_x = _slot_details.x; 
+                        travel_point_y = _slot_details.y;
+                        
+                        // Set the state based on the object type (this could be more dynamic)
+                        // For now, assume right-clicking a slot provider means FORAGING.
                         state = PopState.FORAGING; 
-                        if (state == PopState.FORAGING) { forage_timer = 0; }
+                        previous_state = PopState.FORAGING; // Store that we were commanded to forage.
+                        
+                        // Update last_foraged_target_id because this is a new, explicit command.
+                        last_foraged_target_id = _target_object_for_this_command;
+                        last_foraged_slot_index = _slot_index;
+                        last_foraged_type_tag = _slot_details.type_tag;
+                        
+                        if (state == PopState.FORAGING) { forage_timer = 0; } // Reset forage timer for the new task
                         has_arrived = false; is_waiting = false;
                         array_push(_successfully_assigned_pops, id);
                     } else {
@@ -174,10 +197,22 @@ with (obj_pop) {
         if ((state == PopState.FORAGING || state == PopState.WORKING) && 
             instance_exists(target_interaction_object_id) && 
             target_interaction_slot_index != -1) {
+            // If the pop is currently interacting and is now commanded to move, release its slot.
             scr_interaction_slot_release(target_interaction_object_id, id);
+            
+            // Reset interaction variables.
             target_interaction_object_id = noone;
             target_interaction_slot_index = -1;
             target_interaction_type_tag = "";
+            
+            // Also, reset last_foraged_target_id if it was the one being released.
+            // This is to ensure that if the pop becomes idle after the move,
+            // it doesn't try to resume foraging at the slot it was just pulled from.
+            if (variable_instance_exists(id, "last_foraged_target_id") && last_foraged_target_id == target_interaction_object_id) {
+                last_foraged_target_id = noone;
+                last_foraged_slot_index = -1;
+                last_foraged_type_tag = "";
+            }
         }
         array_push(_selected_pops_list_for_move, id);
     }

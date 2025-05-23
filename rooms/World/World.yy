@@ -25,8 +25,8 @@
     {"name":"status_bar_panel","path":"roomui/RoomUI/RoomUI.yy",},
     {"name":"inst_25800574","path":"roomui/RoomUI/RoomUI.yy",},
     {"name":"command_panel","path":"roomui/RoomUI/RoomUI.yy",},
-    {"name":"messages_panel","path":"roomui/RoomUI/RoomUI.yy",},
     {"name":"inspector_panel","path":"roomui/RoomUI/RoomUI.yy",},
+    {"name":"inst_612D56EB","path":"roomui/RoomUI/RoomUI.yy",},
   ],
   "isDnd":false,
   "layers":[

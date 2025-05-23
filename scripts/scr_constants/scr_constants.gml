@@ -1,42 +1,47 @@
-/// scr_constants.gml
-///
-/// Purpose:
-///     Defines global enumerations (enums) and potentially other constants
-///     used throughout the game. This script should be placed high in the
-///     asset tree or ensured to compile early so these definitions are
-///     available when other scripts need them.
-///
-/// Metadata:
-///     Summary:        Contains global game enums like PopState, ItemType, PopNeeds, BuildingTypes, etc.
-///     Usage:          Exists in the project; its contents are globally accessible once compiled.
-///                     Not called as a function.
-///     Parameters:     none (This script is not a function and does not accept parameters)
-///     Returns:        n/a (This script is not a function and does not return values)
-///     Tags:           [global][definitions][enums][constants]
-///     Version:        1.4 — 2025-05-22 (Added PopLifeStage enum for pop life stages)
-///     Dependencies:   none (Enums defined here are self-contained)
+// Script Name: scr_constants
+// Purpose: Defines global enumerations (enums) and potentially other constants used throughout the game.
+//          This script should be placed high in the asset tree or ensured to compile early so these
+//          definitions are available when other scripts need them.
+//
+// Metadata:
+//   Summary: Contains global game enums like PopState, ItemType, PopNeeds, BuildingTypes, etc.
+//   Usage: Exists in the project; its contents are globally accessible once compiled. Not called as a function.
+//   Parameters: none (This script is not a function and does not accept parameters)
+//   Returns: n/a (This script is not a function and does not return values)
+//   Tags: [global][definitions][enums][constants]
+//   Version: 1.5 — 2025-07-26 (Aligned with project template)
+//   Dependencies: none (Enums defined here are self-contained)
+//   Created: 2023-XX-XX (Assuming a creation date)
+//   Modified: 2025-07-26 // Previously 2025-05-22
+//
+// ---
+
+// This script does not define a function, so no JSDoc function block is needed here.
+// It directly defines enums and constants at the global scope.
 
 // =========================================================================
-// 0. IMPORTS & CACHES
+// 0. IMPORTS & CACHES (Not typically applicable for a pure constants script)
 // =========================================================================
-#region 0.1 Imports & Cached Locals
+#region 0. IMPORTS & CACHES
 // (Not applicable for a script that only defines global enums at the top level)
 #endregion
 
 // =========================================================================
-// 1. VALIDATION & EARLY RETURNS
+// 1. VALIDATION & EARLY RETURNS (Not applicable for a constants script)
 // =========================================================================
-#region 1.1 Parameter Validation
+#region 1. VALIDATION & EARLY RETURNS
 // (Not applicable for a script that only defines global enums)
 #endregion
 
 // =========================================================================
-// 2. CONFIGURATION & CONSTANTS (ENUM DEFINITIONS)
+// 2. GLOBAL DEFINITIONS (ENUMS, MACROS, CONSTANTS)
 // =========================================================================
-// This section is used to define the global enums.
+#region 2. GLOBAL DEFINITIONS
 
 #region 2.1 Pop Enums
 enum PopState {
+	NONE,
+	
     IDLE,
     COMMANDED,
     WANDERING,
@@ -159,7 +164,7 @@ enum ItemTag { // For more flexible item categorization beyond ItemType
 }
 #endregion
 
-#region 2.3 Building & Structure Enums
+#region 2.3 Building & Zone Enums
 enum BuildingCategory {
     HOUSING,
     PRODUCTION_PRIMARY,   // Resource gathering spots like mines, lumber camps
@@ -211,7 +216,7 @@ enum StructureType { // More specific than category
 }
 #endregion
 
-#region 2.4 Environment & Time Enums
+#region 2.4 Resource Enums
 enum BiomeType {
     FOREST_TEMPERATE,
     FOREST_BOREAL,
@@ -260,7 +265,7 @@ enum TimeOfDay { // Could be used for lighting, pop schedules
 }
 #endregion
 
-#region 2.5 Task & System Enums
+#region 2.5 UI & Interaction Enums
 enum TaskPriority {
     NONE,       // Not set or not a task
     VERY_LOW,
@@ -300,33 +305,18 @@ enum FactionStanding { // How other factions view the player's faction
 }
 #endregion
 
-// Add other global enums or macros here as needed within Section 2.
-
-// =========================================================================
-// 3. INITIALIZATION & STATE SETUP
-// =========================================================================
-#region 3.1 One‐Time Setup
-// (Not applicable in the same way as a behavior script; enums are defined at compile time)
-// The show_debug_message below acts as a confirmation that the script has been processed.
+#region 2.6 Game State & System Enums
+// Add any additional game state or system-related enums here
 #endregion
 
-// =========================================================================
-// 4. CORE LOGIC
-// =========================================================================
-#region 4.1 Main Behavior / Utility Logic
-// (Not applicable for a script that only defines global enums)
+#region 2.7 Other Constants & Macros (If any)
+// Example: #macro TILE_SIZE 32
+// Example: #macro GAME_VERSION "0.1.0-alpha"
 #endregion
 
-// =========================================================================
-// 5. CLEANUP & RETURN
-// =========================================================================
-#region 5.1 Cleanup & Return
-// (Not applicable for a script that only defines global enums)
-#endregion
+#endregion // End of 2. GLOBAL DEFINITIONS
 
 // =========================================================================
-// 6. DEBUG/PROFILING (Confirmation Log)
+// X. CLEANUP (Not applicable for a constants script)
 // =========================================================================
-#region 6.1 Debug & Profile Hooks
-show_debug_message("Global Constants & Enums (scr_constants) Initialized/Compiled with expanded list.");
-#endregion
+// (No cleanup actions needed for a script that only defines constants)

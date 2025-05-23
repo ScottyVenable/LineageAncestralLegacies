@@ -89,6 +89,13 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             // Reset task-specific timer upon arrival at slot, based on interaction type
             if (target_interaction_type_tag == "forage_left" || target_interaction_type_tag == "forage_right") {
                 forage_timer = 0;
+                // When arriving at a slot for foraging, this is the current task.
+                // So, update last_foraged_target_id, slot, and type tag.
+                // This ensures that if the pop is interrupted while foraging (e.g., by hunger)
+                // and then finishes that interruption, it knows which bush/slot it was at.
+                last_foraged_target_id = target_interaction_object_id;
+                last_foraged_slot_index = target_interaction_slot_index;
+                last_foraged_type_tag = target_interaction_type_tag;
             }
             // else if (target_interaction_type_tag == "mine_rock") { mining_timer = 0; } // Example
             
@@ -203,49 +210,105 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             // Check if task is complete (target depleted or became invalid)
             if (_target_is_depleted) {
                 var _pop_id_str_depletion = pop_identifier_string + " (ID:" + string(id) + ")"; // For logging
-                show_debug_message("Pop " + _pop_id_str_depletion + " finished foraging: target " + string(target_interaction_object_id) + " depleted or invalid.");
-                
-                // Release the slot robustly
-                var _slot_release_idx = asset_get_index("scr_interaction_slot_release");
-                if (_slot_release_idx != -1 && script_exists(_slot_release_idx)) {
-                    if (instance_exists(target_interaction_object_id)) { // Check instance exists before passing to script
-                        script_execute(_slot_release_idx, target_interaction_object_id, id);
-                    } else {
-                         show_debug_message("Pop " + _pop_id_str_depletion + " target " + string(target_interaction_object_id) + " no longer exists. Cannot release slot formally.");
+                show_debug_message("Pop " + _pop_id_str_depletion + " foraging: target " + string(target_interaction_object_id) + " depleted or invalid.");
+
+                // Check pop's inventory for the item type it was just foraging
+                var _item_type_foraged = target_interaction_object_id.item_yield_enum; // Assuming this variable exists on the target
+                var _has_foraged_items_in_inventory = false;
+                if (variable_instance_exists(id, "inventory_items") && ds_exists(inventory_items, ds_type_list)) {
+                    for (var i = 0; i < ds_list_size(inventory_items); i++) {
+                        var item_struct = inventory_items[| i];
+                        if (is_struct(item_struct) && variable_struct_exists(item_struct, "item_id_enum") && variable_struct_exists(item_struct, "quantity")) {
+                            if (item_struct.item_id_enum == _item_type_foraged && item_struct.quantity > 0) {
+                                _has_foraged_items_in_inventory = true;
+                                break;
+                            }
+                        }
                     }
-                } else {
-                    show_debug_message("ERROR: scr_interaction_slot_release script not found! Pop " + _pop_id_str_depletion + " cannot release slot after depletion.");
                 }
 
-                // The pop was foraging, and the task ended because the resource was depleted.
-                // It should try to find a new foraging task after stepping away.
-                self.previous_state = PopState.FORAGING;
-                // Clear the specific last target because it's gone.
-                // The resume script will then know to search for a *new* target.
-                self.last_foraged_target_id = noone;
-                self.last_foraged_slot_index = -1;
-                self.last_foraged_type_tag = "";
-                
-                // Calculate a "step away" position
-                var _step_away_dist = irandom_range(30, 50);
-                var _new_travel_x = x; 
-                var _new_travel_y = y + _step_away_dist;
+                // LEARNING POINT: When a task like foraging ends because the resource is gone,
+                // the pop needs to decide what to do next. If it has collected items, it should
+                // probably go store them (HAULING). If not, it should look for more resources or idle.
 
-                // Clean up foraging-specific target info from current task variables
-                target_interaction_object_id = noone; 
-                target_interaction_slot_index = -1; 
-                target_interaction_type_tag = "";
-                
-                // Set pop to move to this new "waiting spot"
-                travel_point_x = _new_travel_x;
-                travel_point_y = _new_travel_y;
-                
-                state = PopState.COMMANDED; // Go to COMMANDED to execute the small move
-                is_waiting = false;         // Not waiting yet, it's moving
-                has_arrived = false;        // Needs to arrive at this new step-away spot
-                
-                show_debug_message("Pop " + _pop_id_str_depletion + " (foraging complete due to depletion) setting previous_state=FORAGING, last_target_vars cleared. Stepping away to (" + string(floor(travel_point_x)) + "," + string(floor(travel_point_y)) + ") before resuming/idling.");
-                exit; // Exit script for this step, next step COMMANDED will take over
+                if (_has_foraged_items_in_inventory) {
+                    // Pop has items from the depleted source, so transition to HAULING
+                    show_debug_message("Pop " + _pop_id_str_depletion + " has foraged items. Transitioning to HAULING.");
+
+                    // Store context about the completed foraging task
+                    self.previous_state = PopState.FORAGING; 
+                    self.last_foraged_target_id = target_interaction_object_id; // Store the (now depleted) target
+                    self.last_foraged_slot_index = target_interaction_slot_index;
+                    self.last_foraged_type_tag = target_interaction_type_tag;
+
+                    // Release the slot from the depleted resource
+                    var _slot_release_idx_haul = asset_get_index("scr_interaction_slot_release");
+                    if (_slot_release_idx_haul != -1 && script_exists(_slot_release_idx_haul)) {
+                        if (instance_exists(target_interaction_object_id)) {
+                            script_execute(_slot_release_idx_haul, target_interaction_object_id, id);
+                        } else {
+                            show_debug_message("Pop " + _pop_id_str_depletion + " (to HAUL) target " + string(target_interaction_object_id) + " no longer exists. Cannot release slot formally.");
+                        }
+                    } else {
+                        show_debug_message("ERROR: scr_interaction_slot_release script not found! Pop " + _pop_id_str_depletion + " (to HAUL) cannot release slot.");
+                    }
+
+                    // Clear current interaction targets as we are done with this specific interaction
+                    target_interaction_object_id = noone; 
+                    target_interaction_slot_index = -1; 
+                    target_interaction_type_tag = "";
+                    
+                    // Set state to HAULING
+                    state = PopState.HAULING;
+                    has_arrived = false; // Pop needs to find and move to a gathering hut
+                    // _hauling_state_initialized = false; // Ensure hauling state initializes correctly if it has such a flag
+
+                } else {
+                    // Target depleted AND pop has no items of that type, so step away and then resume/idle.
+                    show_debug_message("Pop " + _pop_id_str_depletion + " has NO foraged items. Stepping away before resuming/idling.");
+
+                    // Release the slot robustly
+                    var _slot_release_idx_step_away = asset_get_index("scr_interaction_slot_release");
+                    if (_slot_release_idx_step_away != -1 && script_exists(_slot_release_idx_step_away)) {
+                        if (instance_exists(target_interaction_object_id)) { 
+                            script_execute(_slot_release_idx_step_away, target_interaction_object_id, id);
+                        } else {
+                             show_debug_message("Pop " + _pop_id_str_depletion + " (to step away) target " + string(target_interaction_object_id) + " no longer exists. Cannot release slot formally.");
+                        }
+                    } else {
+                        show_debug_message("ERROR: scr_interaction_slot_release script not found! Pop " + _pop_id_str_depletion + " (to step away) cannot release slot.");
+                    }
+
+                    // The pop was foraging, and the task ended because the resource was depleted.
+                    // It should try to find a new foraging task after stepping away.
+                    self.previous_state = PopState.FORAGING;
+                    // Clear the specific last target because it's gone and we don't have items from it.
+                    // The resume script will then know to search for a *new* target.
+                    self.last_foraged_target_id = noone; 
+                    self.last_foraged_slot_index = -1;
+                    self.last_foraged_type_tag = "";
+                    
+                    // Calculate a "step away" position
+                    var _step_away_dist = irandom_range(30, 50);
+                    var _new_travel_x = x; 
+                    var _new_travel_y = y + _step_away_dist; // Step away downwards for simplicity
+
+                    // Clean up foraging-specific target info from current task variables
+                    target_interaction_object_id = noone; 
+                    target_interaction_slot_index = -1; 
+                    target_interaction_type_tag = "";
+                    
+                    // Set pop to move to this new "waiting spot"
+                    travel_point_x = _new_travel_x;
+                    travel_point_y = _new_travel_y;
+                    
+                    state = PopState.COMMANDED; // Go to COMMANDED to execute the small move
+                    is_waiting = false;         // Not waiting yet, it's moving
+                    has_arrived = false;        // Needs to arrive at this new step-away spot
+                    
+                    show_debug_message("Pop " + _pop_id_str_depletion + " (foraging complete, no items, target depleted) setting previous_state=FORAGING, last_target_vars cleared. Stepping away to (" + string(floor(travel_point_x)) + "," + string(floor(travel_point_y)) + ") before resuming/idling.");
+                }
+                exit; // Exit script for this step, new state (HAULING or COMMANDED) will take over
             }
         }
     } 

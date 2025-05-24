@@ -22,41 +22,52 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
     // 0. VALIDATION: Ensure Target Object & Slot Info Are Valid
     // =========================================================================
     #region 0.1 Validate Interaction Target
-    if (!instance_exists(target_interaction_object_id) || 
-        target_interaction_slot_index == -1 || // Check if a slot was assigned
-        !variable_instance_exists(target_interaction_object_id, "interaction_slot_positions") || // Target must be a slot provider
-        target_interaction_slot_index >= array_length(target_interaction_object_id.interaction_slot_positions)) { // Slot index must be valid
-
+    // --- UPDATED FOR INTERACTION POINT SYSTEM ---
+    // Instead of checking interaction_slot_positions, we now check the interaction point instance directly.
+    var _valid_slot = false;
+    if (instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
+        if (variable_instance_exists(target_interaction_object_id, "interaction_slots_pop_ids")) {
+            var _points = target_interaction_object_id.interaction_slots_pop_ids;
+            if (target_interaction_slot_index >= 0 && target_interaction_slot_index < array_length(_points)) {
+                var _point_id = _points[target_interaction_slot_index];
+                if (instance_exists(_point_id) && (object_get_parent(_point_id.object_index) == obj_interaction_point || _point_id.object_index == obj_interaction_point)) {
+                    _valid_slot = true;
+                }
+            }
+        }
+    }
+    if (!_valid_slot) {
         // If target is somehow invalid, try to release slot if pop thought it had one
         if (instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1 &&
-            variable_instance_exists(target_interaction_object_id, "interaction_slots_pop_ids")) { // Ensure array exists before access
-             scr_interaction_slot_release(target_interaction_object_id, id);
+            variable_instance_exists(target_interaction_object_id, "interaction_slots_pop_ids")) {
+            var _point_id = scr_interaction_slot_get_by_pop(target_interaction_object_id, id);
+            if (_point_id != noone) scr_interaction_slot_release(_point_id, id);
         }
-        
         // Reset pop's interaction variables and go to WAITING state
         target_interaction_object_id = noone;
         target_interaction_slot_index = -1;
         target_interaction_type_tag = "";
-        state = PopState.WAITING; 
-        is_waiting = true; 
-        depth = -y; 
-        has_arrived = true; // Since it's waiting at its current spot
+        state = PopState.WAITING;
+        is_waiting = true;
+        depth = -y;
+        has_arrived = true;
         speed = pop.base_speed;
-        image_speed = 1.0; 
-        sprite_index = spr_man_idle; // Default to idle sprite
-        show_debug_message($"Pop {pop_identifier_string} (ID: {id}) has invalid interaction target/slot. Reverting to WAITING.");
+        image_speed = 1.0;
+        sprite_index = spr_man_idle;
+        show_debug_message($"Pop {pop_identifier_string} (ID: {id}) has invalid interaction target/slot (new system). Reverting to WAITING.");
         exit;
     }
     #endregion
 
     // Get target slot's current world position (in case target object moved)
     var _slot_details = scr_interaction_slot_get_world_pos(target_interaction_object_id, target_interaction_slot_index);
-    
     if (_slot_details == undefined) {
         show_debug_message($"Pop {pop_identifier_string} (ID: {id}) could not retrieve slot details for target {target_interaction_object_id}, slot {target_interaction_slot_index}. Reverting to WAITING.");
         // Attempt to release slot even if details are bad, as pop *thinks* it has a slot
         if (instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
-            scr_interaction_slot_release(target_interaction_object_id, id);
+            // --- NEW SYSTEM: Release by interaction point ID ---
+            var _point_id = scr_interaction_slot_get_by_pop(target_interaction_object_id, id);
+            if (_point_id != noone) scr_interaction_slot_release(_point_id, id);
         }
         target_interaction_object_id = noone; target_interaction_slot_index = -1; target_interaction_type_tag = "";
         state = PopState.WAITING; is_waiting = true; depth = -y; has_arrived = true; speed = 0; image_speed = 1.0; sprite_index = spr_man_idle;
@@ -64,6 +75,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
     }
     var _slot_target_x = _slot_details.x;
     var _slot_target_y = _slot_details.y;
+    var _interaction_point_id = _slot_details.point_id;
 
     // =========================================================================
     // 1. MOVEMENT TO ASSIGNED SLOT (if not already there)

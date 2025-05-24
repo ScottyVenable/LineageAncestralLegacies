@@ -41,29 +41,80 @@ delay_active        = false;
 
 // ============================================================================
 // 2. INTERACTION SLOT CONFIGURATION (Overrides/defines for this bush type)
+//    NOW GENERATES obj_interaction_point INSTANCES
 // ============================================================================
-#region 2.1 Define Interaction Slots
+#region 2.1 Define Interaction Slots & Create Points
 max_interaction_slots = 2;
-global.init_interaction_slots(); 
+// interaction_slots_pop_ids is now an array to store the instance IDs of the created obj_interaction_point instances.
+// It will still be sized by max_interaction_slots by the parent's init script.
+global.init_interaction_slots(); // This likely initializes interaction_slots_pop_ids to be an array of `noone`
+                                 // We will now fill it with instance IDs of obj_interaction_point.
 
-var slot_offset_x_distance = 24; 
-var slot_offset_y_distance = 0;  
+// We need a new array to store the actual obj_interaction_point instance IDs
+// The parent script (par_slot_provider) might initialize interaction_slots_pop_ids.
+// Let's use a more descriptive name for clarity if we are changing its purpose, or adapt.
+// For now, let's assume interaction_slots_pop_ids will store the point IDs.
+// If par_slot_provider uses interaction_slots_pop_ids for pop IDs directly, this will need adjustment there too.
 
+var slot_offset_x_distance = 24;
+var slot_offset_y_distance = 0;
+
+// Temporary array to hold the definitions, which we'll then use to create points.
+var _slot_definitions = [];
 if (max_interaction_slots > 0) {
-    interaction_slot_positions[0] = { 
-        rel_x: -slot_offset_x_distance, 
-        rel_y: slot_offset_y_distance, 
-        interaction_type_tag: "forage_left" 
-    };
+    array_push(_slot_definitions, {
+        rel_x: -slot_offset_x_distance,
+        rel_y: slot_offset_y_distance,
+        interaction_type_tag: "forage_left"
+    });
+}
+if (max_interaction_slots > 1) {
+    array_push(_slot_definitions, {
+        rel_x: slot_offset_x_distance,
+        rel_y: slot_offset_y_distance,
+        interaction_type_tag: "forage_right"
+    });
+}
+// Add more slots here if max_interaction_slots is higher, following the pattern.
+
+// Now, create the obj_interaction_point instances
+for (var i = 0; i < array_length(_slot_definitions); i++) {
+    if (i < max_interaction_slots) { // Ensure we don't create more points than max_interaction_slots allows
+        var _slot_def = _slot_definitions[i];
+        var _point_x = x + _slot_def.rel_x;
+        var _point_y = y + _slot_def.rel_y;
+        
+        // Create the interaction point instance on a specific layer if you have one for them,
+        // otherwise, it will be on the same layer as the bush.
+        // var _interaction_point_layer = layer_get_id("InteractionPointsLayer"); // Example layer
+        // var _point_inst = instance_create_layer(_point_x, _point_y, _interaction_point_layer, obj_interaction_point);
+        var _point_inst = instance_create_depth(_point_x, _point_y, depth - 1, obj_interaction_point); // Create slightly in front of bush
+
+        if (instance_exists(_point_inst)) {
+            _point_inst.parent_provider_id = id; // Link back to this bush
+            _point_inst.slot_index_on_parent = i;
+            _point_inst.interaction_type_tag = _slot_def.interaction_type_tag;
+            
+            // Store the ID of the created interaction point in the bush's array.
+            // This array was previously interaction_slots_pop_ids, now it stores point instance IDs.
+            interaction_slots_pop_ids[i] = _point_inst.id;
+            
+            debug_log($"Created obj_interaction_point ({_point_inst.id}) for bush {id}, slot {i} at ({_point_x}, {_point_y}) with tag \"{_slot_def.interaction_type_tag}\".", "obj_redBerryBush:Create", "blue");
+        } else {
+            debug_log($"ERROR: Failed to create obj_interaction_point for slot {i} on bush {id}.", "obj_redBerryBush:Create", "red");
+        }
+    } else {
+        // This case should ideally not be hit if _slot_definitions is sized correctly based on max_interaction_slots.
+        interaction_slots_pop_ids[i] = noone; // Ensure any remaining slots in the array are marked as noone.
+    }
 }
 
-if (max_interaction_slots > 1) {
-    interaction_slot_positions[1] = { 
-        rel_x: slot_offset_x_distance, 
-        rel_y: slot_offset_y_distance, 
-        interaction_type_tag: "forage_right" 
-    };
-}
+// The interaction_slot_positions array (which stored structs of rel_x, rel_y, tag)
+// is no longer directly needed by this object if all slot data is now on the obj_interaction_point instances.
+// However, other scripts might still expect it. For now, let's clear it or decide if it should be removed.
+// For safety during transition, we can leave it, but it won't be the primary source of truth for slot positions/tags.
+// interaction_slot_positions = []; // Optional: clear if no longer used by any system.
+
 #endregion
 
 // ============================================================================

@@ -120,58 +120,140 @@ if (_clicked_interactive_object != noone) {
 			
     with (obj_pop) { 
         if (selected) {
-            if ((state == PopState.FORAGING || state == PopState.WORKING) && instance_exists(target_interaction_object_id) && target_interaction_slot_index != -1) {
-                // If the pop is currently interacting with something, release its slot.
-                // This is important to free up the slot for other pops or if the pop is re-tasked.
-                scr_interaction_slot_release(target_interaction_object_id, id);
-                
-                // Reset the pop's interaction-related variables since it's being re-tasked.
-                target_interaction_object_id = noone; 
-                target_interaction_slot_index = -1; 
+            // If the pop is currently interacting, release its claimed interaction point (slot)
+            if ((state == PopState.FORAGING || state == PopState.WORKING)
+                && instance_exists(target_interaction_object_id)
+                && target_interaction_slot_index != -1) {
+                // --- NEW SYSTEM: Release by interaction point ID ---
+                // Fix: Call the script directly, not as a variable of the object.
+                var _old_point_id = scr_interaction_slot_get_by_pop(target_interaction_object_id, id); // Correct usage: script is global
+                if (_old_point_id != noone) scr_interaction_slot_release(_old_point_id, id);
+                // Reset interaction variables
+                target_interaction_object_id = noone;
+                target_interaction_slot_index = -1;
                 target_interaction_type_tag = "";
-                
-                // Also, reset last_foraged_target_id if it was the one being released.
-                // This prevents an immediate attempt to re-acquire the same slot in scr_pop_resume_previous_or_idle
-                // if the pop goes idle after this command fails or is superseded quickly.
+                // Also clear last_foraged_target_id if it was the one being released
                 if (variable_instance_exists(id, "last_foraged_target_id") && last_foraged_target_id == target_interaction_object_id) {
                     last_foraged_target_id = noone;
                     last_foraged_slot_index = -1;
                     last_foraged_type_tag = "";
                 }
             }
-            var _slot_index = scr_interaction_slot_get_free(_target_object_for_this_command); 
-            if (_slot_index != -1) {
-                // Attempt to claim the new slot.
-                if (scr_interaction_slot_claim(_target_object_for_this_command, _slot_index, id)) { 
-                    var _slot_details = scr_interaction_slot_get_world_pos(_target_object_for_this_command, _slot_index); 
+            // --- NEW SYSTEM: Find and claim a free interaction point (slot) ---
+            var _free_point_id = scr_interaction_slot_get_free(_target_object_for_this_command);
+            if (_free_point_id != noone) {
+                if (scr_interaction_slot_claim(_free_point_id, id)) {
+                    // Get the world position and type tag from the point instance
+                    var _slot_index = -1;
+                    var _points = _target_object_for_this_command.interaction_slots_pop_ids;
+                    for (var i = 0; i < array_length(_points); i++) {
+                        if (_points[i] == _free_point_id) { _slot_index = i; break; }
+                    }
+                    var _slot_details = scr_interaction_slot_get_world_pos(_target_object_for_this_command, _slot_index);
                     if (_slot_details != undefined) {
-                        // Successfully claimed a slot, set up the pop for the interaction.
-                        target_interaction_object_id = _target_object_for_this_command; 
-                        target_interaction_slot_index = _slot_index;
+                        // --- Assign all relevant target variables to the pop ---
+                        target_interaction_object_id = _target_object_for_this_command;
+                        target_interaction_slot_index = _slot_index; // Still used for legacy compatibility
                         target_interaction_type_tag = _slot_details.type_tag;
-                        travel_point_x = _slot_details.x; 
+                        // Store the actual interaction point instance ID for robust slot management
+                        target_interaction_point_id = _free_point_id; // (Optional: add this variable for clarity)
+                        travel_point_x = _slot_details.x;
                         travel_point_y = _slot_details.y;
-                        
-                        // Set the state based on the object type (this could be more dynamic)
-                        // For now, assume right-clicking a slot provider means FORAGING.
-                        state = PopState.FORAGING; 
-                        previous_state = PopState.FORAGING; // Store that we were commanded to forage.
-                        
-                        // Update last_foraged_target_id because this is a new, explicit command.
+                        // Set state to FORAGING (or other, based on object type)
+                        state = PopState.FORAGING;
+                        previous_state = PopState.FORAGING;
+                        // Update last_foraged_... for resume/idle logic
                         last_foraged_target_id = _target_object_for_this_command;
                         last_foraged_slot_index = _slot_index;
                         last_foraged_type_tag = _slot_details.type_tag;
-                        
-                        if (state == PopState.FORAGING) { forage_timer = 0; } // Reset forage timer for the new task
+                        if (state == PopState.FORAGING) { forage_timer = 0; }
                         has_arrived = false; is_waiting = false;
                         array_push(_successfully_assigned_pops, id);
                     } else {
-                        scr_interaction_slot_release(_target_object_for_this_command, id); 
+                        // If slot details couldn't be retrieved, release the point
+                        scr_interaction_slot_release(_free_point_id, id);
                     }
-                } 
-            } 
+                }
+            }
         }
     } 
+    // --- MULTI-POP INTERACTION LOGIC ---
+    // 1. Gather all selected pops into a list
+    var _selected_pops = [];
+    with (obj_pop) {
+        if (selected) array_push(_selected_pops, id);
+    }
+    // 2. Gather all free interaction points on the target object
+    var _free_points = [];
+    if (variable_instance_exists(_target_object_for_this_command, "interaction_slots_pop_ids")) {
+        var _points = _target_object_for_this_command.interaction_slots_pop_ids;
+        for (var i = 0; i < array_length(_points); i++) {
+            var _point_id = _points[i];
+            if (instance_exists(_point_id) && (object_get_parent(_point_id.object_index) == obj_interaction_point || _point_id.object_index == obj_interaction_point)) {
+                if (_point_id.is_occupied_by_pop_id == noone) array_push(_free_points, _point_id);
+            }
+        }
+    }
+    // 3. Assign pops to free points (up to available slots)
+    var _num_to_assign = min(array_length(_selected_pops), array_length(_free_points));
+    // --- EDUCATIONAL NOTE: Only assign as many pops as there are free slots. Pops not assigned a slot are skipped ---
+    for (var i = 0; i < _num_to_assign; i++) {
+        var _pop_id = _selected_pops[i];
+        var _point_id = _free_points[i];
+        if (instance_exists(_pop_id) && instance_exists(_point_id)) {
+            with (_pop_id) {
+                // --- Only release/assign slot if this pop is being assigned a new slot ---
+                // Release any previous slot (if any)
+                if ((state == PopState.FORAGING || state == PopState.WORKING)
+                    && instance_exists(target_interaction_object_id)
+                    && target_interaction_slot_index != -1) {
+                    var _old_point_id = scr_interaction_slot_get_by_pop(target_interaction_object_id, id);
+                    if (_old_point_id != noone) scr_interaction_slot_release(_old_point_id, id);
+                    target_interaction_object_id = noone;
+                    target_interaction_slot_index = -1;
+                    target_interaction_type_tag = "";
+                    if (variable_instance_exists(id, "last_foraged_target_id") && last_foraged_target_id == target_interaction_object_id) {
+                        last_foraged_target_id = noone;
+                        last_foraged_slot_index = -1;
+                        last_foraged_type_tag = "";
+                    }
+                }
+                // Claim the new point
+                if (scr_interaction_slot_claim(_point_id, id)) {
+                    // Find the slot index for this point
+                    var _slot_index = -1;
+                    var _pts = _target_object_for_this_command.interaction_slots_pop_ids;
+                    for (var j = 0; j < array_length(_pts); j++) {
+                        if (_pts[j] == _point_id) { _slot_index = j; break; }
+                    }
+                    var _slot_details = scr_interaction_slot_get_world_pos(_target_object_for_this_command, _slot_index);
+                    if (_slot_details != undefined) {
+                        // --- Assign all relevant target variables to the pop ---
+                        target_interaction_object_id = _target_object_for_this_command;
+                        target_interaction_slot_index = _slot_index;
+                        target_interaction_type_tag = _slot_details.type_tag;
+                        target_interaction_point_id = _point_id;
+                        travel_point_x = _slot_details.x;
+                        travel_point_y = _slot_details.y;
+                        state = PopState.FORAGING;
+                        previous_state = PopState.FORAGING;
+                        last_foraged_target_id = _target_object_for_this_command;
+                        last_foraged_slot_index = _slot_index;
+                        last_foraged_type_tag = _slot_details.type_tag;
+                        forage_timer = 0;
+                        has_arrived = false; is_waiting = false;
+                        array_push(_successfully_assigned_pops, id);
+                        // --- Unselect the pop so it is not processed again this event ---
+                        selected = false; // This prevents double-processing and errors
+                    } else {
+                        // If slot details couldn't be retrieved, release the point
+                        scr_interaction_slot_release(_point_id, id);
+                    }
+                }
+            }
+        }
+    }
+    // --- Pops that were not assigned a slot are skipped: no slot-release or assignment logic is run for them ---
     _pops_assigned_to_interaction = array_length(_successfully_assigned_pops);
     if (_pops_assigned_to_interaction > 0) { exit; }
 }

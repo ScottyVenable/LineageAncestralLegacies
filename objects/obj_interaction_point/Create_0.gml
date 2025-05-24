@@ -19,11 +19,10 @@ is_occupied_by_pop_id = noone; // Tracks which pop has claimed this specific poi
 // Set to true to see the points in-game, false to hide them.
 // You might want to assign a specific debug sprite as well.
 visible = true; 
-sprite_index = spr_interaction_point_debug; // Assuming you have or will create a debug sprite
-image_alpha = 0.6; // Make it semi-transparent
+image_alpha = 1; // Make it semi-transparent
 image_speed = 0;
-image_xscale = 0.5;
-image_yscale = 0.5;
+image_xscale = 1;
+image_yscale = 1;
 
 // It's good practice for interaction points not to be solid if they are just markers.
 // If pops need to collide with them for some reason, this might change.

@@ -75,42 +75,42 @@ function scr_pop_resume_previous_or_idle() {
 
                 show_debug_message("Pop " + _pop_id_str + " last_foraged_target_id " + string(self.last_foraged_target_id) + " seems valid. Attempting to reacquire slot " + string(self.last_foraged_slot_index));
 
-                // Attempt to re-acquire the *same* slot first
-                var _slot_acquired_details = _scr_interaction_slot_acquire(self.last_foraged_target_id, self.id, self.last_foraged_slot_index);
-
-                if (_slot_acquired_details != undefined) {
-                    // Successfully re-acquired the previous slot
+                // --- NEW SYSTEM: Try to reacquire the same interaction point ---
+                var _point_id = scr_interaction_slot_get_by_pop(self.last_foraged_target_id, self.id);
+                var _slot_acquired = false;
+                if (_point_id != noone) {
+                    _slot_acquired = scr_interaction_slot_claim(_point_id, self.id);
+                }
+                if (_slot_acquired) {
                     self.target_interaction_object_id = self.last_foraged_target_id;
-                    self.target_interaction_slot_index = _slot_acquired_details.slot_index; // Should be same as last_foraged_slot_index
-                    self.target_interaction_type_tag = _slot_acquired_details.type_tag; // Get the type tag for this slot
-                    
+                    self.target_interaction_slot_index = self.last_foraged_slot_index;
+                    self.target_interaction_type_tag = self.last_foraged_type_tag;
                     self.state = PopState.FORAGING;
-                    self.has_arrived = false; // Will need to move to slot (or confirm arrival if already there)
-                    self.forage_timer = 0; // Reset forage timer
-                    
-                    // LEARNING POINT: It's good practice to reset task-specific timers and flags
-                    // when resuming a task to ensure it starts cleanly.
-                    
-                    show_debug_message("Pop " + _pop_id_str + " re-acquired previous slot " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
-                    self.previous_state = PopState.NONE; // Clear previous_state as we've acted on it
-                    exit; // Successfully resumed foraging
+                    self.has_arrived = false;
+                    self.forage_timer = 0;
+                    show_debug_message("Pop " + _pop_id_str + " re-acquired previous interaction point " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
+                    self.previous_state = PopState.NONE;
+                    exit;
                 } else {
                     // Could not re-acquire the exact same slot, try any available slot on the same target
-                    show_debug_message("Pop " + _pop_id_str + " could not re-acquire specific slot " + string(self.last_foraged_slot_index) + ". Trying any slot on " + string(self.last_foraged_target_id));
-                    _slot_acquired_details = _scr_interaction_slot_acquire(self.last_foraged_target_id, self.id); // Request any slot
-                    if (_slot_acquired_details != undefined) {
+                    show_debug_message("Pop " + _pop_id_str + " could not re-acquire specific interaction point. Trying any available point on " + string(self.last_foraged_target_id));
+                    var _free_point_id = scr_interaction_slot_get_free(self.last_foraged_target_id, self.last_foraged_type_tag);
+                    if (_free_point_id != noone && scr_interaction_slot_claim(_free_point_id, self.id)) {
+                        // Find the slot index for this point (for legacy compatibility)
+                        var _slot_index = -1;
+                        var _points = self.last_foraged_target_id.interaction_slots_pop_ids;
+                        for (var i = 0; i < array_length(_points); i++) {
+                            if (_points[i] == _free_point_id) { _slot_index = i; break; }
+                        }
                         self.target_interaction_object_id = self.last_foraged_target_id;
-                        self.target_interaction_slot_index = _slot_acquired_details.slot_index;
-                        self.target_interaction_type_tag = _slot_acquired_details.type_tag;
+                        self.target_interaction_slot_index = _slot_index;
+                        self.target_interaction_type_tag = self.last_foraged_type_tag;
                         self.state = PopState.FORAGING;
                         self.has_arrived = false;
                         self.forage_timer = 0;
-                        show_debug_message("Pop " + _pop_id_str + " acquired new slot " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
+                        show_debug_message("Pop " + _pop_id_str + " acquired new interaction point " + string(_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
                         self.previous_state = PopState.NONE;
                         exit;
-                    } else {
-                        show_debug_message("Pop " + _pop_id_str + " could not acquire any slot on previous target " + string(self.last_foraged_target_id) + ".");
-                        // Fall through to find a new target of the same type
                     }
                 }
             } else {

@@ -37,6 +37,9 @@ if (!variable_global_exists("life_stage")) {
 if (!variable_global_exists("hover_detection_distance")) {
     global.hover_detection_distance = 50; // Default hover detection distance in pixels
 }
+
+// --- Ensure selected_pop is always defined to prevent runtime errors ---
+selected_pop = noone; // This prevents 'not set before reading' errors when checking or using selected_pop
 #endregion
 
 // ============================================================================

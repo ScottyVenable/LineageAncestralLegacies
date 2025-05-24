@@ -15,13 +15,19 @@
         <div class="container">
             <h1>Lineage: Ancestral Legacies</h1>
             <nav>
-                <a href="#overview">Overview</a>
-                <a href="#features">Features</a>
-                <a href="#gameplay">Gameplay</a>
-                <a href="#progression">Progression</a>
-                <a href="#language">Procedural Language</a>
-                <a href="#roadmap">Roadmap</a>
+                <a href="index.html" id="nav-overview">Overview</a>
+                <a href="features.html" id="nav-features">Features</a>
+                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+                <a href="progression.html" id="nav-progression">Progression</a>
+                <a href="language.html" id="nav-language">Procedural Language</a>
+                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+                <a href="contact.html" id="nav-contact">Contact</a>
             </nav>
+            <!--
+                Navigation links now use separate HTML files instead of #anchors.
+                This makes each section a real page, not just a scroll target.
+                This is best practice for multi-page sites and helps with subdomain routing.
+            -->
         </div>
     </header>
     <main>
@@ -43,78 +49,12 @@
                 </ul>
             </div>
         </section>
-        <section id="features">
-            <div class="container">
-                <h2>Unique Features</h2>
-                <ul class="features-list">
-                    <li><strong>Deep Evolutionary Trait System:</strong> Modular genetic tree with visible, inheritable traits and mutations.</li>
-                    <li><strong>Emergent Generational Storytelling:</strong> Every pop is unique, with their own traits, relationships, and stories.</li>
-                    <li><strong>Procedural Language Evolution:</strong> Tribes develop unique languages you can decipher and influence.</li>
-                    <li><strong>Branching Tribal Legacies:</strong> Guide tribes to split, adapt, and form new cultures in diverse biomes.</li>
-                    <li><strong>Accessible Complexity:</strong> Deep simulation with intuitive controls and clear UI.</li>
-                </ul>
-            </div>
-        </section>
-        <section id="gameplay">
-            <div class="container">
-                <h2>Core Gameplay Pillars</h2>
-                <div class="pillars">
-                    <div class="pillar">
-                        <h3>Survive</h3>
-                        <p>Manage needs, gather resources, build shelter, and protect your tribe from threats.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Evolve</h3>
-                        <p>Earn Evolution Points to unlock and enhance genetic traits, shaping your lineage across generations.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Branch</h3>
-                        <p>Guide tribe splits and adaptation, creating new cultures and legacies in different environments.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Legacy</h3>
-                        <p>Track family trees, milestones, and traditions as your civilization grows and stories unfold.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section id="progression">
-            <div class="container">
-                <h2>Progression Flow</h2>
-                <ol class="progression-list">
-                    <li><strong>Dawn Age:</strong> Basic survival, foraging, and first discoveries.</li>
-                    <li><strong>Primitive Age:</strong> Tool crafting, group hunting, and simple shelters.</li>
-                    <li><strong>Tribal Age:</strong> Role specialization, communal structures, and early culture.</li>
-                    <li><strong>Divergence Age:</strong> Environmental adaptation, unique cultures, and meta-genetics.</li>
-                    <li><strong>Ancestral Legacy:</strong> Interconnected lineages, advanced research, and grand aspirations.</li>
-                </ol>
-            </div>
-        </section>
-        <section id="language">
-            <div class="container">
-                <h2>Procedural Language System</h2>
-                <p>Each tribe invents and evolves its own language. Decipher words, influence vocabulary, and experience emergent linguistic drift. The language system is a living record of your tribe's journey, offering unique puzzles and cultural depth every playthrough.</p>
-                <button id="show-language-demo">See Language Demo</button>
-                <div id="language-demo" class="hidden">
-                    <h3>Example Proto-Words</h3>
-                    <ul id="proto-words-list"></ul>
-                    <!-- Add a fire icon span for the FIRE proto-word, handled in JS -->
-                </div>
-            </div>
-        </section>
-        <section id="roadmap">
-            <div class="container">
-                <h2>Development Roadmap</h2>
-                <ol class="roadmap-list">
-                    <li><strong>Core Prototype:</strong> Pop FSM, basic movement, simple foraging, minimal UI.</li>
-                    <li><strong>Alpha:</strong> Expanded FSM, inventory, basic crafting, needs system, simple combat, genetic tree UI.</li>
-                    <li><strong>Beta:</strong> Full FSM, roles, biomes, expanded genetics, advanced crafting, social dynamics, language system, tribe splitting, sound & music.</li>
-                    <li><strong>Release Candidate:</strong> Full progression, advanced systems, inter-tribe dynamics, polish, tutorial, balancing.</li>
-                    <li><strong>Post-Release:</strong> Content updates, new biomes, advanced features, modding, multiplayer.</li>
-                </ol>
-            </div>
-        </section>
     </main>
+    <!--
+        The main page now only shows the Overview section.
+        All other content (Features, Gameplay, etc.) is on their own HTML pages.
+        This keeps the homepage simple and directs users to dedicated pages for details.
+    -->
     <footer>
         <div class="container">
             <div class="social-row">

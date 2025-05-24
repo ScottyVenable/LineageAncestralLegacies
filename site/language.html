@@ -48,14 +48,33 @@
             <div class="container">
                 <h2>Procedural Language System</h2>
                 <p>Each tribe invents and evolves its own language. Decipher words, influence vocabulary, and experience emergent linguistic drift. The language system is a living record of your tribe's journey, offering unique puzzles and cultural depth every playthrough.</p>
+                <ul class="features-list">
+                    <li><strong>Language Generation:</strong> Each tribe starts with a set of proto-words. As the game progresses, new words are invented and old ones drift, creating unique languages.<br>
+                        <em>// GameMaker tip: Use arrays or ds_lists to store word lists, and scripts to generate and mutate words procedurally.</em>
+                    </li>
+                    <li><strong>Deciphering & Influence:</strong> Players can try to decipher the language, influence vocabulary, and see how words change over time.<br>
+                        <em>// Educational: String manipulation and procedural generation are key programming skills for this feature.</em>
+                    </li>
+                    <li><strong>Linguistic Drift:</strong> Separated tribes develop their own dialects and languages, reflecting their unique experiences and environments.<br>
+                        <em>// Game design: Use tribe-specific word lists and mutation rates to simulate language drift.</em>
+                    </li>
+                    <li><strong>Gameplay Impact:</strong> Language affects communication, social cohesion, and even gameplay events (e.g., misunderstandings, alliances, or rivalries).</li>
+                </ul>
                 <button id="show-language-demo">See Language Demo</button>
                 <div id="language-demo" class="hidden">
                     <h3>Example Proto-Words</h3>
                     <ul id="proto-words-list"></ul>
                 </div>
+                <!--
+                    This page explains the procedural language system, with comments to help you connect language evolution to GameMaker programming and game design.
+                -->
             </div>
         </section>
     </main>
+    <!--
+        This page now only shows the Language section.
+        Navigation links let users explore other sections on their own pages.
+    -->
     <footer>
         <div class="container">
             <div class="social-row">

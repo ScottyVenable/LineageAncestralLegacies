@@ -47,27 +47,38 @@
         <section id="gameplay">
             <div class="container">
                 <h2>Core Gameplay Pillars</h2>
-                <div class="pillars">
-                    <div class="pillar">
-                        <h3>Survive</h3>
-                        <p>Manage needs, gather resources, build shelter, and protect your tribe from threats.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Evolve</h3>
-                        <p>Earn Evolution Points to unlock and enhance genetic traits, shaping your lineage across generations.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Branch</h3>
-                        <p>Guide tribe splits and adaptation, creating new cultures and legacies in different environments.</p>
-                    </div>
-                    <div class="pillar">
-                        <h3>Legacy</h3>
-                        <p>Track family trees, milestones, and traditions as your civilization grows and stories unfold.</p>
-                    </div>
-                </div>
+                <ul class="features-list">
+                    <li><strong>Survive:</strong> Gather resources, build shelter, and protect your tribe from threats and the environment.<br>
+                        <em>// GameMaker concept: Use objects for resources and structures. Pops can have a needs system (hunger, thirst, etc.) and interact with the environment using state machines.</em>
+                    </li>
+                    <li><strong>Evolve:</strong> Earn Evolution Points (EP) to unlock new traits and shape your lineage. Traits are inherited and can mutate, driving diversity.<br>
+                        <em>// Educational: Implement a trait tree using data structures (ds_maps, ds_lists) and random mutation logic for emergent gameplay.</em>
+                    </li>
+                    <li><strong>Branch:</strong> Guide tribe splits and adaptation, creating new cultures and legacies. Tribes can specialize based on their environment.<br>
+                        <em>// Game design: Use arrays or ds_lists to manage multiple tribes and their unique properties. This encourages replayability and player-driven stories.</em>
+                    </li>
+                    <li><strong>Legacy:</strong> Track family trees, milestones, and traditions as your civilization grows. Pops have life cycles, relationships, and can pass down knowledge.<br>
+                        <em>// GameMaker tip: Store pop data in structs/objects and use lists to track family trees and key events.</em>
+                    </li>
+                </ul>
+                <h3>Key Mechanics</h3>
+                <ul class="features-list">
+                    <li><strong>Needs & FSM:</strong> Pops use a finite state machine (FSM) to decide actions (idle, forage, hunt, craft, socialize, etc.) based on their needs and environment.</li>
+                    <li><strong>Resource & Inventory System:</strong> Each pop has a personal inventory, and the tribe can build communal storage. Items include food, materials, tools, and crafted goods.</li>
+                    <li><strong>Crafting & Technology:</strong> Unlock new recipes and blueprints through discovery points (DP) and "Eureka!" moments. Pops improve skills by crafting and can create higher-quality items.</li>
+                    <li><strong>Dynamic Environment:</strong> Multiple biomes, weather, seasons, and hazards affect gameplay. Resource nodes regrow, and animal behavior is simulated for realism.</li>
+                    <li><strong>Social & Tribal Dynamics:</strong> Pops form relationships, develop moods, and can become leaders. Traditions and customs emerge, affecting gameplay and tribe cohesion.</li>
+                </ul>
+                <!--
+                    This page explains the core gameplay pillars and mechanics, with comments to help you connect game design ideas to GameMaker implementation.
+                -->
             </div>
         </section>
     </main>
+    <!--
+        This page now only shows the Gameplay section.
+        Navigation links let users explore other sections on their own pages.
+    -->
     <footer>
         <div class="container">
             <div class="social-row">

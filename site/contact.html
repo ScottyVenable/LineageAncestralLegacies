@@ -47,17 +47,27 @@
         <section id="contact">
             <div class="container">
                 <h2>Contact & Feedback</h2>
-                <p>We'd love to hear from you! Whether you have questions, feedback, or want to get involved, please reach out using the options below:</p>
-                <ul class="features-list">
-                    <li><strong>Email:</strong> <a href="mailto:contact@lineagegame.com">contact@lineagegame.com</a></li>
-                    <li><strong>Discord:</strong> <a href="https://discord.gg/" target="_blank" rel="noopener">Join our Discord</a></li>
-                    <li><strong>Twitter/X:</strong> <a href="https://twitter.com/" target="_blank" rel="noopener">@LineageGame</a></li>
-                    <li><strong>Feedback Form:</strong> <a href="https://forms.gle/" target="_blank" rel="noopener">Submit Feedback</a></li>
-                </ul>
-                <p>For business or press inquiries, please use the email above.</p>
+                <p>We'd love to hear from you! Please use the form below to send questions, feedback, or business inquiries directly to the developer.</p>
+                <form class="contact-form" action="mailto:scottyvenable@gmail.com" method="POST" enctype="text/plain">
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="email">Your Email:</label>
+                    <input type="email" id="email" name="email" required>
+
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="6" required></textarea>
+
+                    <button type="submit">Send Message</button>
+                </form>
+                <p><em>// This form uses <code>mailto:</code> to open the user's email client and send the message. For a professional site, use a backend service (like Formspree, Netlify Forms, or your own server) for better reliability and user experience.</em></p>
             </div>
         </section>
     </main>
+    <!--
+        This page now features a simple contact form for user feedback.
+        For real-world projects, always validate and secure form submissions!
+    -->
     <footer>
         <div class="container">
             <div class="social-row">

@@ -23,6 +23,11 @@
                 <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
                 <a href="contact.html" id="nav-contact">Contact</a>
             </nav>
+            <!--
+                Navigation links now use separate HTML files instead of #anchors.
+                This makes each section a real page, not just a scroll target.
+                This is best practice for multi-page sites and helps with subdomain routing.
+            -->
         </div>
     </header>
     <main>
@@ -30,15 +35,55 @@
             <div class="container">
                 <h2>Unique Features</h2>
                 <ul class="features-list">
-                    <li><strong>Deep Evolutionary Trait System:</strong> Modular genetic tree with visible, inheritable traits and mutations.</li>
-                    <li><strong>Emergent Generational Storytelling:</strong> Every pop is unique, with their own traits, relationships, and stories.</li>
-                    <li><strong>Procedural Language Evolution:</strong> Tribes develop unique languages you can decipher and influence.</li>
-                    <li><strong>Branching Tribal Legacies:</strong> Guide tribes to split, adapt, and form new cultures in diverse biomes.</li>
-                    <li><strong>Accessible Complexity:</strong> Deep simulation with intuitive controls and clear UI.</li>
+                    <!-- Deep Evolutionary Trait System -->
+                    <li>
+                        <strong>Deep Evolutionary Trait System:</strong>
+                        Modular genetic tree lets you unlock and combine physical, mental, and emotional traits. Traits are inherited and can mutate, so every pop is unique!<br>
+                        <em>// Game design note: This system uses inheritance and mutation logic, which is a great example of emergent gameplay and replayability.</em>
+                    </li>
+                    <!-- Emergent Generational Storytelling -->
+                    <li>
+                        <strong>Emergent Generational Storytelling:</strong>
+                        Each pop has their own traits, skills, relationships, and life events. Family trees track their stories across generations, creating unscripted, memorable narratives.<br>
+                        <em>// GameMaker tip: Use structs or objects to store pop data, and keep a log of key events for each pop for later display.</em>
+                    </li>
+                    <!-- Procedural Language Evolution -->
+                    <li>
+                        <strong>Procedural Language Evolution:</strong>
+                        Tribes invent and evolve their own languages. Players can decipher, influence, and watch languages drift over time.<br>
+                        <em>// Educational: This feature uses procedural generation and string manipulation, which are fun programming challenges in GameMaker!</em>
+                    </li>
+                    <!-- Branching Tribal Legacies -->
+                    <li>
+                        <strong>Branching Tribal Legacies:</strong>
+                        Tribes can split and adapt to new biomes, developing unique traits, technologies, and cultures. This creates a tapestry of interconnected (or rival) lineages.<br>
+                        <em>// Game design: This encourages replayability and player-driven storytelling. Try using arrays or ds_lists to track multiple tribes!</em>
+                    </li>
+                    <!-- Accessible Complexity -->
+                    <li>
+                        <strong>Accessible Complexity:</strong>
+                        Deep simulation with intuitive controls and clear UI. Complex systems are made approachable for all players.<br>
+                        <em>// UI/UX tip: Good interface design is key for complex games. Use clear icons, tooltips, and progressive disclosure to help new players.</em>
+                    </li>
                 </ul>
+                <h3>Bonus: Core Gameplay Pillars</h3>
+                <ul class="features-list">
+                    <li><strong>Survive:</strong> Gather resources, build shelter, and protect your tribe from threats and the environment.</li>
+                    <li><strong>Evolve:</strong> Earn Evolution Points to unlock new traits and shape your lineage.</li>
+                    <li><strong>Branch:</strong> Guide tribe splits and adaptation, creating new cultures and legacies.</li>
+                    <li><strong>Legacy:</strong> Track family trees, milestones, and traditions as your civilization grows.</li>
+                </ul>
+                <!--
+                    This page summarizes the most innovative and educational features of the game.
+                    Each feature is inspired by real game design and programming concepts you can try in your own GameMaker projects!
+                -->
             </div>
         </section>
     </main>
+    <!--
+        This page now only shows the Features section.
+        Navigation links let users explore other sections on their own pages.
+    -->
     <footer>
         <div class="container">
             <div class="social-row">

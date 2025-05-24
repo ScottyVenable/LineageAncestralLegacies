@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Lineage: Ancestral Legacies</title>
+    <link rel="icon" type="image/x-icon" href="icon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-flex">
+            <button id="nav-toggle" aria-label="Toggle navigation" class="nav-toggle" tabindex="0" style="display:none;">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <h1>Lineage: Ancestral Legacies</h1>
+            <nav id="main-nav">
+                <a href="index.html">Overview</a>
+                <a href="features.html">Features</a>
+                <a href="gameplay.html">Gameplay</a>
+                <a href="progression.html">Progression</a>
+                <a href="language.html">Language</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="contact.html">Contact</a>
+                <a href="admin.html" class="nav-link">Admin Center</a>
+            </nav>
+            <div id="login-area" style="margin-left:auto;"></div>
+        </div>
+    </header>
+    <main>
+        <section id="account-section">
+            <div class="container">
+                <h2>Your Account</h2>
+                <div id="account-info">
+                    <!-- Account details will be loaded here by JS -->
+                </div>
+                <button id="logout-btn">Log Out</button>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="container">
+            <div class="social-row">
+                <!-- ...existing social icons... -->
+            </div>
+            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved. <span id="site-version" class="site-version"></span></p>
+        </div>
+    </footer>
+    <button id="back-to-top" title="Back to top" aria-label="Back to top">
+        <span class="back-to-top-arrow">&#8593;</span>
+    </button>
+    <script src="script.js"></script>
+    <script>
+    // Loads user account info from session/localStorage (for demo purposes)
+    // In a real app, this would use secure authentication and server-side data
+    document.addEventListener('DOMContentLoaded', function() {
+        const accountInfo = document.getElementById('account-info');
+        // Example: get username from localStorage/sessionStorage
+        const username = localStorage.getItem('username') || sessionStorage.getItem('username');
+        if (username) {
+            accountInfo.innerHTML = `<p><strong>Username:</strong> ${username}</p>`;
+        } else {
+            accountInfo.innerHTML = '<p>You are not logged in.</p>';
+            document.getElementById('logout-btn').style.display = 'none';
+        }
+        // Log out button clears session/localStorage and redirects to login
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('username');
+            sessionStorage.removeItem('username');
+            window.location.href = 'login.html';
+        });
+    });
+    // Version injection (same as index.html)
+    fetch('package.json')
+        .then(response => response.json())
+        .then(data => {
+            const version = data.version;
+            document.getElementById('site-version').innerText = `v${version}`;
+        })
+        .catch(error => {
+            document.getElementById('site-version').innerText = '';
+        });
+    </script>
+</body>
+</html>

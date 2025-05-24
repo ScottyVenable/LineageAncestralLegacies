@@ -14,14 +14,17 @@
 </head>
 <body>
     <header>
-        <div class="container header-flex">
-            <button id="nav-toggle" aria-label="Toggle navigation" class="nav-toggle" tabindex="0" style="display:none;">
+        <div class="container header-flex header-animate" id="header-animate">
+            <button id="nav-toggle" aria-label="Toggle navigation" class="nav-toggle header-animate-stagger" tabindex="0" style="display:none;">
                 <span class="nav-toggle-bar"></span>
                 <span class="nav-toggle-bar"></span>
                 <span class="nav-toggle-bar"></span>
             </button>
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav id="main-nav">
+            <h1 class="site-title-advanced header-animate-stagger">
+                <span class="site-title-main">Lineage</span>
+                <span class="site-title-sub">Ancestral Legacies</span>
+            </h1>
+            <nav id="main-nav" class="header-animate-stagger">
                 <a href="index.html" id="nav-overview">Overview</a>
                 <a href="features.html" id="nav-features">Features</a>
                 <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
@@ -32,7 +35,7 @@
                 <a href="admin.html" id="nav-admin" class="nav-link">Admin Center</a>
             </nav>
             <!-- Login/Account button, updated by JS based on session -->
-            <div id="login-area" style="margin-left:auto;"></div>
+            <div id="login-area" class="header-animate-stagger" style="margin-left:auto;"></div>
         </div>
     </header>
     <main>
@@ -174,7 +177,7 @@
                     <svg viewBox="0 0 24 24" class="social-icon"><defs><linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffe7a0"/><stop offset="60%" stop-color="#ffb300"/><stop offset="100%" stop-color="#ff7043"/></linearGradient></defs><path fill="url(#grad3)" d="M21.8 8.001s-.2-1.4-.8-2c-.7-.8-1.5-.8-1.9-.9C16.1 5 12 5 12 5h-.1s-4.1 0-7.1.1c-.4 0-1.2.1-1.9.9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.6c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.7.8 1.7.8 2.1.9 1.5.1 6.9.1 6.9.1s4.1 0 7.1-.1c.4 0 1.2-.1 1.9-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.6c0-1.6-.2-3.2-.2-3.2zM9.8 15.3V8.7l6.4 3.3-6.4 3.3z"/></svg>
                 </a>
             </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved. <span class="site-version">v1.1.0</span></p>
+            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved. <span id="site-version" class="site-version"></span></p>
         </div>
     </footer>
     <button id="back-to-top" title="Back to top" aria-label="Back to top">
@@ -200,6 +203,19 @@
             window.location.href = '/' + subdomainMap[sub];
         }
     }
+
+    // Inject version number from package.json into the footer
+    // Using a placeholder span with id 'site-version' for dynamic version injection
+    fetch('package.json')
+        .then(response => response.json())
+        .then(data => {
+            const version = data.version;
+            document.getElementById('site-version').innerText = `v${version}`;
+        })
+        .catch(error => {
+            console.error('Error loading version:', error);
+            document.getElementById('site-version').innerText = ''; // Fallback in case of error
+        });
     </script>
 </body>
 </html>

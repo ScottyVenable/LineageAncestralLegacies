@@ -58,40 +58,29 @@ sel_start_y         = 0;     // GUI Y where drag selection box started
 is_dragging         = false; // True when actively dragging a selection box
 click_start_world_x = 0;     // World X where a click/drag input began
 click_start_world_y = 0;     // World Y where a click/drag input began
+ui_inspector_cleared = true; // Tracks if the inspector UI has been set to its "cleared" (N/A) state.
 
 debug_log($"click_start_world_x initialized to: {click_start_world_x}", "obj_controller:Create", "cyan");
 #endregion
 
-#region 2.2 Zoom Variables
-zoom_level    = 1.0;
-zoom_target   = 1.0;
-zoom_min      = 0.5;
-zoom_max      = 2.0;
-zoom_speed    = 0.1;
-zoom_smooth   = 0.50; // Note: 0.5 is fairly fast smoothing, 0.1-0.2 is common for smoother
-#endregion
-
-#region 2.3 Camera Tracking Variables
-cam_x           = room_width / 2;
-cam_y           = room_height / 2;
-dragging_camera = false;
-drag_start_x    = 0;     // Mouse x when camera drag started
-drag_start_y    = 0;     // Mouse y when camera drag started
-#endregion
-
+// Regions 2.2 (Zoom Variables) and 2.3 (Camera Tracking Variables) are removed as camera logic is now in obj_camera_controller.
 
 // ============================================================================
 // 3. CAMERA SETUP (Initial camera configuration)
 // ============================================================================
-#region 3.1 Active Camera Setup
-var _active_cam = view_camera[0];
-if (is_real(_active_cam) && _active_cam >= 0) {
-    debug_log($"Initial active camera ID {_active_cam} appears valid.", "obj_controller:Create", "green");
-    // camera_set_view_pos(_active_cam, cam_x - (camera_get_view_width(_active_cam)/2), cam_y - (camera_get_view_height(_active_cam)/2)); // Center camera
-} else {
-    debug_log($"ERROR (Initial camera ID from view_camera[0] is invalid or 'noone' (Value: {_active_cam})). Camera setup might fail.", "obj_controller:Create", "red");
+// Region 3.1 (Active Camera Setup) is removed. obj_camera_controller handles its own setup.
+
+// Ensure obj_camera_controller instance exists
+if (!instance_exists(obj_camera_controller)) {
+    // Assuming "Instances" layer is appropriate. Adjust if you have a dedicated layer for controllers.
+    var _controller_layer = "Instances"; 
+    if (!layer_exists(_controller_layer)) {
+        layer_create(0, _controller_layer); // Create layer if it doesn't exist, depth 0 or other suitable depth
+        debug_log($"Dynamically created controller layer: '{_controller_layer}' for obj_camera_controller.", "obj_controller:Create", "cyan");
+    }
+    instance_create_layer(0, 0, _controller_layer, obj_camera_controller);
+    debug_log("DEBUG (obj_controller): Created obj_camera_controller instance.", "obj_controller:Create", "green");
 }
-#endregion
 
 // ============================================================================
 // 4. GLOBAL GAME STATE & UI
@@ -223,19 +212,10 @@ if (object_exists(obj_pop)) {
     }
     debug_log($"Total initial pops spawned: {_spawned_count}/{global.initial_pop_count}.", "obj_controller:Create", "green");
 
-    // Center camera on spawn area (optional)
-    if (is_real(view_camera[0]) && view_camera[0] >= 0) {
-        var _view_w = camera_get_view_width(view_camera[0]); 
-        var _view_h = camera_get_view_height(view_camera[0]);
-        // Adjust cam_x/y to be the top-left of the view for camera_set_view_pos
-        camera_set_view_pos(view_camera[0], 
-            _spawn_center_x - (_view_w / 2 / zoom_level), 
-            _spawn_center_y - (_view_h / 2 / zoom_level)
-        );
-        // Keep your instance variables cam_x/y as the "target center" for your scr_camera_controller
-        cam_x = _spawn_center_x; 
-        cam_y = _spawn_center_y;
-    }
+    // Camera re-centering logic after pop spawn is removed.
+    // If needed, obj_camera_controller could have a function or variables obj_controller can set
+    // to tell it where to focus, e.g., obj_camera_controller.target_center_x = _spawn_center_x;
+    
 } else { 
     debug_log("ERROR (obj_pop object asset does not exist. Cannot spawn initial pops.)", "obj_controller:Create", "red");
 }
@@ -347,14 +327,14 @@ debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create
 
 // Initialize global name data variables
 if (!variable_global_exists("male_prefixes")) {
-    global.male_prefixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
+    global.male_prefixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
 }
 if (!variable_global_exists("male_suffixes")) {
-    global.male_suffixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
+    global.male_suffixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
 }
 if (!variable_global_exists("female_prefixes")) {
-    global.female_prefixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
+    global.female_prefixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
 }
 if (!variable_global_exists("female_suffixes")) {
-    global.female_suffixes = scr_load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
+    global.female_suffixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
 }

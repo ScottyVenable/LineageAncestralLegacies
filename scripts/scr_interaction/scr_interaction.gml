@@ -100,7 +100,7 @@ function scr_interaction_slot_release(_target_object_id, _pop_id) {
 // ============================================================================
 /// @function scr_interaction_slot_get_world_pos(_target_object_id, _slot_index)
 /// @description Calculates the world x,y coordinates and interaction type tag of a specific interaction slot.
-/// @param {Id.Instance} _target_object_id   The instance ID of the slot provider object.
+/// @param {Id.Instance} _target_object_id   The instance ID of THE slot provider object.
 /// @param {Real}        _slot_index         The index of the slot.
 /// @returns {Struct|Undefined} A struct { x: world_x, y: world_y, type_tag: string } or undefined if invalid.
 function scr_interaction_slot_get_world_pos(_target_object_id, _slot_index) {
@@ -127,6 +127,109 @@ function scr_interaction_slot_get_world_pos(_target_object_id, _slot_index) {
     }
     // show_debug_message($"Error (GetWorldPos): Invalid target {_target_object_id} or slot index {_slot_index} for slot position.");
     return undefined;
+}
+
+// ============================================================================
+// FUNCTION: scr_interaction_slot_acquire
+// ============================================================================
+/// @function scr_interaction_slot_acquire(_target_object_id, _pop_id, [_preferred_slot_index=-1], [_required_type_tag=""])
+/// @description Attempts to find and claim an interaction slot on a target object.
+///              Can prioritize a specific slot or search for any available slot,
+///              optionally matching a specific interaction type tag.
+/// @param {Id.Instance} _target_object_id      The instance ID of the slot provider object.
+/// @param {Id.Instance} _pop_id                The instance ID of the pop attempting to acquire the slot.
+/// @param {Real}        [_preferred_slot_index=-1] Optional. The specific slot index to try first. If -1, searches all.
+/// @param {String}      [_required_type_tag=""] Optional. The interaction_type_tag the slot must have. If empty, any tag is fine.
+/// @returns {Struct} A struct with the following fields:
+///                   { success: Boolean, slot_index: Real, world_x: Real, world_y: Real, type_tag: String }
+///                   \'success\' is true if a slot was acquired, false otherwise.
+///                   \'slot_index\' is the index of the acquired slot (-1 if none).
+///                   \'world_x\', \'world_y\' are the world coordinates of the acquired slot.
+///                   \'type_tag\' is the interaction_type_tag of the acquired slot.
+function scr_interaction_slot_acquire(_target_object_id, _pop_id, _preferred_slot_index = -1, _required_slot_type_tag = "") {
+    // Basic validation
+    if (!instance_exists(_target_object_id) ||
+        !variable_instance_exists(_target_object_id, "interaction_slots_pop_ids") ||
+        !variable_instance_exists(_target_object_id, "interaction_slot_positions")) {
+        show_debug_message($"ERROR (SlotAcquire): Target {_target_object_id} invalid or missing slot data.");
+        return { success: false, slot_index: -1, world_x: 0, world_y: 0, type_tag: "" };
+    }
+    if (!instance_exists(_pop_id)) {
+        show_debug_message($"ERROR (SlotAcquire): Pop ID {_pop_id} invalid.");
+        return { success: false, slot_index: -1, world_x: 0, world_y: 0, type_tag: "" };
+    }
+
+    var _slots_pop_ids = _target_object_id.interaction_slots_pop_ids;
+    var _slot_positions = _target_object_id.interaction_slot_positions;
+
+    // Helper function to check and claim a specific slot
+    // Now accepts _current_slots_pop_ids and _current_slot_positions as arguments
+    var _try_claim_slot = function(_slot_idx, _current_slots_pop_ids, _current_slot_positions) {
+        // Access array_length of the passed _current_slots_pop_ids array
+        if (_slot_idx < 0 || _slot_idx >= array_length(_current_slots_pop_ids)) return undefined; // Invalid index
+
+        // Check if slot is free using the passed _current_slots_pop_ids
+        if (_current_slots_pop_ids[_slot_idx] != noone) return undefined; // Slot not free
+
+        // Check type tag if required, using the passed _current_slot_positions
+        var _slot_data_struct = _current_slot_positions[_slot_idx];
+        if (!is_struct(_slot_data_struct) || !variable_struct_exists(_slot_data_struct, "interaction_type_tag")) {
+             show_debug_message($"Warning (SlotAcquire): Slot data for index {_slot_idx} on target {_target_object_id} is malformed.");
+             return undefined; // Malformed slot data
+        }
+        var _current_slot_type_tag = _slot_data_struct.interaction_type_tag;
+        if (_required_slot_type_tag != "" && _current_slot_type_tag != _required_slot_type_tag) {
+            return undefined; // Type tag mismatch
+        }
+
+        // Try to claim
+        if (scr_interaction_slot_claim(_target_object_id, _slot_idx, _pop_id)) {
+            var _world_pos_data = scr_interaction_slot_get_world_pos(_target_object_id, _slot_idx);
+            if (!is_undefined(_world_pos_data)) {
+                 show_debug_message($"INFO (SlotAcquire): Pop {_pop_id} acquired slot {_slot_idx} (Tag: \'{_current_slot_type_tag}\') on target {_target_object_id}.");
+                return {
+                    success: true,
+                    slot_index: _slot_idx,
+                    world_x: _world_pos_data.x,
+                    world_y: _world_pos_data.y,
+                    type_tag: _current_slot_type_tag
+                };
+            } else {
+                // This should ideally not happen if claim was successful and data is consistent
+                show_debug_message($"ERROR (SlotAcquire): Claimed slot {_slot_idx} but failed to get world position.");
+                // Release the claim as we can\'t return full data
+                scr_interaction_slot_release(_target_object_id, _pop_id); 
+                return undefined;
+            }
+        }
+        return undefined; // Claim failed
+    }
+
+    // 1. Try preferred slot index first
+    if (_preferred_slot_index != -1) {
+        // Pass _slots_pop_ids and _slot_positions to the helper function
+        var _claimed_details = _try_claim_slot(_preferred_slot_index, _slots_pop_ids, _slot_positions);
+        if (!is_undefined(_claimed_details)) {
+            return _claimed_details;
+        }
+        // If preferred slot claim failed (e.g. busy, wrong tag), continue to search all.
+    }
+
+    // 2. Iterate through all slots to find a suitable one
+    for (var i = 0; i < array_length(_slots_pop_ids); i++) {
+        // Don't re-try the preferred slot if it was already attempted and failed
+        if (_preferred_slot_index != -1 && i == _preferred_slot_index) continue;
+        
+        // Pass _slots_pop_ids and _slot_positions to the helper function
+        var _claimed_details = _try_claim_slot(i, _slots_pop_ids, _slot_positions);
+        if (!is_undefined(_claimed_details)) {
+            return _claimed_details;
+        }
+    }
+
+    // 3. No suitable slot found or claimed
+    show_debug_message($"INFO (SlotAcquire): Pop {_pop_id} failed to acquire any slot (Tag req: \'{_required_slot_type_tag}\') on target {_target_object_id}.");
+    return { success: false, slot_index: -1, world_x: 0, world_y: 0, type_tag: "" };
 }
 
 // ============================================================================

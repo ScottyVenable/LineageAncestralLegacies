@@ -10,7 +10,72 @@
 ///    Parameters:    none
 ///    Returns:         void
 ///    Tags:            [world_object][harvestable][resource][update][physics_lite]
-///    Version:         1.1 - [Current Date] (Using initialized _time variables)
+///    Version:         1.2 - [Current Date] (Moved sprite update logic here)
+
+
+// ——————————————————————————————————————————————————
+// 0) Sprite Update Logic (moved to Step Event for continuous updates)
+// ——————————————————————————————————————————————————
+
+/// @description Updates the bush sprite based on current_berry_count every step
+
+// =========================================================================
+// 0. DEFINE SPRITES (Cached for clarity, though direct use is also fine)
+// =========================================================================
+var _sprite_full = spr_redBerryBush_full;
+var _sprite_empty = spr_bush_empty;
+
+// =========================================================================
+// 1. VALIDATE REQUIRED VARIABLES (Essential for this event to function)
+// =========================================================================
+// These checks ensure the object has the necessary variables.
+// If not, it logs an error, which is helpful for debugging.
+// Note: For a Step event, constant checks might be a slight performance hit.
+// Consider if these are absolutely needed every step or primarily for initial setup debugging.
+if (!variable_instance_exists(id, "resource_count")) { // Changed from current_berry_count
+    show_debug_message("ERROR (obj_redBerryBush - Step Event): Instance " + string(id) + " is missing 'resource_count' variable.");
+    exit; // Exit this event if critical variable is missing
+}
+if (!variable_instance_exists(id, "max_berries")) { // Changed from max_berry_count
+    show_debug_message("ERROR (obj_redBerryBush - Step Event): Instance " + string(id) + " is missing 'max_berries' variable.");
+    exit; // Exit this event if critical variable is missing
+}
+
+// =========================================================================
+// 2. CONFIGURATION & CONSTANTS (Derived from sprite properties)
+// =========================================================================
+var _full_sprite_berry_stages = sprite_get_number(_sprite_full);
+
+// =========================================================================
+// 3. CORE LOGIC: UPDATE SPRITE AND IMAGE_INDEX
+// =========================================================================
+// Ensure resource_count is within valid bounds (0 to max_berries)
+// This might be redundant if resource_count is always managed correctly elsewhere,
+// but provides safety.
+var _clamped_resource_count = clamp(resource_count, 0, max_berries); // Changed from current_berry_count and max_berry_count
+
+if (_clamped_resource_count == 0) {
+    // --- Case 1: No berries ---
+    if (sprite_index != _sprite_empty) { // Only change if not already empty
+        sprite_index = _sprite_empty;
+        image_index = 0;
+        image_speed = 0;
+    }
+} else {
+    // --- Case 2: Berries exist ---
+    var _new_sprite_index = _sprite_full;
+    // Calculate proportion based on resource_count and max_berries
+    var _berry_proportion = (max_berries > 0) ? (_clamped_resource_count / max_berries) : 0;
+    var _target_frame = floor((1 - _berry_proportion) * (_full_sprite_berry_stages - 1));
+    _target_frame = clamp(_target_frame, 0, _full_sprite_berry_stages - 1);
+
+    // Only update sprite and image_index if they need to change, to avoid unnecessary assignments
+    if (sprite_index != _new_sprite_index || image_index != _target_frame) {
+        sprite_index = _new_sprite_index;
+        image_index = _target_frame;
+        image_speed = 0;
+    }
+}
 
 
 // ——————————————————————————————————————————————————

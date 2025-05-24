@@ -3,6 +3,7 @@
   "%Name":"obj_structure_gatheringHut",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
   "name":"obj_structure_gatheringHut",
@@ -31,10 +32,10 @@
   "properties":[],
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
-  "solid":false,
+  "solid":true,
   "spriteId":{
-    "name":"spr_building_placeholder",
-    "path":"sprites/spr_building_placeholder/spr_building_placeholder.yy",
+    "name":"spr_gathering_hut",
+    "path":"sprites/spr_gathering_hut/spr_gathering_hut.yy",
   },
   "spriteMaskId":null,
   "visible":true,

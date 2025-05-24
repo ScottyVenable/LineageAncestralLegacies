@@ -3,8 +3,23 @@
 
 function scr_selection_controller(_selected_pop_id_arg) {
 
-    show_debug_message("========================================================");
-    show_debug_message($"DEBUG (scr_selection_controller V1.8): Called with _selected_pop_id_arg: {_selected_pop_id_arg}");
+    // Only show detailed logs if the selection state *changes* or is a valid pop.
+    var _log_this_call = false;
+    if (_selected_pop_id_arg != noone) {
+        _log_this_call = true; // Always log if a specific pop is selected
+    } else { // _selected_pop_id_arg is noone
+        // If it's noone, only log if the UI wasn't already cleared.
+        // This requires obj_controller to manage a state variable like 'ui_inspector_cleared'.
+        // We assume obj_controller has: ui_inspector_cleared (true if N/A, false if displaying a pop)
+        if (variable_instance_exists(obj_controller, "ui_inspector_cleared") && !obj_controller.ui_inspector_cleared) {
+            _log_this_call = true;
+        }
+    }
+
+    if (_log_this_call) {
+        show_debug_message("========================================================");
+        show_debug_message($"DEBUG (scr_selection_controller V1.8): Called with _selected_pop_id_arg: {_selected_pop_id_arg}");
+    }
 
     // --- Validate Selected Pop for Text Updates ---
     // We don't exit early. If pop is invalid, _pop_for_text_update becomes noone,
@@ -20,9 +35,17 @@ function scr_selection_controller(_selected_pop_id_arg) {
     }
 
     if (_pop_for_text_update != noone) {
-        show_debug_message($"DEBUG (scr_selection_controller): Valid pop (ID: {_pop_for_text_update}) identified for text updates.");
+        if (_log_this_call) {
+            show_debug_message($"DEBUG (scr_selection_controller): Valid pop (ID: {_pop_for_text_update}) identified for text updates.");
+        }
+        // When a valid pop is selected, the UI is no longer in its "cleared" state.
+        if (variable_instance_exists(obj_controller, "ui_inspector_cleared")) {
+            obj_controller.ui_inspector_cleared = false;
+        }
     } else {
-        show_debug_message("DEBUG (scr_selection_controller): No valid pop for text updates. Inspector fields will be set to 'N/A'.");
+        if (_log_this_call) {
+            show_debug_message("DEBUG (scr_selection_controller): No valid pop for text updates. Inspector fields will be set to 'N/A'.");
+        }
     }
 
     // --- Update Inspector Panel Text Elements ---
@@ -44,13 +67,13 @@ function scr_selection_controller(_selected_pop_id_arg) {
                 var _name_to_display = variable_instance_get(_pop_for_text_update, "pop_name");
                 if (is_string(_name_to_display)) {
                     layer_text_text(_name_el_id, _name_to_display);
-                    show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Name to: {_name_to_display}");
+                    if (_log_this_call) show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Name to: {_name_to_display}");
                 } else {
                     layer_text_text(_name_el_id, "Err:Name"); // Display error if name is not a string
-                    show_debug_message("ERROR (scr_selection_controller): pop_name variable is not a string for the selected pop.");
+                    if (_log_this_call) show_debug_message("ERROR (scr_selection_controller): pop_name variable is not a string for the selected pop.");
                 }
             } else {
-                show_debug_message("ERROR (scr_selection_controller): Pop Name display element is invalid or not found in global.ui_text_elements.");
+                if (_log_this_call) show_debug_message("ERROR (scr_selection_controller): Pop Name display element is invalid or not found in global.ui_text_elements.");
             }
 
             // Update Pop Sex
@@ -60,9 +83,9 @@ function scr_selection_controller(_selected_pop_id_arg) {
                 if (_sex_value == PopSex.MALE) { _sex_string = "Male"; }
                 else if (_sex_value == PopSex.FEMALE) { _sex_string = "Female"; }
                 layer_text_text(_sex_el_id, _sex_string);
-                show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Sex to: {_sex_string}");
+                if (_log_this_call) show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Sex to: {_sex_string}");
             } else {
-                show_debug_message("ERROR (scr_selection_controller): Pop Sex display element is invalid or not found in global.ui_text_elements.");
+                if (_log_this_call) show_debug_message("ERROR (scr_selection_controller): Pop Sex display element is invalid or not found in global.ui_text_elements.");
             }
 
             // Update Pop Age
@@ -70,31 +93,37 @@ function scr_selection_controller(_selected_pop_id_arg) {
                 var _age_value = variable_instance_get(_pop_for_text_update, "age");
                 if (is_real(_age_value)) {
                     layer_text_text(_age_el_id, string(floor(_age_value))); // Use floor to show whole numbers for age
-                    show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Age to: {string(floor(_age_value))}");
+                    if (_log_this_call) show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Age to: {string(floor(_age_value))}");
                 } else {
                     layer_text_text(_age_el_id, "Err:Age"); // Display error if age is not a number
-                    show_debug_message("ERROR (scr_selection_controller): age variable is not a real number for the selected pop.");
+                    if (_log_this_call) show_debug_message("ERROR (scr_selection_controller): age variable is not a real number for the selected pop.");
                 }
             } else {
-                show_debug_message("ERROR (scr_selection_controller): Pop Age display element is invalid or not found in global.ui_text_elements.");
+                if (_log_this_call) show_debug_message("ERROR (scr_selection_controller): Pop Age display element is invalid or not found in global.ui_text_elements.");
             }
         } else {
             // No valid pop is selected (_pop_for_text_update is noone), so set fields to "N/A".
-            show_debug_message("DEBUG (scr_selection_controller): Setting text fields to N/A as no valid pop is selected.");
-            if (_name_el_id != undefined && is_real(_name_el_id) && layer_get_element_type(_name_el_id) != layerelementtype_undefined) {
-                layer_text_text(_name_el_id, "N/A");
-            }
-            if (_sex_el_id != undefined && is_real(_sex_el_id) && layer_get_element_type(_sex_el_id) != layerelementtype_undefined) {
-                layer_text_text(_sex_el_id, "N/A");
-            }
-            if (_age_el_id != undefined && is_real(_age_el_id) && layer_get_element_type(_age_el_id) != layerelementtype_undefined) {
-                layer_text_text(_age_el_id, "N/A");
+            // Only log and update if the UI wasn't already cleared.
+            if (variable_instance_exists(obj_controller, "ui_inspector_cleared") && !obj_controller.ui_inspector_cleared) {
+                if (_log_this_call) show_debug_message("DEBUG (scr_selection_controller): Setting text fields to N/A as no valid pop is selected.");
+                if (_name_el_id != undefined && is_real(_name_el_id) && layer_get_element_type(_name_el_id) != layerelementtype_undefined) {
+                    layer_text_text(_name_el_id, "N/A");
+                }
+                if (_sex_el_id != undefined && is_real(_sex_el_id) && layer_get_element_type(_sex_el_id) != layerelementtype_undefined) {
+                    layer_text_text(_sex_el_id, "N/A");
+                }
+                if (_age_el_id != undefined && is_real(_age_el_id) && layer_get_element_type(_age_el_id) != layerelementtype_undefined) {
+                    layer_text_text(_age_el_id, "N/A");
+                }
+                obj_controller.ui_inspector_cleared = true; // Mark UI as cleared
             }
         }
     } else {
         // This case should ideally not be reached if obj_controller initializes global.ui_text_elements correctly.
-        show_debug_message("CRITICAL ERROR (scr_selection_controller): global.ui_text_elements struct itself does not exist. Cannot update UI text.");
+        if (_log_this_call) show_debug_message("CRITICAL ERROR (scr_selection_controller): global.ui_text_elements struct itself does not exist. Cannot update UI text.");
     }
 
-    show_debug_message("========================================================");
+    if (_log_this_call) {
+        show_debug_message("========================================================");
+    }
 }

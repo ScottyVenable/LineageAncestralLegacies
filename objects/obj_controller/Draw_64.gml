@@ -19,7 +19,11 @@
 // =========================================================================
 #region 1.1 Draw Selection Box
 // This script should handle its own checks (e.g., if is_dragging is true)
-scr_draw_selection_box();
+if(is_dragging){
+	scr_draw_selection_box();
+}
+
+show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selection_box."); // DEBUG ADDED
 #endregion
 
 // =========================================================================

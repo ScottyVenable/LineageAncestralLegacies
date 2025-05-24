@@ -13,7 +13,7 @@
   "name":"snd_man_commanded_8",
   "parent":{
     "name":"Commanded",
-    "path":"folders/Sounds/Pops/Man/Commanded.yy",
+    "path":"folders/Sprites/Sounds/Pops/Man/Commanded.yy",
   },
   "preload":false,
   "resourceType":"GMSound",

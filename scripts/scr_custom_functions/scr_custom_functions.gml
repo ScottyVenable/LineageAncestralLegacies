@@ -40,9 +40,9 @@
 // 4. CORE LOGIC (Individual Functions)
 // =========================================================================
 
-#region 4.1 scr_ds_list_to_array
+#region 4.1 ds_list_to_array
 /// ---
-/// scr_ds_list_to_array(_list)
+/// ds_list_to_array(_list)
 /// ---
 /// Purpose:
 ///   Converts a ds_list into a standard GML array.
@@ -50,14 +50,14 @@
 /// Metadata (for function):
 ///   Summary:       Converts a ds_list to an array.
 ///   Usage:         Utility function for data structure operations.
-///                  e.g., var _my_array = scr_ds_list_to_array(my_ds_list);
+///                  e.g., var _my_array = ds_list_to_array(my_ds_list);
 ///   Parameters:    _list : Id.DsList — The ds_list to convert.
 ///   Returns:       Array<Any> — A GML array containing the elements of the ds_list. Returns an empty array if input is invalid.
 ///   Tags:          [utility][ds_list][array][conversion]
 ///   Version:       1.1 - 2025-05-23 // Integrated into scr_custom_functions and updated header
 ///   Dependencies:  None
 
-function scr_ds_list_to_array(_list) {
+function ds_list_to_array(_list) {
     // =========================================================================
     // 0. IMPORTS & CACHES (Function Specific)
     // =========================================================================
@@ -71,7 +71,7 @@ function scr_ds_list_to_array(_list) {
     #region 1.1 Parameter Validation
     // Check if the input is a valid ds_list
     if (!ds_exists(_list, ds_type_list)) {
-        show_debug_message("ERROR: scr_ds_list_to_array() — Invalid _list parameter: not a valid ds_list.");
+        show_debug_message("ERROR: ds_list_to_array() — Invalid _list parameter: not a valid ds_list.");
         return []; // Return an empty array if the input is invalid
     }
     #endregion

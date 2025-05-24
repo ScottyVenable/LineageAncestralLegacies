@@ -20,14 +20,14 @@
 /// @usage obj_controller Draw GUI Event: draw_selection_box();
 // No parameters for this function
 /// @return {void}
-function draw_selection_box() {
+function scr_draw_selection_box() {
     // =========================================================================
     // 0. IMPORTS & CACHES (Function-local)
     // =========================================================================
     #region 0. IMPORTS & CACHES
     // No specific imports or cached locals needed for this function beyond instance variables.
     // Assumes `is_dragging`, `sel_start_x`, and `sel_start_y` are accessible instance variables
-    // from the calling object (e.g., obj_controller).
+    // from the calling object (e.g., obj_controller).\
     #endregion
 
     // =========================================================================
@@ -35,17 +35,20 @@ function draw_selection_box() {
     // =========================================================================
     #region 1. VALIDATION & EARLY RETURNS
     // Only proceed if a drag operation is currently active.
+    // TEMPORARILY COMMENTED OUT FOR TESTING
+    /*
     if (!is_dragging) {
         return; // Exit early if not dragging, nothing to draw.
     }
+    */
     #endregion
 
     // =========================================================================
     // 2. CONFIGURATION & CONSTANTS (Function-local)
     // =========================================================================
     #region 2. CONFIGURATION & CONSTANTS
-    var _selection_color = c_lime; // The color of the selection box.
-    var _selection_alpha = 0.25;   // The transparency of the selection box (0.0 to 1.0).
+    var _selection_color = global.SELECTION_BOX_PROPERTIES.COLOR; // The color of the selection box.
+    var _selection_alpha = global.SELECTION_BOX_PROPERTIES.ALPHA;   // The transparency of the selection box (0.0 to 1.0).
     #endregion
 
     // =========================================================================
@@ -60,6 +63,9 @@ function draw_selection_box() {
     // Set drawing properties for the selection box.
     draw_set_color(_selection_color);
     draw_set_alpha(_selection_alpha);
+
+    // DEBUG MESSAGE ADDED
+    show_debug_message($"DEBUG scr_draw_selection_box: Drawing rect from ({sel_start_x},{sel_start_y}) to ({_gui_mouse_x},{_gui_mouse_y}). is_dragging: {is_dragging}");
 
     // Draw the rectangle.
     // min() and max() are used to ensure the rectangle is drawn correctly

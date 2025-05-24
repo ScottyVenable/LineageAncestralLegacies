@@ -43,7 +43,7 @@
   ],
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
-  "solid":false,
+  "solid":true,
   "spriteId":{
     "name":"spr_man_idle",
     "path":"sprites/spr_man_idle/spr_man_idle.yy",

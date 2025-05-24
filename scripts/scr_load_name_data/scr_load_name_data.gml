@@ -11,7 +11,7 @@
 ///   Returns:       void (This function modifies global variables directly: `global.male_prefixes`, `global.male_suffixes`, `global.female_prefixes`, `global.female_suffixes`)
 ///   Tags:          [data][utility][names][generation][initialization][file_io]
 ///   Version:       1.1 - 2025-05-23 // Renamed functions, aligned with TEMPLATE_SCRIPT.
-///   Dependencies:  `ds_list_to_array()` (from `scr_ds_list_to_array.gml`). Text files in `data/names/`.
+///   Dependencies:  `ds_list_to_array()` (from `ds_list_to_array.gml`). Text files in `data/names/`.
 ///   Creator:       GameDev AI (Originally) / Your Name // Please update creator if known
 ///   Created:       2025-05-22 // Assumed creation date, please update if known
 ///   Last Modified: 2025-05-23 by Copilot // Updated to match template, renamed functions
@@ -20,7 +20,7 @@
 // 0. IMPORTS & CACHES (Script-level)
 // =========================================================================
 #region 0.1 Global Scope Dependencies
-// This script relies on `ds_list_to_array` being available globally from `scr_ds_list_to_array.gml`.
+// This script relies on `ds_list_to_array` being available globally from `ds_list_to_array.gml`.
 // No direct script-level imports here, but function dependencies are noted in metadata.
 #endregion
 
@@ -210,12 +210,12 @@ function load_text_file_lines(_path) {
     // =========================================================================
     #region Helper_5.1 Convert to Array and Cleanup DS_List
     // Convert the ds_list to a standard GameMaker array.
-    // This uses the `ds_list_to_array` function (expected to be globally available from `scr_ds_list_to_array.gml`).
+    // This uses the `ds_list_to_array` function (expected to be globally available from `ds_list_to_array.gml`).
     if (script_exists(ds_list_to_array)) { // Check if the conversion script exists
         _array = ds_list_to_array(_list); 
     } else {
         show_debug_message("CRITICAL ERROR (load_text_file_lines): ds_list_to_array script not found! Cannot convert list for " + _path);
-        // Fallback: Manually convert if scr_ds_list_to_array is missing (less efficient for large lists but functional)
+        // Fallback: Manually convert if ds_list_to_array is missing (less efficient for large lists but functional)
         // for (var i = 0; i < ds_list_size(_list); i++) {
         //     array_push(_array, _list[| i]);
         // }

@@ -157,14 +157,17 @@ if (_show_details_text) { // Use the new combined condition
 // ============================================================================
 #region 4.1 Selection Circle
 if (selected) { 
-    draw_set_color(c_lime); 
-    var _base_selection_radius_x = _base_sprite_w * 0.35;
+    draw_set_color(global.POP_SELECTION_PROPERTIES.COLOR); 
+
+	var _base_selection_radius_x = _base_sprite_w * 0.35;
     var _base_selection_radius_y = _base_sprite_w * 0.15; // This being different from X makes it an ellipse
-    var _scaled_selection_radius_x = _base_selection_radius_x * image_xscale;
+    
+	
+	var _scaled_selection_radius_x = _base_selection_radius_x * image_xscale;
     var _scaled_selection_radius_y = _base_selection_radius_y * image_xscale; // Should this be image_yscale for true ellipse scaling?
                                                                             // Or keep image_xscale if you want a specific shape.
     var _ellipse_center_y = _y_pop + (_scaled_sprite_h * 0.5) - _scaled_selection_radius_y; 
-    var _thickness = 2; 
+    var _thickness = global.POP_SELECTION_PROPERTIES.THICKNESS; 
     for (var i = 0; i < _thickness; i++) {
         draw_ellipse(
             _x_pop - _scaled_selection_radius_x - i, _ellipse_center_y - _scaled_selection_radius_y - i,
@@ -184,14 +187,14 @@ if (_state_current == PopState.COMMANDED &&
     variable_instance_exists(id, "travel_point_y") && is_real(travel_point_y) && 
     (floor(x) != floor(travel_point_x) || floor(y) != floor(travel_point_y))) { 
 
-    draw_set_alpha(0.75);
-    draw_set_color(c_aqua); 
-    var _marker_size = 4;
+    draw_set_alpha(global.POP_DESTINATION_MARKER_PROPERTIES.ALPHA);
+    draw_set_color(global.POP_DESTINATION_MARKER_PROPERTIES.COLOR); 
+    var _marker_size = global.POP_DESTINATION_MARKER_PROPERTIES.SIZE; // Use the size from global.POP_SELECTION_PROPERTIES
     draw_line_width(travel_point_x - _marker_size, travel_point_y - _marker_size, 
                     travel_point_x + _marker_size, travel_point_y + _marker_size, 2);
     draw_line_width(travel_point_x + _marker_size, travel_point_y - _marker_size, 
                     travel_point_x - _marker_size, travel_point_y + _marker_size, 2);
-    draw_set_alpha(1.0); 
+    draw_set_alpha(global.POP_DESTINATION_MARKER_PROPERTIES.ALPHA);
 }
 #endregion
 

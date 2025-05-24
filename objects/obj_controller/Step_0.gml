@@ -23,8 +23,18 @@ var _ctrl_held  = keyboard_check(vk_control);
 // 1. CAMERA CONTROL (Conditional based on Shift or Ctrl key)
 // ============================================================================
 #region 1.1 Camera Controller
+// The call to scr_camera_controller(); is removed.
+// Camera logic is now handled by the obj_camera_controller instance in its own Step Event.
 if (!_shift_held && !_ctrl_held) {
-    scr_camera_controller();
+    // If you need obj_controller to tell obj_camera_controller to do something specific
+    // (e.g., enable/disable controls), you would do it here, e.g.:
+    // if (instance_exists(obj_camera_controller)) {
+    //     obj_camera_controller.can_control = true; // Assuming obj_camera_controller has such a variable
+    // }
+} else {
+    // if (instance_exists(obj_camera_controller)) {
+    //     obj_camera_controller.can_control = false;
+    // }
 }
 #endregion
 

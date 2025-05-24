@@ -13,7 +13,7 @@
   "name":"music1",
   "parent":{
     "name":"Music",
-    "path":"folders/Sounds/Music.yy",
+    "path":"folders/Sprites/Sounds/Music.yy",
   },
   "preload":false,
   "resourceType":"GMSound",

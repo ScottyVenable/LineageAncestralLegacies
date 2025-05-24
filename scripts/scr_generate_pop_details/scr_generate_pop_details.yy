@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"scr_generate_pop_details",
   "parent":{
-    "name":"Data",
-    "path":"folders/Scripts/Data.yy",
+    "name":"Pop",
+    "path":"folders/Scripts/Pop.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

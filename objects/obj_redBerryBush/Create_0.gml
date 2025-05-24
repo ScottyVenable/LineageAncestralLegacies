@@ -25,7 +25,8 @@ resource_count = 10; // Standardized: How many items are available
 item_yield_enum = Item.FOOD_RED_BERRY; // Standardized: What item this bush yields (ensure Item.FOOD_RED_BERRY is defined in your Item enum)
 yield_quantity_per_cycle = 1; // Standardized: How many items are gathered per foraging cycle
 // berry_count = 10; // Replaced by resource_count
-max_berries = resource_count; // Keep for regrowth logic if needed, or adapt regrowth to use resource_count
+max_berries = resource_count; // Initialize max_berries with the initial resource_count. This is used for sprite frame calculation.
+// current_berry_count has been removed as resource_count serves its purpose.
 #endregion
 
 #region 1.2 Regrowth Timing
@@ -84,8 +85,18 @@ is_wiggling         = false;
 spr_full            = spr_redBerryBush_full;
 spr_empty           = spr_bush_empty;      // Standardized: Sprite to show when depleted
 
+// Initialize sprite_index based on the initial resource_count.
+// The Step event will handle dynamic updates if spr_redBerryBush_full is animated.
 if (sprite_exists(spr_full) && sprite_exists(spr_empty)) {
-    sprite_index    = (resource_count > 0) ? spr_full : spr_empty; // Use resource_count
+    sprite_index    = (resource_count > 0) ? spr_full : spr_empty;
+    if (resource_count > 0 && sprite_get_number(spr_full) > 1) {
+        // If the full sprite is animated, set to the last frame initially (most full)
+        // The Step event logic calculates frame based on (1 - proportion), so frame 0 is most full.
+        image_index = 0; // Start at the 'most full' frame
+    } else {
+        image_index = 0; // For single-frame sprites or empty sprite
+    }
+    image_speed = 0; // Animation will be handled by Step event logic if needed
 } else {
     debug_log($"ERROR (Bush sprites (spr_full or spr_empty) not found for ID {id}!)", "obj_redBerryBush:Create", "red");
 }
@@ -109,3 +120,13 @@ depth = -y;
 // Corrected debug message line:
 debug_log($"Bush {id} created. Max Slots: {max_interaction_slots}. Berries: {resource_count}. Regrow Time: {berry_regrow_time} steps. Delay Time: {berry_delay_time} steps.", "obj_redBerryBush:Create", "green");
 #endregion
+
+// Initialize berry count variables
+// max_berry_count = 7; // This is now set in the main #region 1.1 based on resource_count
+// current_berry_count = max_berry_count; // This is also effectively set by resource_count initialization
+
+// Initial sprite update is now handled by the Step Event, so no explicit call needed here.
+// event_user(0); // This call is removed as logic is moved to Step Event
+
+// Ensure max_berry_count is available for the Step event if it relies on it before full init.
+// However

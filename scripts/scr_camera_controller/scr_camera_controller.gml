@@ -99,8 +99,14 @@ function camera_controller() {
     // -------------------------------------------------------------------------
     // Adjust the zoom_target based on mouse wheel input.
     // clamp() ensures the zoom_target stays within defined min/max bounds.
-    if (mouse_wheel_up())   zoom_target = clamp(zoom_target + zoom_speed, zoom_min, zoom_max);
-    if (mouse_wheel_down()) zoom_target = clamp(zoom_target - zoom_speed, zoom_min, zoom_max);
+    if (mouse_wheel_up()) {
+        zoom_target = clamp(zoom_target + zoom_speed, zoom_min, zoom_max);
+        show_debug_message($"DEBUG (camera_controller): Mouse Wheel Up. Zoom Target: {zoom_target}");
+    }
+    if (mouse_wheel_down()) {
+        zoom_target = clamp(zoom_target - zoom_speed, zoom_min, zoom_max);
+        show_debug_message($"DEBUG (camera_controller): Mouse Wheel Down. Zoom Target: {zoom_target}");
+    }
 
     // 3.3. Smooth Zoom Interpolation
     // -------------------------------------------------------------------------
@@ -126,9 +132,11 @@ function camera_controller() {
         dragging_camera = true;
         drag_start_x    = _gui_mx; // Store initial mouse position for drag calculation
         drag_start_y    = _gui_my;
+        show_debug_message($"DEBUG (camera_controller): Middle Mouse Pressed. Dragging Camera: {dragging_camera}. Start: ({drag_start_x},{drag_start_y})");
     }
     if (mouse_check_button_released(mb_middle)) {
         dragging_camera = false;
+        show_debug_message($"DEBUG (camera_controller): Middle Mouse Released. Dragging Camera: {dragging_camera}");
     }
 
     if (dragging_camera) {
@@ -139,6 +147,7 @@ function camera_controller() {
         // Dividing by zoom_level ensures panning feels consistent regardless of zoom.
         cam_x -= _delta_gui_mx / zoom_level;
         cam_y -= _delta_gui_my / zoom_level;
+        show_debug_message($"DEBUG (camera_controller): Dragging. Delta: ({_delta_gui_mx},{_delta_gui_my}). New Cam Pos: ({cam_x},{cam_y})");
 
         // Update drag_start positions for the next frame's calculation.
         drag_start_x = _gui_mx;

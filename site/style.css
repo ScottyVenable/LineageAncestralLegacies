@@ -435,18 +435,94 @@ button:hover, .btn:hover {
   display: block;
 }
 
+/* Responsive design for mobile devices */
 @media (max-width: 700px) {
     .container {
-        padding: 1rem;
+        padding: 0.7rem;
+        max-width: 98vw;
+    }
+    header h1 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+    nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    nav a {
+        display: block;
+        margin: 0.3rem 0;
+        font-size: 1.1rem;
+        padding: 0.5rem 0.8rem;
+    }
+    #hero {
+        padding: 1.2rem 0 1rem 0;
+    }
+    #hero h2 {
+        font-size: 1.1rem;
     }
     .pillars {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.7rem;
+    }
+    .pillar {
+        min-width: unset;
+        padding: 0.7rem;
+    }
+    section h2 {
+        font-size: 1.2rem;
+    }
+    .features-list li, .game-info li, .progression-list li, .roadmap-list li {
+        font-size: 1rem;
+    }
+    button {
+        font-size: 1rem;
+        padding: 0.7rem 1.2rem;
+    }
+    footer {
+        font-size: 0.95rem;
+        padding: 0.7rem 0;
+    }
+    .social-row {
+        flex-direction: row;
+        gap: 0.7rem;
+    }
+    .social-btn {
+        width: 38px;
+        height: 38px;
+    }
+    .social-icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* Extra small devices (phones) */
+@media (max-width: 450px) {
+    header h1 {
+        font-size: 1.1rem;
     }
     nav a {
-        margin: 0 0.5rem;
+        font-size: 1rem;
+        padding: 0.4rem 0.5rem;
     }
     #hero h2 {
-        font-size: 1.2rem;
+        font-size: 0.95rem;
+    }
+    section h2 {
+        font-size: 1rem;
+    }
+    .container {
+        padding: 0.4rem;
+    }
+}
+
+/* Touch-friendly tweaks for mobile */
+@media (pointer: coarse) {
+    button, nav a {
+        min-height: 44px;
+        min-width: 44px;
     }
 }

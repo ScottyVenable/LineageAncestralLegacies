@@ -135,5 +135,25 @@
         </div>
     </footer>
     <script src="script.js"></script>
+    <script>
+    // Redirect subdomains to their respective pages for clean subdomain navigation
+    // This allows features.lineagegame.com to go directly to features.html, etc.
+    const subdomainMap = {
+        'features': 'features.html',
+        'gameplay': 'gameplay.html',
+        'progression': 'progression.html',
+        'language': 'language.html',
+        'roadmap': 'roadmap.html'
+    };
+    const hostParts = window.location.hostname.split('.');
+    // Only redirect if on a subdomain (not www or root)
+    if (hostParts.length > 2) {
+        const sub = hostParts[0].toLowerCase();
+        if (subdomainMap[sub]) {
+            // Use relative path for GitHub Pages compatibility
+            window.location.href = '/' + subdomainMap[sub];
+        }
+    }
+    </script>
 </body>
 </html>

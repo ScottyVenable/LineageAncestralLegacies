@@ -1,6 +1,7 @@
 {
   "FolderOrderSettings":[
     {"name":"Structures","order":1,"path":"folders/Objects/Structures.yy",},
+    {"name":"UI","order":6,"path":"folders/Scripts/UI.yy",},
     {"name":"Art","order":1,"path":"folders/Scripts/Pop/Art.yy",},
     {"name":"Behaviors","order":2,"path":"folders/Scripts/Pop/Behaviors.yy",},
     {"name":"Behavior Functions","order":4,"path":"folders/Scripts/Pop/Behaviors/Behavior Functions.yy",},

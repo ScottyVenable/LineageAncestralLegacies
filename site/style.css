@@ -176,6 +176,13 @@ code, pre {
     padding: 2px 6px;
     border-radius: 4px;
 }
+.site-version {
+    color: #bfa76a;
+    font-size: 0.95em;
+    margin-left: 1.2em;
+    opacity: 0.85;
+    letter-spacing: 1px;
+}
 
 /* Accent colors */
 :root {

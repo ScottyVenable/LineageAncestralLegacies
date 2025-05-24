@@ -97,7 +97,7 @@
         // Fallback: If fetch fails (e.g. on GitHub Pages), use hardcoded users
         let users;
         try {
-          const response = await fetch('users.json');
+          const response = await fetch('data/users.json');
           if (!response.ok) throw new Error('Could not load user database.');
           users = await response.json();
         } catch (fetchErr) {

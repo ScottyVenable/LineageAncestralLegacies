@@ -9,29 +9,29 @@
     <link rel="icon" type="image/x-icon" href="icon.ico">
     <link rel="stylesheet" href="style.css">
     <!-- Local fonts only for consistency and offline support -->
+    <script>
+    // Simple client-side session check for demo/learning purposes only
+    // Replace with a secure server-side check in production!
+    // Assumes 'isAdmin' is set in localStorage on successful login
+    if (!localStorage.getItem('isAdmin')) {
+        window.location.href = 'login.html'; // Redirect unauthorized users
+    }
+    </script>
 </head>
 <body class="admin-body">
-    <!-- Admin session check: Only show content if logged in (handled by JS) -->
-    <div id="admin-session-guard">
-        <!-- This overlay is shown if the user is not logged in -->
-        <div class="admin-guard-message">
-            <h2>Access Denied</h2>
-            <p>You must be logged in to view the admin panel.</p>
-            <a href="admin-login.html" class="btn">Go to Login</a>
-        </div>
-    </div>
+    <!-- Removed Access Denied/session guard overlay for simplicity and security. -->
     <div class="admin-container">
         <aside class="admin-sidebar">
             <h1 class="admin-title">Admin Panel</h1>
             <nav class="admin-nav">
                 <ul>
-                    <li><a href="#dashboard" class="admin-nav-link active">Dashboard</a></li>
-                    <li><a href="#mailbox" class="admin-nav-link">Mailbox</a></li>
-                    <li><a href="#content" class="admin-nav-link">Content Editor</a></li>
-                    <li><a href="#users" class="admin-nav-link">User Management</a></li>
-                    <li><a href="#settings" class="admin-nav-link">Site Settings</a></li>
-                    <li><a href="#analytics" class="admin-nav-link">Analytics</a></li>
-                    <li><a href="#docs" class="admin-nav-link">Docs & Help</a></li>
+                    <li><a href="admin center/dashboard.html" class="admin-nav-link active">Dashboard</a></li>
+                    <li><a href="admin center/mailbox.html" class="admin-nav-link">Mailbox</a></li>
+                    <li><a href="admin center/content.html" class="admin-nav-link">Content Editor</a></li>
+                    <li><a href="admin center/users.html" class="admin-nav-link">User Management</a></li>
+                    <li><a href="admin center/settings.html" class="admin-nav-link">Site Settings</a></li>
+                    <li><a href="admin center/analytics.html" class="admin-nav-link">Analytics</a></li>
+                    <li><a href="admin center/docs.html" class="admin-nav-link">Docs & Help</a></li>
                     <li><button id="admin-logout" class="btn btn-logout">Logout</button></li>
                 </ul>
             </nav>

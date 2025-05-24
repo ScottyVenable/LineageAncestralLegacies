@@ -194,3 +194,5 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// If any fetch or AJAX calls reference 'users.json', update to 'data/users.json'

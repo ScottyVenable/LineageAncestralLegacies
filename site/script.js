@@ -73,7 +73,7 @@ Array.from(document.querySelectorAll('nav a')).forEach(link => {
 const backToTop = document.createElement('button');
 backToTop.id = 'back-to-top';
 backToTop.title = 'Back to top';
-backToTop.innerHTML = '↑';
+backToTop.innerHTML = '🡹';
 document.body.appendChild(backToTop);
 
 window.addEventListener('scroll', () => {

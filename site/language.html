@@ -1,91 +1,45 @@
+<!-- Language Section Page
+     This file is language.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Procedural Language | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Language</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-        </div>
-    </header>
-    <script>
-    (function() {
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
-    <main>
-        <section id="language">
-            <div class="container">
-                <h2>Procedural Language System</h2>
-                <p>Each tribe invents and evolves its own language. Decipher words, influence vocabulary, and experience emergent linguistic drift. The language system is a living record of your tribe's journey, offering unique puzzles and cultural depth every playthrough.</p>
-                <ul class="features-list">
-                    <li><strong>Language Generation:</strong> Each tribe starts with a set of proto-words. As the game progresses, new words are invented and old ones drift, creating unique languages.<br>
-                        <em>// GameMaker tip: Use arrays or ds_lists to store word lists, and scripts to generate and mutate words procedurally.</em>
-                    </li>
-                    <li><strong>Deciphering & Influence:</strong> Players can try to decipher the language, influence vocabulary, and see how words change over time.<br>
-                        <em>// Educational: String manipulation and procedural generation are key programming skills for this feature.</em>
-                    </li>
-                    <li><strong>Linguistic Drift:</strong> Separated tribes develop their own dialects and languages, reflecting their unique experiences and environments.<br>
-                        <em>// Game design: Use tribe-specific word lists and mutation rates to simulate language drift.</em>
-                    </li>
-                    <li><strong>Gameplay Impact:</strong> Language affects communication, social cohesion, and even gameplay events (e.g., misunderstandings, alliances, or rivalries).</li>
-                </ul>
-                <button id="show-language-demo">See Language Demo</button>
-                <div id="language-demo" class="hidden">
-                    <h3>Example Proto-Words</h3>
-                    <ul id="proto-words-list"></ul>
-                </div>
-                <!--
-                    This page explains the procedural language system, with comments to help you connect language evolution to GameMaker programming and game design.
-                -->
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now only shows the Language section.
-        Navigation links let users explore other sections on their own pages.
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener"></a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener"></a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener"></a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener"></a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Language</h2>
+      <!-- GDD-based content with educational comments for learners -->
+      <div id="language-demo">
+        <h3>Proto-Language System</h3>
+        <ul id="proto-words-list">
+          <li><strong>Word Creation:</strong> // Pops invent words for new concepts, showing procedural content generation.</li>
+          <li><strong>Language Spread:</strong> // Words spread through the population, simulating real-world language evolution.</li>
+          <li><strong>Player Influence:</strong> // Players can influence language by naming things, teaching about player agency.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

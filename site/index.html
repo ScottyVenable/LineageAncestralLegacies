@@ -6,9 +6,11 @@
     <title>Lineage: Ancestral Legacies</title>
     <link rel="icon" type="image/x-icon" href="icon.ico">
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- All fonts are now loaded from the local fonts folder only. Removed Google Fonts. -->
+    <!--
+      @font-face rules in style.css load PixelOperator, PixelOperator-Bold, PixelOperatorMono, and PixelOperatorMono-Bold from /fonts/.
+      No external fonts are used for consistency and offline support.
+    -->
 </head>
 <body>
     <header>
@@ -19,7 +21,7 @@
                 <a href="features.html" id="nav-features">Features</a>
                 <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
                 <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
+                <a href="language.html" id="nav-language">Language</a>
                 <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
                 <a href="contact.html" id="nav-contact">Contact</a>
             </nav>
@@ -49,11 +51,109 @@
                 </ul>
             </div>
         </section>
+        <section id="pillars">
+            <div class="container">
+                <h2>Core Pillars</h2>
+                <div class="pillars">
+                    <div class="pillar">
+                        <h3>Legacy & Progression</h3>
+                        <p>// Successive generations inherit traits, skills, and knowledge. This teaches about inheritance and progression systems in games.</p>
+                    </div>
+                    <div class="pillar">
+                        <h3>Emergent Storytelling</h3>
+                        <p>// Pops (villagers) have needs, skills, and AI-driven behaviors, creating unique stories each playthrough.</p>
+                    </div>
+                    <div class="pillar">
+                        <h3>Procedural World</h3>
+                        <p>// Each world is generated uniquely, encouraging replayability and teaching procedural generation concepts.</p>
+                    </div>
+                    <div class="pillar">
+                        <h3>Language Evolution</h3>
+                        <p>// In-game language system evolves as the lineage advances, demonstrating procedural content and player agency.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="features-summary">
+            <div class="container">
+                <h2>Key Features</h2>
+                <ul class="features-list">
+                    <li><strong>Procedural World Generation:</strong> // Generates a unique world each playthrough for replayability.</li>
+                    <li><strong>Dynamic Pop System:</strong> // Pops (villagers) have needs, skills, and AI-driven behaviors.</li>
+                    <li><strong>Resource Management:</strong> // Players gather, store, and use resources to grow their lineage.</li>
+                    <li><strong>Legacy Progression:</strong> // Successive generations inherit traits and skills, teaching about inheritance in games.</li>
+                    <li><strong>Language Evolution:</strong> // In-game language system evolves as the lineage advances.</li>
+                    <li><strong>Event System:</strong> // Random and scripted events challenge the player and add variety.</li>
+                </ul>
+            </div>
+        </section>
+        <section id="gameplay-summary">
+            <div class="container">
+                <h2>Gameplay Loop</h2>
+                <ul class="game-info">
+                    <li><strong>Core Loop:</strong> // Gather, build, survive, and progress your lineage.</li>
+                    <li><strong>AI Pops:</strong> // Pops act autonomously, teaching about AI in games.</li>
+                    <li><strong>Building System:</strong> // Players place and upgrade structures for their tribe.</li>
+                    <li><strong>Seasons & Events:</strong> // Dynamic world events affect strategy and planning.</li>
+                    <li><strong>Exploration:</strong> // Discover new biomes and resources, encouraging curiosity.</li>
+                </ul>
+            </div>
+        </section>
+        <section id="progression-summary">
+            <div class="container">
+                <h2>Progression</h2>
+                <ul class="progression-list">
+                    <li><strong>Generational Legacy:</strong> // Each generation inherits traits, skills, and knowledge.</li>
+                    <li><strong>Skill Trees:</strong> // Unlock new abilities and technologies over time.</li>
+                    <li><strong>Milestones:</strong> // Achieve goals to advance your lineage and unlock rewards.</li>
+                    <li><strong>Difficulty Scaling:</strong> // The game becomes more challenging as you progress, teaching about balancing.</li>
+                </ul>
+            </div>
+        </section>
+        <section id="language-summary">
+            <div class="container">
+                <h2>Language System</h2>
+                <div id="language-demo">
+                    <h3>Proto-Language System</h3>
+                    <ul id="proto-words-list">
+                        <li><strong>Word Creation:</strong> // Pops invent words for new concepts, showing procedural content generation.</li>
+                        <li><strong>Language Spread:</strong> // Words spread through the population, simulating real-world language evolution.</li>
+                        <li><strong>Player Influence:</strong> // Players can influence language by naming things, teaching about player agency.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <section id="roadmap-summary">
+            <div class="container">
+                <h2>Roadmap</h2>
+                <ul class="roadmap-list">
+                    <li><strong>Alpha Release:</strong> // Core systems implemented, feedback phase begins.</li>
+                    <li><strong>Beta Release:</strong> // More features, polish, and bug fixes.</li>
+                    <li><strong>Full Release:</strong> // Complete game with all planned content and systems.</li>
+                    <li><strong>Post-Launch:</strong> // Ongoing updates, community-driven features, and support.</li>
+                </ul>
+            </div>
+        </section>
+        <section id="contact-summary">
+            <div class="container">
+                <h2>Contact</h2>
+                <form class="contact-form" method="POST" enctype="multipart/form-data" autocomplete="on">
+                    <!-- The action is now handled by JS for AJAX submission. -->
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+                    <button type="submit">Send</button>
+                </form>
+                <!-- Thank you message will be injected here by JS -->
+            </div>
+        </section>
     </main>
     <!--
-        The main page now only shows the Overview section.
-        All other content (Features, Gameplay, etc.) is on their own HTML pages.
-        This keeps the homepage simple and directs users to dedicated pages for details.
+        The main page now shows a summary of all sections for easy overview and navigation.
+        Each section is commented for learning, and links to full details are in the nav bar.
     -->
     <footer>
         <div class="container">

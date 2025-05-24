@@ -1,84 +1,47 @@
+<!-- Contact Section Page
+     This file is contact.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Contact</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-        </div>
-    </header>
-    <script>
-    (function() {
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
-    <main>
-        <section id="contact">
-            <div class="container">
-                <h2>Contact & Feedback</h2>
-                <p>We'd love to hear from you! Please use the form below to send questions, feedback, or business inquiries directly to the developer.</p>
-                <form class="contact-form" action="mailto:scottyvenable@gmail.com" method="POST" enctype="text/plain">
-                    <label for="name">Your Name:</label>
-                    <input type="text" id="name" name="name" required>
-
-                    <label for="email">Your Email:</label>
-                    <input type="email" id="email" name="email" required>
-
-                    <label for="message">Message:</label>
-                    <textarea id="message" name="message" rows="6" required></textarea>
-
-                    <button type="submit">Send Message</button>
-                </form>
-                <p><em>// This form uses <code>mailto:</code> to open the user's email client and send the message. For a professional site, use a backend service (like Formspree, Netlify Forms, or your own server) for better reliability and user experience.</em></p>
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now features a simple contact form for user feedback.
-        For real-world projects, always validate and secure form submissions!
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener"></a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener"></a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener"></a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener"></a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Contact</h2>
+      <!-- Contact form with educational comments for learners -->
+      <form class="contact-form" action="mailto:scottyvenable@gmail.com" method="POST" enctype="text/plain">
+        <!-- Using mailto: for simple email sending; for production, a backend is recommended. -->
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="5" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

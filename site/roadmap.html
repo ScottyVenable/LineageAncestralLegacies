@@ -1,90 +1,43 @@
+<!-- Roadmap Section Page
+     This file is roadmap.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roadmap | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Roadmap</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-        </div>
-    </header>
-    <script>
-    (function() {
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
-    <main>
-        <section id="roadmap">
-            <div class="container">
-                <h2>Development Roadmap</h2>
-                <ol class="roadmap-list">
-                    <li><strong>Core Prototype:</strong> Pop FSM, basic movement, simple foraging, minimal UI.<br>
-                        <em>// Start with the basics: movement, simple AI, and UI. Focus on getting a playable loop before adding complexity.</em>
-                    </li>
-                    <li><strong>Alpha:</strong> Expanded FSM, inventory, basic crafting, needs system, simple combat, genetic tree UI.<br>
-                        <em>// Add more systems and polish. Use scripts for inventory and crafting, and start building the trait tree UI.</em>
-                    </li>
-                    <li><strong>Beta:</strong> Full FSM, roles, biomes, expanded genetics, advanced crafting, social dynamics, language system, tribe splitting, sound & music.<br>
-                        <em>// Expand content and systems. Add biomes, more complex AI, and polish the language and genetics systems.</em>
-                    </li>
-                    <li><strong>Release Candidate:</strong> Full progression, advanced systems, inter-tribe dynamics, polish, tutorial, balancing.<br>
-                        <em>// Finalize all features, add tutorials, and balance gameplay for a smooth player experience.</em>
-                    </li>
-                    <li><strong>Post-Release:</strong> Content updates, new biomes, advanced features, modding, multiplayer.<br>
-                        <em>// Plan for future updates and community involvement. Consider how to structure your code for modding and expansion.</em>
-                    </li>
-                </ol>
-                <!--
-                    This page explains the development roadmap, with comments to help you connect each milestone to GameMaker and game design concepts.
-                -->
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now only shows the Roadmap section.
-        Navigation links let users explore other sections on their own pages.
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener"></a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener"></a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener"></a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener"></a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Roadmap</h2>
+      <!-- GDD-based content with educational comments for learners -->
+      <ul class="roadmap-list">
+        <li><strong>Alpha Release:</strong> // Core systems implemented, feedback phase begins.</li>
+        <li><strong>Beta Release:</strong> // More features, polish, and bug fixes.</li>
+        <li><strong>Full Release:</strong> // Complete game with all planned content and systems.</li>
+        <li><strong>Post-Launch:</strong> // Ongoing updates, community-driven features, and support.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

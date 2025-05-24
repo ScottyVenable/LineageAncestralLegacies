@@ -1,95 +1,44 @@
+<!-- Gameplay Section Page
+     This file is gameplay.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gameplay | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Gameplay</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-        </div>
-    </header>
-    <script>
-    (function() {
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
-    <main>
-        <section id="gameplay">
-            <div class="container">
-                <h2>Core Gameplay Pillars</h2>
-                <ul class="features-list">
-                    <li><strong>Survive:</strong> Gather resources, build shelter, and protect your tribe from threats and the environment.<br>
-                        <em>// GameMaker concept: Use objects for resources and structures. Pops can have a needs system (hunger, thirst, etc.) and interact with the environment using state machines.</em>
-                    </li>
-                    <li><strong>Evolve:</strong> Earn Evolution Points (EP) to unlock new traits and shape your lineage. Traits are inherited and can mutate, driving diversity.<br>
-                        <em>// Educational: Implement a trait tree using data structures (ds_maps, ds_lists) and random mutation logic for emergent gameplay.</em>
-                    </li>
-                    <li><strong>Branch:</strong> Guide tribe splits and adaptation, creating new cultures and legacies. Tribes can specialize based on their environment.<br>
-                        <em>// Game design: Use arrays or ds_lists to manage multiple tribes and their unique properties. This encourages replayability and player-driven stories.</em>
-                    </li>
-                    <li><strong>Legacy:</strong> Track family trees, milestones, and traditions as your civilization grows. Pops have life cycles, relationships, and can pass down knowledge.<br>
-                        <em>// GameMaker tip: Store pop data in structs/objects and use lists to track family trees and key events.</em>
-                    </li>
-                </ul>
-                <h3>Key Mechanics</h3>
-                <ul class="features-list">
-                    <li><strong>Needs & FSM:</strong> Pops use a finite state machine (FSM) to decide actions (idle, forage, hunt, craft, socialize, etc.) based on their needs and environment.</li>
-                    <li><strong>Resource & Inventory System:</strong> Each pop has a personal inventory, and the tribe can build communal storage. Items include food, materials, tools, and crafted goods.</li>
-                    <li><strong>Crafting & Technology:</strong> Unlock new recipes and blueprints through discovery points (DP) and "Eureka!" moments. Pops improve skills by crafting and can create higher-quality items.</li>
-                    <li><strong>Dynamic Environment:</strong> Multiple biomes, weather, seasons, and hazards affect gameplay. Resource nodes regrow, and animal behavior is simulated for realism.</li>
-                    <li><strong>Social & Tribal Dynamics:</strong> Pops form relationships, develop moods, and can become leaders. Traditions and customs emerge, affecting gameplay and tribe cohesion.</li>
-                </ul>
-                <!--
-                    This page explains the core gameplay pillars and mechanics, with comments to help you connect game design ideas to GameMaker implementation.
-                -->
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now only shows the Gameplay section.
-        Navigation links let users explore other sections on their own pages.
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener"></a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener"></a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener"></a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener"></a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Gameplay</h2>
+      <!-- GDD-based content with educational comments for learners -->
+      <ul class="game-info">
+        <li><strong>Core Loop:</strong> // Gather, build, survive, and progress your lineage.</li>
+        <li><strong>AI Pops:</strong> // Pops act autonomously, teaching about AI in games.</li>
+        <li><strong>Building System:</strong> // Players place and upgrade structures for their tribe.</li>
+        <li><strong>Seasons & Events:</strong> // Dynamic world events affect strategy and planning.</li>
+        <li><strong>Exploration:</strong> // Discover new biomes and resources, encouraging curiosity.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

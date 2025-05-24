@@ -1,130 +1,45 @@
+<!-- Features Section Page
+     This file is features.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Features | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Features</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-            <!--
-                Navigation links now use separate HTML files instead of #anchors.
-                This makes each section a real page, not just a scroll target.
-                This is best practice for multi-page sites and helps with subdomain routing.
-            -->
-        </div>
-    </header>
-    <main>
-        <section id="features">
-            <div class="container">
-                <h2>Unique Features</h2>
-                <ul class="features-list">
-                    <!-- Deep Evolutionary Trait System -->
-                    <li>
-                        <strong>Deep Evolutionary Trait System:</strong>
-                        Modular genetic tree lets you unlock and combine physical, mental, and emotional traits. Traits are inherited and can mutate, so every pop is unique!<br>
-                        <em>// Game design note: This system uses inheritance and mutation logic, which is a great example of emergent gameplay and replayability.</em>
-                    </li>
-                    <!-- Emergent Generational Storytelling -->
-                    <li>
-                        <strong>Emergent Generational Storytelling:</strong>
-                        Each pop has their own traits, skills, relationships, and life events. Family trees track their stories across generations, creating unscripted, memorable narratives.<br>
-                        <em>// GameMaker tip: Use structs or objects to store pop data, and keep a log of key events for each pop for later display.</em>
-                    </li>
-                    <!-- Procedural Language Evolution -->
-                    <li>
-                        <strong>Procedural Language Evolution:</strong>
-                        Tribes invent and evolve their own languages. Players can decipher, influence, and watch languages drift over time.<br>
-                        <em>// Educational: This feature uses procedural generation and string manipulation, which are fun programming challenges in GameMaker!</em>
-                    </li>
-                    <!-- Branching Tribal Legacies -->
-                    <li>
-                        <strong>Branching Tribal Legacies:</strong>
-                        Tribes can split and adapt to new biomes, developing unique traits, technologies, and cultures. This creates a tapestry of interconnected (or rival) lineages.<br>
-                        <em>// Game design: This encourages replayability and player-driven storytelling. Try using arrays or ds_lists to track multiple tribes!</em>
-                    </li>
-                    <!-- Accessible Complexity -->
-                    <li>
-                        <strong>Accessible Complexity:</strong>
-                        Deep simulation with intuitive controls and clear UI. Complex systems are made approachable for all players.<br>
-                        <em>// UI/UX tip: Good interface design is key for complex games. Use clear icons, tooltips, and progressive disclosure to help new players.</em>
-                    </li>
-                </ul>
-                <h3>Bonus: Core Gameplay Pillars</h3>
-                <ul class="features-list">
-                    <li><strong>Survive:</strong> Gather resources, build shelter, and protect your tribe from threats and the environment.</li>
-                    <li><strong>Evolve:</strong> Earn Evolution Points to unlock new traits and shape your lineage.</li>
-                    <li><strong>Branch:</strong> Guide tribe splits and adaptation, creating new cultures and legacies.</li>
-                    <li><strong>Legacy:</strong> Track family trees, milestones, and traditions as your civilization grows.</li>
-                </ul>
-                <!--
-                    This page summarizes the most innovative and educational features of the game.
-                    Each feature is inspired by real game design and programming concepts you can try in your own GameMaker projects!
-                -->
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now only shows the Features section.
-        Navigation links let users explore other sections on their own pages.
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener">
-                    <!-- Discord SVG icon here -->
-                </a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener">
-                    <!-- Facebook SVG icon here -->
-                </a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener">
-                    <!-- Instagram SVG icon here -->
-                </a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener">
-                    <!-- YouTube SVG icon here -->
-                </a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
-    <script>
-    // Highlight the current page in the nav bar
-    (function() {
-        // Map page filenames to nav link IDs
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        // Get current page filename
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        // Highlight the nav link if it exists
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Features</h2>
+      <!-- GDD-based content with educational comments for learners -->
+      <ul class="features-list">
+        <li><strong>Procedural World Generation:</strong> // Generates a unique world each playthrough for replayability.</li>
+        <li><strong>Dynamic Pop System:</strong> // Pops (villagers) have needs, skills, and AI-driven behaviors.</li>
+        <li><strong>Resource Management:</strong> // Players gather, store, and use resources to grow their lineage.</li>
+        <li><strong>Legacy Progression:</strong> // Successive generations inherit traits and skills, teaching about inheritance in games.</li>
+        <li><strong>Language Evolution:</strong> // In-game language system evolves as the lineage advances.</li>
+        <li><strong>Event System:</strong> // Random and scripted events challenge the player and add variety.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

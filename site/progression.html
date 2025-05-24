@@ -1,90 +1,43 @@
+<!-- Progression Section Page
+     This file is progression.html in the site root for direct navigation and subdomain compatibility. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progression | Lineage: Ancestral Legacies</title>
-    <link rel="icon" type="image/x-icon" href="icon.ico">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineage - Progression</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
-                <a href="index.html" id="nav-overview">Overview</a>
-                <a href="features.html" id="nav-features">Features</a>
-                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
-                <a href="progression.html" id="nav-progression">Progression</a>
-                <a href="language.html" id="nav-language">Procedural Language</a>
-                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
-                <a href="contact.html" id="nav-contact">Contact</a>
-            </nav>
-        </div>
-    </header>
-    <script>
-    (function() {
-        const pageToNav = {
-            'index.html': 'nav-overview',
-            'features.html': 'nav-features',
-            'gameplay.html': 'nav-gameplay',
-            'progression.html': 'nav-progression',
-            'language.html': 'nav-language',
-            'roadmap.html': 'nav-roadmap',
-            'contact.html': 'nav-contact'
-        };
-        let page = window.location.pathname.split('/').pop() || 'index.html';
-        if(pageToNav[page]) {
-            let el = document.getElementById(pageToNav[page]);
-            if(el) el.classList.add('active');
-        }
-    })();
-    </script>
-    <main>
-        <section id="progression">
-            <div class="container">
-                <h2>Progression Flow</h2>
-                <ol class="progression-list">
-                    <li><strong>Dawn Age:</strong> Basic survival, foraging, and first discoveries.<br>
-                        <em>// Start with simple mechanics: resource gathering, shelter, and basic needs. Great for learning about object interactions in GameMaker.</em>
-                    </li>
-                    <li><strong>Primitive Age:</strong> Tool crafting, group hunting, and simple shelters.<br>
-                        <em>// Introduce crafting and inventory systems. Use scripts to manage item creation and pop skills.</em>
-                    </li>
-                    <li><strong>Tribal Age:</strong> Role specialization, communal structures, and early culture.<br>
-                        <em>// Add roles and social systems. Try using enums or constants for pop roles and ds_maps for tribe data.</em>
-                    </li>
-                    <li><strong>Divergence Age:</strong> Environmental adaptation, unique cultures, and meta-genetics.<br>
-                        <em>// Encourage tribe splitting and adaptation. Use arrays/lists to manage multiple tribes and their unique traits.</em>
-                    </li>
-                    <li><strong>Ancestral Legacy:</strong> Interconnected lineages, advanced research, and grand aspirations.<br>
-                        <em>// Track family trees and milestones. Use data structures to store lineage and achievement data for end-game reflection.</em>
-                    </li>
-                </ol>
-                <!--
-                    This page explains the game's progression system, with comments to help you connect each age to GameMaker and game design concepts.
-                -->
-            </div>
-        </section>
-    </main>
-    <!--
-        This page now only shows the Progression section.
-        Navigation links let users explore other sections on their own pages.
-    -->
-    <footer>
-        <div class="container">
-            <div class="social-row">
-                <a href="https://discord.gg/" class="social-btn" title="Discord" target="_blank" rel="noopener"></a>
-                <a href="https://facebook.com/" class="social-btn" title="Facebook" target="_blank" rel="noopener"></a>
-                <a href="https://instagram.com/" class="social-btn" title="Instagram" target="_blank" rel="noopener"></a>
-                <a href="https://youtube.com/" class="social-btn" title="YouTube" target="_blank" rel="noopener"></a>
-            </div>
-            <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
+  <header>
+    <div class="container">
+      <h1>Lineage: Ancestral Legacies</h1>
+      <nav>
+        <a href="index.html" id="nav-overview">Overview</a>
+        <a href="features.html" id="nav-features">Features</a>
+        <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+        <a href="progression.html" id="nav-progression">Progression</a>
+        <a href="language.html" id="nav-language">Language</a>
+        <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+        <a href="contact.html" id="nav-contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h2>Progression</h2>
+      <!-- GDD-based content with educational comments for learners -->
+      <ul class="progression-list">
+        <li><strong>Generational Legacy:</strong> // Each generation inherits traits, skills, and knowledge.</li>
+        <li><strong>Skill Trees:</strong> // Unlock new abilities and technologies over time.</li>
+        <li><strong>Milestones:</strong> // Achieve goals to advance your lineage and unlock rewards.</li>
+        <li><strong>Difficulty Scaling:</strong> // The game becomes more challenging as you progress, teaching about balancing.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Lineage: Ancestral Legacies
+  </footer>
 </body>
 </html>

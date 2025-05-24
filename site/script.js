@@ -137,22 +137,7 @@ if (contactForm) {
 
 // --- MOBILE NAVIGATION & LOGIN/ACCOUNT BUTTON LOGIC ---
 window.addEventListener('DOMContentLoaded', () => {
-  // Hamburger menu toggle for mobile nav
-  const navToggle = document.getElementById('nav-toggle');
-  const mainNav = document.getElementById('main-nav');
-  if (navToggle && mainNav) {
-    navToggle.addEventListener('click', () => {
-      mainNav.classList.toggle('open');
-      navToggle.classList.toggle('open');
-    });
-    // Close nav when clicking a link (for mobile UX)
-    mainNav.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        mainNav.classList.remove('open');
-        navToggle.classList.remove('open');
-      });
-    });
-  }
+  // Hamburger menu toggle for mobile nav (REMOVED: not used, prevents blank button)
 
   // Login/Account button logic
   const loginArea = document.getElementById('login-area');
@@ -192,6 +177,40 @@ window.addEventListener('DOMContentLoaded', () => {
         });
       }
     }
+  }
+
+  // --- MOBILE NAVIGATION LOGIC ---
+  function isMobileDevice() {
+      return window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  }
+
+  const navToggle = document.getElementById('nav-toggle');
+  const mainNav = document.getElementById('main-nav');
+  if (navToggle && mainNav) {
+      function updateMobileNav() {
+          if (isMobileDevice()) {
+              navToggle.style.display = 'flex';
+              mainNav.classList.remove('open');
+          } else {
+              navToggle.style.display = 'none';
+              mainNav.classList.remove('open');
+          }
+      }
+      updateMobileNav();
+      window.addEventListener('resize', updateMobileNav);
+      navToggle.addEventListener('click', function() {
+          navToggle.classList.toggle('open');
+          mainNav.classList.toggle('open');
+      });
+      // Optional: close nav when clicking a link (mobile UX)
+      mainNav.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+              if (isMobileDevice()) {
+                  navToggle.classList.remove('open');
+                  mainNav.classList.remove('open');
+              }
+          });
+      });
   }
 });
 

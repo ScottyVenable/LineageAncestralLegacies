@@ -35,6 +35,18 @@ header {
     border-bottom: 4px solid #bfa76a;
     padding: 0.5rem 0;
 }
+header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(45, 30, 19, 0.65); /* semi-transparent overlay for readability */
+    pointer-events: none;
+    z-index: 0;
+}
+header > .container {
+    position: relative;
+    z-index: 1;
+}
 header h1 {
     font-family: 'PixelOperator-Bold', Arial, sans-serif;
     font-size: 2.5rem;
@@ -587,5 +599,86 @@ button:hover, .btn:hover {
 @media (max-width: 500px) {
     .contact-form {
         padding: 0.7rem 0.2rem;
+    }
+}
+
+/* Hamburger menu button styles */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    margin-right: 1rem;
+}
+.nav-toggle-bar {
+    width: 28px;
+    height: 4px;
+    background: #ffe7a0;
+    margin: 3px 0;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+/* Hamburger animation when open */
+.nav-toggle.open .nav-toggle-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+.nav-toggle.open .nav-toggle-bar:nth-child(2) {
+    opacity: 0;
+}
+.nav-toggle.open .nav-toggle-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile nav menu styles */
+@media (max-width: 900px) {
+    .nav-toggle {
+        display: flex;
+    }
+    #main-nav {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 220px;
+        height: 100vh;
+        background: #2d1e13ee;
+        box-shadow: 2px 0 16px #0008;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 2.5rem 1.2rem 1.2rem 1.2rem;
+        gap: 1.2rem;
+        z-index: 1000;
+        transition: left 0.35s cubic-bezier(.4,0,.2,1);
+        grid-template-columns: 1fr;
+        row-gap: 1.2rem;
+    }
+    #main-nav.open {
+        left: 0;
+    }
+    #main-nav a {
+        margin: 0.4em 0;
+        font-size: 1.2rem;
+        width: 100%;
+        display: block;
+    }
+    .header-flex {
+        flex-wrap: nowrap;
+    }
+}
+
+/* Hide nav menu when not open on mobile */
+@media (max-width: 900px) {
+    #main-nav {
+        pointer-events: none;
+    }
+    #main-nav.open {
+        pointer-events: auto;
     }
 }

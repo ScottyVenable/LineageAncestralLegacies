@@ -14,9 +14,9 @@
 </head>
 <body>
     <header>
-        <div class="container">
+        <div class="container header-flex">
             <h1>Lineage: Ancestral Legacies</h1>
-            <nav>
+            <nav id="main-nav">
                 <a href="index.html" id="nav-overview">Overview</a>
                 <a href="features.html" id="nav-features">Features</a>
                 <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
@@ -25,11 +25,14 @@
                 <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
                 <a href="contact.html" id="nav-contact">Contact</a>
             </nav>
-            <!--
-                Navigation links now use separate HTML files instead of #anchors.
-                This makes each section a real page, not just a scroll target.
-                This is best practice for multi-page sites and helps with subdomain routing.
-            -->
+            <!-- Hamburger menu for mobile navigation -->
+            <button id="nav-toggle" aria-label="Toggle navigation" class="nav-toggle" tabindex="0">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <!-- Login/Account button, updated by JS based on session -->
+            <div id="login-area" style="margin-left:auto;"></div>
         </div>
     </header>
     <main>
@@ -174,6 +177,9 @@
             <p>&copy; 2025 Cadential Studios | Lineage: Ancestral Legacies. All rights reserved.</p>
         </div>
     </footer>
+    <button id="back-to-top" title="Back to top" aria-label="Back to top">
+        <span class="back-to-top-arrow">&#8593;</span>
+    </button>
     <script src="script.js"></script>
     <script>
     // Redirect subdomains to their respective pages for clean subdomain navigation

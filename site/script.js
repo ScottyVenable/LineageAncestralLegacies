@@ -134,3 +134,63 @@ if (contactForm) {
     // No need to await, UX is instant
   });
 }
+
+// --- MOBILE NAVIGATION & LOGIN/ACCOUNT BUTTON LOGIC ---
+window.addEventListener('DOMContentLoaded', () => {
+  // Hamburger menu toggle for mobile nav
+  const navToggle = document.getElementById('nav-toggle');
+  const mainNav = document.getElementById('main-nav');
+  if (navToggle && mainNav) {
+    navToggle.addEventListener('click', () => {
+      mainNav.classList.toggle('open');
+      navToggle.classList.toggle('open');
+    });
+    // Close nav when clicking a link (for mobile UX)
+    mainNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mainNav.classList.remove('open');
+        navToggle.classList.remove('open');
+      });
+    });
+  }
+
+  // Login/Account button logic
+  const loginArea = document.getElementById('login-area');
+  if (loginArea) {
+    // Check for session (demo: use loggedIn, username, and role)
+    const isLoggedIn = sessionStorage.getItem('loggedIn') === 'true';
+    const username = sessionStorage.getItem('username') || 'User';
+    const role = sessionStorage.getItem('role') || 'user';
+    // Show/hide Admin Center nav link if admin
+    const mainNav = document.getElementById('main-nav');
+    let adminLink = document.getElementById('nav-admin');
+    if (mainNav) {
+      if (role === 'admin') {
+        if (!adminLink) {
+          adminLink = document.createElement('a');
+          adminLink.href = 'admin.html';
+          adminLink.id = 'nav-admin';
+          adminLink.textContent = 'Admin Center';
+          mainNav.appendChild(adminLink);
+        }
+      } else {
+        if (adminLink) adminLink.remove();
+      }
+    }
+    if (isLoggedIn) {
+      // Show greeting and Account link
+      loginArea.innerHTML = `<span class="greeting">Hello, <strong>${username}</strong>! </span><a href="#" class="btn btn-account" id="account-btn">Account</a>`;
+      // Optionally, add account button logic here
+    } else {
+      // Show Login button
+      loginArea.innerHTML = `<button id="login-btn" class="btn btn-login">Login</button>`;
+      // Add click event to redirect to login page
+      const loginBtn = document.getElementById('login-btn');
+      if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+          window.location.href = 'login.html'; // Now points to universal login page
+        });
+      }
+    }
+  }
+});

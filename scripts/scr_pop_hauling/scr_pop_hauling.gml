@@ -159,21 +159,40 @@ function scr_pop_hauling() {
                     switch (item_enum) {
                         case Item.FOOD_RED_BERRY:
                             global.lineage_food_stock += item_qty;
+                            // --- Show floating dropoff text above the hut ---
+                            if (sprite_exists(spr_ui_icons_food)) {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, spr_ui_icons_food);
+                            } else {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, -1); // No sprite fallback
+                            }
                             break;
                         case Item.MATERIAL_WOOD:
                             global.lineage_wood_stock += item_qty;
+                            if (sprite_exists(spr_ui_icons_wood)) {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, spr_ui_icons_wood);
+                            } else {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, -1);
+                            }
                             break;
                         case Item.MATERIAL_STONE:
                             global.lineage_stone_stock += item_qty;
+                            if (sprite_exists(spr_ui_icons_stone)) {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, spr_ui_icons_stone);
+                            } else {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, -1);
+                            }
                             break;
-                        case Item.MATERIAL_METAL_ORE: // Assuming you added this global
+                        case Item.MATERIAL_METAL_ORE:
                             global.lineage_metal_stock += item_qty;
+                            if (sprite_exists(spr_ui_icons_metal)) {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, spr_ui_icons_metal);
+                            } else {
+                                scr_ui_showDropoffText(target_object_id.x, target_object_id.y - 48, item_qty, -1);
+                            }
                             break;
-                        // Add cases for other haulable items
+                        // Add more cases for other haulable items as needed
                         default:
                             show_debug_message("Item " + item_data.name + " is not designated for global stock in hauling script.");
-                            // Optionally, don't remove it from inventory if it's not stockable
-                            // For now, we assume all items in inventory are being hauled to general stock
                             break;
                     }
                 }

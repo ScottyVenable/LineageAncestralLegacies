@@ -66,6 +66,13 @@ nav a {
 nav a:hover {
     color: #bfa76a;
 }
+nav a.active {
+    color: #ffb300;
+    border-bottom: 2px solid #ffb300;
+    background: #23190c;
+    border-radius: 6px 6px 0 0;
+    /* Visually highlight the active nav link for clarity on all devices */
+}
 .container {
     max-width: 900px;
     margin: 0 auto;

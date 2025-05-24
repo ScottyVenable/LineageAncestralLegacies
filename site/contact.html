@@ -15,16 +15,34 @@
         <div class="container">
             <h1>Lineage: Ancestral Legacies</h1>
             <nav>
-                <a href="index.html">Overview</a>
-                <a href="features.html">Features</a>
-                <a href="gameplay.html">Gameplay</a>
-                <a href="progression.html">Progression</a>
-                <a href="language.html">Procedural Language</a>
-                <a href="roadmap.html">Roadmap</a>
-                <a href="contact.html">Contact</a>
+                <a href="index.html" id="nav-overview">Overview</a>
+                <a href="features.html" id="nav-features">Features</a>
+                <a href="gameplay.html" id="nav-gameplay">Gameplay</a>
+                <a href="progression.html" id="nav-progression">Progression</a>
+                <a href="language.html" id="nav-language">Procedural Language</a>
+                <a href="roadmap.html" id="nav-roadmap">Roadmap</a>
+                <a href="contact.html" id="nav-contact">Contact</a>
             </nav>
         </div>
     </header>
+    <script>
+    (function() {
+        const pageToNav = {
+            'index.html': 'nav-overview',
+            'features.html': 'nav-features',
+            'gameplay.html': 'nav-gameplay',
+            'progression.html': 'nav-progression',
+            'language.html': 'nav-language',
+            'roadmap.html': 'nav-roadmap',
+            'contact.html': 'nav-contact'
+        };
+        let page = window.location.pathname.split('/').pop() || 'index.html';
+        if(pageToNav[page]) {
+            let el = document.getElementById(pageToNav[page]);
+            if(el) el.classList.add('active');
+        }
+    })();
+    </script>
     <main>
         <section id="contact">
             <div class="container">

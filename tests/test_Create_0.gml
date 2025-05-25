@@ -2,12 +2,12 @@
 
 // Mock dependencies
 enum PopState { IDLE, MOVING, FORAGING }
-// Updated EntityType to reflect a specific Hominid from the new scr_entities.gml
+// Updated EntityType to reflect a specific Hominid from the new scr_database.gml
 // POP_HOMINID is obsolete.
 enum EntityType { POP_HOMO_HABILIS_EARLY }
 
 // Updated mock get_entity_data to use the new enum and return 'base_speed_units_sec'
-// as per the updated scr_entities.gml.
+// as per the updated scr_database.gml.
 function get_entity_data(type) {
     if (type == EntityType.POP_HOMO_HABILIS_EARLY) {
         // The field name for speed in the main entity database is now 'base_speed_units_sec'.
@@ -42,7 +42,7 @@ assert(inst.is_mouse_hovering == false, "is_mouse_hovering should be false");
 
 // --- Test 2: Pop Data ---
 assert(is_struct(inst.pop), "Pop should be a struct");
-// Updated to check for 'base_speed_units_sec' to match the new field name in scr_entities.gml
+// Updated to check for 'base_speed_units_sec' to match the new field name in scr_database.gml
 // and the updated mock get_entity_data.
 assert(inst.pop.base_speed_units_sec == 2.5, "Pop base_speed_units_sec should be 2.5");
 

@@ -1,4 +1,4 @@
-/// scr_entities.gml
+/// scr_database.gml
 ///
 /// Purpose:
 ///    Defines the EntityType enum, provides the function get_entity_data()
@@ -399,7 +399,7 @@ enum EntityType {
     HAZARD_CLOUD_DISEASE_STAGNANT_AIR,
     #endregion
 }
-show_debug_message("Enum 'EntityType' (scr_entities) Initialized with " + string(enum_size(EntityType)) + " entries. (v3 Research Integrated)");
+show_debug_message("Enum 'EntityType' (scr_database) Initialized with " + string(enum_size(EntityType)) + " entries. (v3 Research Integrated)");
 #endregion
 
 // ============================================================================
@@ -550,7 +550,7 @@ function get_entity_data(entity_enum_id) {
 /// @description Initializes and returns the master database of entity properties.
 /// @returns {Struct} The master entity database.
 function __internal_init_entity_database() {
-    show_debug_message("Initializing Entity Database (scr_entities)... (v3 Hominid Research Integrated)");
+    show_debug_message("Initializing Entity Database (scr_database)... (v3 Hominid Research Integrated)");
     var _db = {};
 
     // --- SECTION: Hominids (Refined based on Research Doc) ---
@@ -828,6 +828,39 @@ function __internal_init_entity_database() {
         // IDEA: GDD - "Mastery of Fire" is a key discovery. Needs fuel management.
     };
     #endregion
+
+    // --- SECTION: Forageable Wild Plants (Updated BERRY_BUSH_GENERIC_RED) ---
+    #region Forageable Wild Plants Data
+    _db[$ EntityType.BERRY_BUSH_GENERIC_RED] = {
+        name: "Red Berry Bush (Generic)",
+        description: "A common bush bearing edible red berries. A vital early food source.",
+        object_index: obj_resource_node_controller, // NOW USES GENERIC CONTROLLER
+        default_sprite: spr_berry_bush_red_full, // Ensure this sprite exists (e.g., spr_berry_bush_red_full)
+        sprite_depleted: spr_berry_bush_red_empty, // Ensure this sprite exists (e.g., spr_berry_bush_red_empty)
+        tags: ["flora", "plant", "forageable", "resource_node", "source_food_berries_red", "early_game_food_source", "regenerates_seasonally_or_over_time", "logic_attracts_herbivores_small", "logic_provides_minimal_cover"],
+        faction: "Nature_WildFlora_Harvestable",
+        is_interactive: true, // For gathering
+        is_destructible: false, // Typically not destroyed by gathering, just depleted/regenerates
+        max_health: 50, // Or not applicable if not destructible in the traditional sense
+        
+        // --- Resource Node Specific Data ---
+        item_yielded_enum: "ITEM_BERRIES_RED_GENERIC", // Placeholder for actual item enum/ID from your item system
+        max_yield: 25,          // Total berries before depletion
+        yield_per_gather: 5,    // Berries obtained per gather action
+        regeneration_time_steps: 1800, // Time in game steps to regenerate (e.g., 30 seconds at 60 FPS)
+        tool_required_tag: "none", // No tool needed to gather berries
+        harvest_skill_tag: "foraging", // Skill associated with gathering
+        
+        // --- Other Potential Fields ---
+        // sound_placeholders: { gather: "snd_bush_rustle_gather", depleted: "snd_bush_empty_rustle" },
+        // particle_effect_on_gather: "ptl_berry_leaf_burst",
+        // map_icon_sprite: spr_map_icon_berry_bush,
+        // season_availability_tags: ["spring_fruit", "summer_fruit"], // If seasons affect availability
+        // biome_suitability_tags: ["forest_edge", "grassland_patchy", "temperate_climate"],
+
+        flavor_text_lore_snippet: "Clusters of ruby-red jewels hanging invitingly from thorny branches, a sweet promise against hunger."
+    };
+    #endregion // End Forageable Wild Plants Data
 
     // Add other sections and entities, refining with research and GDD...
     // For example, tool entities (though not directly in this script, their requirements are defined by pop capabilities):

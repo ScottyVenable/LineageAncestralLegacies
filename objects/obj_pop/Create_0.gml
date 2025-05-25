@@ -17,27 +17,33 @@ state = PopState.IDLE;
 selected = false;
 depth = -y;
 image_speed = 1;
-sprite_index = spr_man_idle;
+sprite_index = spr_man_idle; // Default sprite, can be overridden by entity_data
 image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
 
-// Updated to use a specific Hominid species from global.EntityCategories
-// as EntityType.POP_HOMINID is obsolete.
-// This provides a default concrete entity type for obj_pop instances.
-// Consider making this configurable if obj_pop needs to represent different entity types at creation.
-pop = get_entity_data(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY);
-if (is_undefined(pop)) {
-	show_error("Failed to initialize 'pop': Entity data is invalid.", true);
-}
+// Entity data placeholders - these will be populated by scr_spawn_entity
+entity_type = EntityType.NONE; // The specific enum ID (e.g., EntityType.POP_HOMO_HABILIS_EARLY)
+entity_data = undefined;       // The full data struct for this entity type
+pop = undefined;               // This instance variable will hold entity_data for convenience, used by existing code
+
+// REMOVED: Old hardcoded pop initialization:
+// // Updated to use a specific Hominid species from global.EntityCategories
+// // as EntityType.POP_HOMINID is obsolete.
+// // This provides a default concrete entity type for obj_pop instances.
+// // Consider making this configurable if obj_pop needs to represent different entity types at creation.
+// pop = get_entity_data(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY);
+// if (is_undefined(pop)) {
+// 	show_error("Failed to initialize 'pop': Entity data is invalid.", true);
+// }
 #endregion
 
 // =========================================================================
 // 2. MOVEMENT & COMMAND RELATED
 // =========================================================================
 #region 2.1 Movement & Command Vars
-// Updated to use 'base_speed_units_sec' from the new entity data structure.
-speed = pop.base_speed_units_sec;
+// These will be properly initialized in initialize_from_data() after 'pop' is set.
+speed = 1; // Default speed, will be overridden
 direction = random(360);
 travel_point_x = x;
 travel_point_y = y;
@@ -78,10 +84,8 @@ forage_rate = global.game_speed;
 
 #region 3.4 Interaction Variables
 target_interaction_object_id = noone;
-// target_object_id is a more generic variable for any targeted object (like a hut for hauling, or a point for commanded move)
-// It should be initialized to 'noone' to prevent errors like the one encountered.
-target_object_id = noone; 
-_slot_index = -1; // Initialize to -1 (meaning no slot claimed)
+target_object_id = noone;
+_slot_index = -1; 
 _interaction_type_tag = "";
 #endregion
 
@@ -89,31 +93,20 @@ _interaction_type_tag = "";
 // 4. GENERATE POP DETAILS (Name, Sex, Age, Stats, Traits etc.)
 // =========================================================================
 #region 4.1 Generate Details
-// This script will set: pop_identifier_string, pop_name, sex, age, scale,
-// stats (strength, etc.), health, hunger, thirst, energy, skills, traits.
-// Pass the life_stage variable explicitly to scr_generate_pop_details
-// Use the global life_stage variable
-scr_generate_pop_details(global.life_stage);
-// After scr_generate_pop_details, 'image_xscale' and 'image_yscale' will be set based on age.
-
-// Debugging: Log the generated pop name
-debug_log("Generated pop name: " + pop_identifier_string, "obj_pop:Create");
-
-// Debugging: Log the value of pop_identifier_string to ensure it is set correctly
-debug_log("Pop identifier string during creation: " + pop_identifier_string, "obj_pop:Create");
+// This section will be effectively handled within initialize_from_data()
+// after 'pop' (entity_data) is properly assigned.
+// The call to scr_generate_pop_details will be moved into initialize_from_data().
 #endregion
 
 // =========================================================================
 // 5. INVENTORY (Initialize after details)
 // =========================================================================
 #region 5.1 Initialize Inventory
-inventory_items = ds_list_create(); // Initialize as an empty list for item stacks
-// inventory = {}; // This was for the old struct-based inventory, replaced by inventory_items list
+inventory_items = ds_list_create();
 
-// Updated to use 'carrying_capacity_units' from the new entity data structure.
-max_inventory_capacity = pop.carrying_capacity_units; 
-// Updated to use 'carrying_capacity_units' for consistency.
-hauling_threshold = pop.carrying_capacity_units; 
+// These will be properly initialized in initialize_from_data()
+max_inventory_capacity = 10; // Default capacity, will be overridden
+hauling_threshold = 10;    // Default threshold, will be overridden
 
 // Initialize variables for resuming tasks, if not already present from a previous version
 if (!variable_instance_exists(id, "previous_state")) {
@@ -129,6 +122,88 @@ if (!variable_instance_exists(id, "last_foraged_type_tag")) {
     last_foraged_type_tag = "";
 }
 
+#endregion
+
+// =========================================================================
+// X. INITIALIZE FROM DATA METHOD (Called by scr_spawn_entity)
+// =========================================================================
+#region X.1 Initialize From Data Method
+initialize_from_data = function() {
+    // This function is called by scr_spawn_entity after the instance is created
+    // and self.entity_type and self.entity_data have been assigned.
+
+    // Ensure entity_data is valid (it should be, as scr_spawn_entity checks)
+    if (is_undefined(self.entity_data)) {
+        var _msg = $\"FATAL (obj_pop.initialize_from_data): self.entity_data is undefined for entity_type {entity_type_to_string(self.entity_type)}. This should not happen if spawned via scr_spawn_entity.\";
+        show_error(_msg, true);
+        return; // Stop further initialization if data is missing
+    }
+
+    // Assign the received entity_data to the instance variable 'pop'
+    // This 'pop' variable is used throughout the existing obj_pop code.
+    pop = self.entity_data; // 'self.pop = self.entity_data;' also works
+
+    // --- Initialize/Re-initialize variables that depend on 'pop' (i.e., entity_data) ---
+
+    // Sprite Initialization (from Section 1)
+    if (struct_exists(pop, "default_sprite") && !is_undefined(pop.default_sprite)) {
+        sprite_index = pop.default_sprite;
+        current_sprite = pop.default_sprite;
+    } else {
+        // Fallback to the already set spr_man_idle or log a warning
+        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No default_sprite in entity_data for '{pop.name}'. Using current sprite: {sprite_get_name(sprite_index)}.\");
+    }
+    image_index = 0; // Reset animation frame
+
+    // Movement Speed (from Section 2)
+    if (struct_exists(pop, "base_speed_units_sec")) {
+        speed = pop.base_speed_units_sec;
+    } else {
+        speed = 1; // Fallback speed if not defined in data
+        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No base_speed_units_sec in entity_data for '{pop.name}'. Using fallback speed: {speed}.\");
+    }
+    
+    // Inventory Capacity (from Section 5)
+    if (struct_exists(pop, "carrying_capacity_units")) {
+        max_inventory_capacity = pop.carrying_capacity_units;
+        hauling_threshold = pop.carrying_capacity_units; // Assuming threshold is same as max capacity
+    } else {
+        max_inventory_capacity = 10; // Fallback capacity
+        hauling_threshold = 10;    // Fallback threshold
+        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No carrying_capacity_units in entity_data for '{pop.name}'. Using fallback capacity: {max_inventory_capacity}.\");
+    }
+
+    // Generate Pop Details (from Section 4)
+    // This script (scr_generate_pop_details) likely uses the 'pop' struct and other instance variables.
+    // It's crucial that 'pop' is correctly assigned from self.entity_data before this call.
+    // Also ensure global.life_stage is available.
+    if (variable_global_exists("life_stage")) {
+        scr_generate_pop_details(global.life_stage);
+    } else {
+        // This error is critical as pop generation depends on it.
+        show_error("FATAL (obj_pop.initialize_from_data): Global variable 'life_stage' is not initialized prior to calling scr_generate_pop_details. Ensure obj_controller or game setup initializes it.", true);
+    }
+    
+    // Initialize health (example, actual health stats might be set within scr_generate_pop_details)
+    // If scr_generate_pop_details sets stats like 'current_health_stat' and 'max_health_stat' based on 'pop.max_health',
+    // then this explicit setting might not be needed. Verify how health is handled by that script.
+    if (struct_exists(pop, "max_health")) {
+        // Assuming 'health' is the variable for current health and 'max_health_stat' for max.
+        // Adjust if your variables are named differently (e.g., current_hp, max_hp).
+        // self.health = pop.max_health; // Set current health to max
+        // self.max_health_stat = pop.max_health; // Set max health stat
+        // If scr_generate_pop_details handles this, these lines might be redundant or need adjustment.
+    } else {
+         show_debug_message($\"WARNING (obj_pop.initialize_from_data): No max_health in entity_data for '{pop.name}'. Health may not be set correctly unless handled by scr_generate_pop_details.\");
+    }
+
+    // Log successful initialization
+    var _pop_id_string = "Unknown Pop";
+    if (variable_instance_exists(id, "pop_identifier_string")) {
+        _pop_id_string = pop_identifier_string; // This should be set by scr_generate_pop_details
+    }
+    show_debug_message($\"INFO (obj_pop.initialize_from_data): Pop '{_pop_id_string}' (Entity: '{pop.name}') initialized with data for type {entity_type_to_string(self.entity_type)}.\");
+}
 #endregion
 
 // SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.
@@ -158,4 +233,4 @@ if (global.first_load) {
 
 // Post-generation debug message is intentionally disabled for production.
 // Uncomment the line below for debugging purposes during development.
-// debug_log($"Pop {pop_identifier_string} fully created. State: {state}", "obj_pop:Create", "blue"); // Enable for detailed pop creation debug
+// debug_log($\"Pop {pop_identifier_string} fully created. State: {state}\", "obj_pop:Create", "blue"); // Enable for detailed pop creation debug

@@ -172,59 +172,78 @@ if (!layer_exists(_pop_spawn_layer)) {
     debug_log($"Dynamically created Pop Spawn layer: '{_pop_spawn_layer}' at depth 0.", "obj_controller:Create", "cyan");
 }
 
-if (object_exists(obj_pop)) {
+// Check if the spawn entity script exists
+if (script_exists(scr_spawn_entity)) {
     // SAFETY CHECK: Ensure pop entity data is valid before spawning pops
-    // Updated to use a specific Hominid species from global.EntityCategories
-    // as EntityType.POP_HOMINID is obsolete.
-    var _pop_entity_data = get_entity_data(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY);
+    // We'll use a specific Hominid species for initial spawning.
+    // This assumes EntityType.POP_HOMO_HABILIS_EARLY is defined in your scr_database.gml
+    // and is intended for the initial pops.
+    var _initial_pop_entity_type = EntityType.POP_HOMO_HABILIS_EARLY; 
+    var _pop_entity_data = get_entity_data(_initial_pop_entity_type);
+
     if (_pop_entity_data == undefined) {
-        // Updated error message to reflect the specific entity type checked.
-        show_error("ERROR: EntityType '" + string(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY) + "' (Hominids.Species.HOMO_HABILIS_EARLY) is not defined in the entity database. Cannot spawn pops!", true);
-        // Optionally: exit or return to prevent further errors
-    }
-    
-	global.spawn_point = instance_find(obj_gameStart, 1)
-    var _spawn_center_x = global.spawn_point.x
-    var _spawn_center_y = global.spawn_point.y
-    var _spawn_radius = 300; // Example
-    var _spawn_attempts_max_per_pop = 15; // Max attempts to find a free spot for one pop
-    var _spawned_count = 0;
-
-    for (var i = 0; i < global.initial_pop_count; i++) {
-        var _attempt = 0; 
-        var _spawn_x, _spawn_y; 
-        var _valid_spot_found = false;
-        
-        do {
-            _attempt++;
-            var _angle = random(360); 
-            var _dist  = random(_spawn_radius);
-            _spawn_x = _spawn_center_x + lengthdir_x(_dist, _angle);
-            _spawn_y = _spawn_center_y + lengthdir_y(_dist, _angle);
-            _spawn_x = clamp(_spawn_x, 32, room_width - 32); 
-            _spawn_y = clamp(_spawn_y, 32, room_height - 32);
-            
-            if (!place_meeting(_spawn_x, _spawn_y, obj_pop)) { // Check against other obj_pop instances
-                _valid_spot_found = true; 
-            }
-        } until (_valid_spot_found || _attempt >= _spawn_attempts_max_per_pop);
-        
-        if (_valid_spot_found) {
-            var _new_pop_vars = { /* You can pass initial variables here if scr_generate_pop_details doesn't cover everything */ };
-            var _new_pop = instance_create_layer(_spawn_x, _spawn_y, _pop_spawn_layer, obj_pop, _new_pop_vars);
-            _spawned_count++;
-        } else { 
-            debug_log($"Warning: Could not find valid spawn spot for pop {i+1} after {_spawn_attempts_max_per_pop} attempts.", "obj_controller:Create", "yellow");
+        show_error("ERROR: EntityType '" + entity_type_to_string(_initial_pop_entity_type) + "' is not defined in the entity database. Cannot spawn initial pops!", true);
+    } else {
+        // Find the game start object to determine spawn location
+        // Ensure obj_gameStart exists and is placed in the room.
+        var _game_start_obj = instance_find(obj_gameStart, 0); // Typically there's only one
+        if (!instance_exists(_game_start_obj)) {
+            show_error("ERROR: obj_gameStart instance not found in the room. Cannot determine spawn location for initial pops.", true);
+            return; // Exit if no spawn point
         }
-    }
-    debug_log($"Total initial pops spawned: {_spawned_count}/{global.initial_pop_count}.", "obj_controller:Create", "green");
 
-    // Camera re-centering logic after pop spawn is removed.
-    // If needed, obj_camera_controller could have a function or variables obj_controller can set
-    // to tell it where to focus, e.g., obj_camera_controller.target_center_x = _spawn_center_x;
-    
+        var _spawn_center_x = _game_start_obj.x;
+        var _spawn_center_y = _game_start_obj.y;
+        var _spawn_radius = 300; // Radius around the spawn point
+        var _spawn_attempts_max_per_pop = 15; // Max attempts to find a free spot for one pop
+        var _spawned_count = 0;
+
+        debug_log($"Attempting to spawn {global.initial_pop_count} pops of type '{entity_type_to_string(_initial_pop_entity_type)}' around ({_spawn_center_x}, {_spawn_center_y}).", "obj_controller:Create", "cyan");
+
+        for (var i = 0; i < global.initial_pop_count; i++) {
+            var _attempt = 0; 
+            var _spawn_x, _spawn_y; 
+            var _valid_spot_found = false;
+            var _controller_to_check = obj_pop; // Default to checking against obj_pop if specific controller isn't easily determined here.
+                                                // This could be refined if scr_spawn_entity returned the controller type or if we had a utility.
+
+            do {
+                _attempt++;
+                var _angle = random(360); 
+                var _dist  = random(_spawn_radius);
+                _spawn_x = _spawn_center_x + lengthdir_x(_dist, _angle);
+                _spawn_y = _spawn_center_y + lengthdir_y(_dist, _angle);
+                _spawn_x = clamp(_spawn_x, 32, room_width - 32); 
+                _spawn_y = clamp(_spawn_y, 32, room_height - 32);
+                
+                // Check for collisions with existing pops (or their controllers)
+                // For now, we assume initial pops are obj_pop. If other controllers are used for initial spawns,
+                // this collision check might need to be more dynamic.
+                if (!place_meeting(_spawn_x, _spawn_y, _controller_to_check)) { 
+                    _valid_spot_found = true; 
+                }
+            } until (_valid_spot_found || _attempt >= _spawn_attempts_max_per_pop);
+            
+            if (_valid_spot_found) {
+                // Use scr_spawn_entity to create the pop
+                var _new_pop_instance = scr_spawn_entity(_initial_pop_entity_type, _spawn_x, _spawn_y, _pop_spawn_layer);
+                
+                if (instance_exists(_new_pop_instance)) {
+                    _spawned_count++;
+                    // debug_log($"Successfully spawned pop {i+1} (Instance ID: {_new_pop_instance}) at ({_spawn_x}, {_spawn_y}).", "obj_controller:Create", "green");
+                } else {
+                    debug_log($"Warning: scr_spawn_entity did not return a valid instance for pop {i+1}.", "obj_controller:Create", "yellow");
+                }
+            } else { 
+                debug_log($"Warning: Could not find valid spawn spot for pop {i+1} after {_spawn_attempts_max_per_pop} attempts.", "obj_controller:Create", "yellow");
+            }
+        }
+        debug_log($"Total initial pops spawned via scr_spawn_entity: {_spawned_count}/{global.initial_pop_count}.", "obj_controller:Create", "green");
+    }
 } else { 
-    debug_log("ERROR (obj_pop object asset does not exist. Cannot spawn initial pops.)", "obj_controller:Create", "red");
+    debug_log("ERROR: scr_spawn_entity script does not exist. Cannot spawn initial pops using the new system.", "obj_controller:Create", "red");
+    // Fallback or alternative spawning logic could be placed here if necessary
+    // For now, we'll just log the error.
 }
 #endregion
 

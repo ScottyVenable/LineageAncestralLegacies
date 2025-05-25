@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_entities",
+  "%Name":"scr_database",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_entities",
+  "name":"scr_database",
   "parent":{
     "name":"Data",
     "path":"folders/Scripts/Data.yy",

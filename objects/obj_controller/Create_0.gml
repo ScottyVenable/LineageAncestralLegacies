@@ -166,7 +166,7 @@ if (!variable_global_exists("life_stage")) {
 // 5. SET THE GAME START
 // ============================================================================
 #region 5.1 Spawn Initial Pops
-var _pop_spawn_layer = "Entities"; // Ensure this layer exists or is created with appropriate depth (e.g., below UILayer)
+var _pop_spawn_layer = "Pops"; // Ensure this layer exists or is created with appropriate depth (e.g., below UILayer)
 if (!layer_exists(_pop_spawn_layer)) { 
     layer_create(0, _pop_spawn_layer); // Create layer if it doesn't exist (depth 0 is common for instances)
     debug_log($"Dynamically created Pop Spawn layer: '{_pop_spawn_layer}' at depth 0.", "obj_controller:Create", "cyan");
@@ -180,10 +180,11 @@ if (object_exists(obj_pop)) {
         // Optionally: exit or return to prevent further errors
     }
     
-    var _spawn_center_x = room_width / 2;
-    var _spawn_center_y = room_height / 2;
-    var _spawn_radius = 250; // Example
-    var _spawn_attempts_max_per_pop = 10; // Max attempts to find a free spot for one pop
+	global.spawn_point = instance_find(obj_gameStart, 1)
+    var _spawn_center_x = global.spawn_point.x
+    var _spawn_center_y = global.spawn_point.y
+    var _spawn_radius = 300; // Example
+    var _spawn_attempts_max_per_pop = 15; // Max attempts to find a free spot for one pop
     var _spawned_count = 0;
 
     for (var i = 0; i < global.initial_pop_count; i++) {

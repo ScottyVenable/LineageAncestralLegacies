@@ -93,6 +93,7 @@
     {"id":{"name":"obj_berry_icon","path":"objects/obj_berry_icon/obj_berry_icon.yy",},},
     {"id":{"name":"obj_camera_controller","path":"objects/obj_camera_controller/obj_camera_controller.yy",},},
     {"id":{"name":"obj_controller","path":"objects/obj_controller/obj_controller.yy",},},
+    {"id":{"name":"obj_gameStart","path":"objects/obj_gameStart/obj_gameStart.yy",},},
     {"id":{"name":"obj_gui_controller","path":"objects/obj_gui_controller/obj_gui_controller.yy",},},
     {"id":{"name":"obj_interaction_point","path":"objects/obj_interaction_point/obj_interaction_point.yy",},},
     {"id":{"name":"obj_pop","path":"objects/obj_pop/obj_pop.yy",},},

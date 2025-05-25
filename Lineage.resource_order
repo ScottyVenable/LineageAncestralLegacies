@@ -31,6 +31,7 @@
     {"name":"fnt_ui_stock_count","order":2,"path":"fonts/fnt_ui_stock_count/fnt_ui_stock_count.yy",},
     {"name":"fnt_ui_stock_header","order":3,"path":"fonts/fnt_ui_stock_header/fnt_ui_stock_header.yy",},
     {"name":"obj_camera_controller","order":3,"path":"objects/obj_camera_controller/obj_camera_controller.yy",},
+    {"name":"obj_gameStart","order":3,"path":"objects/obj_gameStart/obj_gameStart.yy",},
     {"name":"obj_gui_controller","order":4,"path":"objects/obj_gui_controller/obj_gui_controller.yy",},
     {"name":"obj_interaction_point","order":2,"path":"objects/obj_interaction_point/obj_interaction_point.yy",},
     {"name":"obj_sound_controller","order":2,"path":"objects/obj_sound_controller/obj_sound_controller.yy",},

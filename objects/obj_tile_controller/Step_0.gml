@@ -14,7 +14,7 @@ var _cam_h = camera_get_view_height(view_camera_main);
 // =========================================================================
 // Calculate the range of chunks that *should* be visible or buffered around the camera.
 // We add a buffer of 1 chunk around the visible area to preemptively generate.
-var _buffer_chunks = 1;
+var _buffer_chunks = 3;
 
 var _start_chunk_x = floor((_cam_x - (_buffer_chunks * CHUNK_WIDTH_PIXELS)) / CHUNK_WIDTH_PIXELS);
 var _end_chunk_x   = floor((_cam_x + _cam_w + (_buffer_chunks * CHUNK_WIDTH_PIXELS)) / CHUNK_WIDTH_PIXELS);

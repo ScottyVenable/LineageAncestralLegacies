@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_spawn_entity",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_spawn_entity",
+  "parent":{
+    "name":"WorldGen",
+    "path":"folders/Scripts/WorldGen.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

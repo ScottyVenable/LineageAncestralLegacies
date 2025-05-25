@@ -2,10 +2,17 @@
 
 // Mock dependencies
 enum PopState { IDLE, MOVING, FORAGING }
-enum EntityType { POP_HOMINID }
+// Updated EntityType to reflect a specific Hominid from the new scr_entities.gml
+// POP_HOMINID is obsolete.
+enum EntityType { POP_HOMO_HABILIS_EARLY }
+
+// Updated mock get_entity_data to use the new enum and return 'base_speed_units_sec'
+// as per the updated scr_entities.gml.
 function get_entity_data(type) {
-    if (type == EntityType.POP_HOMINID) {
-        return { base_speed: 2.5 };
+    if (type == EntityType.POP_HOMO_HABILIS_EARLY) {
+        // The field name for speed in the main entity database is now 'base_speed_units_sec'.
+        // The test previously checked for 'base_speed'.
+        return { base_speed_units_sec: 2.5, name: "Mock Habilis" }; // Added name for potential future use in tests
     }
     return undefined;
 }
@@ -35,10 +42,13 @@ assert(inst.is_mouse_hovering == false, "is_mouse_hovering should be false");
 
 // --- Test 2: Pop Data ---
 assert(is_struct(inst.pop), "Pop should be a struct");
-assert(inst.pop.base_speed == 2.5, "Pop base_speed should be 2.5");
+// Updated to check for 'base_speed_units_sec' to match the new field name in scr_entities.gml
+// and the updated mock get_entity_data.
+assert(inst.pop.base_speed_units_sec == 2.5, "Pop base_speed_units_sec should be 2.5");
 
 // --- Test 3: Movement & Command Vars ---
-assert(inst.speed == 2.5, "Speed should match pop.base_speed");
+// Assuming inst.speed is set based on pop.base_speed_units_sec in obj_pop's Create event.
+assert(inst.speed == 2.5, "Speed should match pop.base_speed_units_sec");
 assert(inst.direction >= 0 && inst.direction < 360, "Direction should be in [0,360)");
 assert(inst.travel_point_x == inst.x, "travel_point_x should be x");
 assert(inst.travel_point_y == inst.y, "travel_point_y should be y");

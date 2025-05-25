@@ -22,7 +22,11 @@ image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
 
-pop = get_entity_data(EntityType.POP_HOMINID);
+// Updated to use a specific Hominid species from global.EntityCategories
+// as EntityType.POP_HOMINID is obsolete.
+// This provides a default concrete entity type for obj_pop instances.
+// Consider making this configurable if obj_pop needs to represent different entity types at creation.
+pop = get_entity_data(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY);
 if (is_undefined(pop)) {
 	show_error("Failed to initialize 'pop': Entity data is invalid.", true);
 }
@@ -32,7 +36,8 @@ if (is_undefined(pop)) {
 // 2. MOVEMENT & COMMAND RELATED
 // =========================================================================
 #region 2.1 Movement & Command Vars
-speed = pop.base_speed;
+// Updated to use 'base_speed_units_sec' from the new entity data structure.
+speed = pop.base_speed_units_sec;
 direction = random(360);
 travel_point_x = x;
 travel_point_y = y;
@@ -104,8 +109,11 @@ debug_log("Pop identifier string during creation: " + pop_identifier_string, "ob
 #region 5.1 Initialize Inventory
 inventory_items = ds_list_create(); // Initialize as an empty list for item stacks
 // inventory = {}; // This was for the old struct-based inventory, replaced by inventory_items list
-max_inventory_capacity = pop.base_max_items_carried; // Initialize max inventory capacity
-hauling_threshold = pop.base_max_items_carried; // Set hauling threshold based on pop's carrying capacity
+
+// Updated to use 'carrying_capacity_units' from the new entity data structure.
+max_inventory_capacity = pop.carrying_capacity_units; 
+// Updated to use 'carrying_capacity_units' for consistency.
+hauling_threshold = pop.carrying_capacity_units; 
 
 // Initialize variables for resuming tasks, if not already present from a previous version
 if (!variable_instance_exists(id, "previous_state")) {

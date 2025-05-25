@@ -174,9 +174,12 @@ if (!layer_exists(_pop_spawn_layer)) {
 
 if (object_exists(obj_pop)) {
     // SAFETY CHECK: Ensure pop entity data is valid before spawning pops
-    var _pop_entity_data = get_entity_data(EntityType.POP_HOMINID);
+    // Updated to use a specific Hominid species from global.EntityCategories
+    // as EntityType.POP_HOMINID is obsolete.
+    var _pop_entity_data = get_entity_data(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY);
     if (_pop_entity_data == undefined) {
-        show_error("ERROR: EntityType.POP_HOMINID is not defined in the entity database. Cannot spawn pops!", true);
+        // Updated error message to reflect the specific entity type checked.
+        show_error("ERROR: EntityType '" + string(global.EntityCategories.Hominids.Species.HOMO_HABILIS_EARLY) + "' (Hominids.Species.HOMO_HABILIS_EARLY) is not defined in the entity database. Cannot spawn pops!", true);
         // Optionally: exit or return to prevent further errors
     }
     

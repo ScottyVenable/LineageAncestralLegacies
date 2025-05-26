@@ -1,6 +1,6 @@
 ## **Lineage: Ancestral Legacies - Design Document**
-**Version:** v2025.5.23.1
-**Last Updated:** 2025-05-23
+**Version:** v2025.5.26.1
+**Last Updated:** 2025-05-26
 
 ---
 
@@ -66,20 +66,24 @@ _Lineage: Ancestral Legacies_ invites you to shepherd a tribe of early hominids 
 
 #### 3.1. Pop Entity (`obj_pop`)
 *   **Core Attributes:** Health, Hunger, Thirst, Stamina, Mood, Age, Sex.
+*   **Needs:** A struct (e.g., `self.needs = { hunger: 50, thirst: 50 }`) defining current levels of various needs. These are initialized on creation and updated by `scr_needs_update`.
 *   **Inherited Traits:** Genetic traits affecting attributes, skills, and appearance.
 *   **Skills:** Learned abilities (e.g., Foraging proficiency, Crafting skill, Combat effectiveness) improved through practice, influenced by traits.
-*   **Needs System:** Pops will attempt to fulfill their needs based on priority (e.g., critical hunger before minor discomfort). Failure to meet needs leads to negative mood, health penalties, or death.
+*   **Needs System:** Pops will attempt to fulfill their needs based on priority. The `scr_needs_update` script manages the decay of needs (e.g., hunger, thirst) and can trigger state changes (e.g., to "Foraging" if hunger is low) based on thresholds. Values are typically 0-100. Failure to meet needs leads to negative mood, health penalties, or death.
 *   **Life Cycle:** Birth, childhood (learning phase, dependent), adulthood (productive), old age (potential wisdom/teaching roles, declining physical ability), death (natural causes, starvation, predation, etc.). Records of dead pops are maintained for lineage tracking.
+*   **Current State:** Pops now use `current_state_id` (numeric) and `current_state_name` (string) driven by definitions in `global.GameData.pop_states` (loaded from `pop_states.json`).
 
 #### 3.2. Finite State Machine (Pop Behavior)
-*(Expanding on the existing FSM)*
+*(Expanding on the existing FSM, now data-driven by `pop_states.json`)*
+
+Pops operate on a state machine defined in `global.GameData.pop_states`. Each state profile in the JSON can define parameters for behavior. Common states include:
 
 | State          | Description & Triggers                                                                                                                               | Key Actions & Outcomes                                                                                               |
 | :------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------- |
-| **Idle**       | Default state when no urgent needs or commands. Plays animated idle loop (0.2‑3 FPS), head‑bob, for random 2–4s. Triggered after other states complete. | Scans environment, minor stamina/mood recovery.                                                                      |
+| **Idle**       | Default state (ID typically 0). Pop is not actively pursuing a goal. Triggers after other states complete or if no pressing needs/commands.        | Scans environment, minor stamina/mood recovery. May transition to Wandering or other states based on internal logic or needs. |
 | **Wandering**  | If idle for too long or specific "curiosity" trait. Picks 1–N random waypoints (within 50–150 px radius) and hops between them, then idles.           | Explores immediate vicinity, chance to discover new resources or points of interest.                                   |
 | **Satisfying Need** | Triggered when a need (hunger, thirst, rest) drops below a threshold.                                                                               | Seeks nearest valid source (e.g., food in inventory/storage, water source, shelter for rest). Consumes/uses resource. |
-| **Foraging**   | Player right-clicks a resource node (e.g., berry bush, fishing spot) or pop autonomously decides based on need/role. Walks to node, harvests.      | Adds resources (e.g., 1 berry/second) to personal inventory. Resource node depletes. Shows "Foraging xN" UI.         |
+| **Foraging**   | Triggered by low hunger (via `scr_needs_update`) or direct command. Pop seeks and gathers food resources.                                            | Moves to a food source, gathers items (e.g., berries) into inventory. State continues until need is met or interrupted. |
 | **Hunting**    | Player designates prey or pop (with "Hunter" role/trait) identifies opportunity. Requires appropriate tools/skills for success.                   | Stalks, attacks prey. Risk of injury. Successful hunt yields food (meat, hide).                                       |
 | **Crafting**   | Player assigns crafting task at a station, or pop autonomously crafts needed items (tools, shelter components). Requires resources.                 | Consumes input resources, produces item, gains skill.                                                                |
 | **Building**   | Player places a construction blueprint. Pop with "Builder" role/task brings resources and works on it.                                             | Consumes resources, incrementally builds structure.                                                                   |
@@ -93,7 +97,7 @@ _Lineage: Ancestral Legacies_ invites you to shepherd a tribe of early hominids 
 
 *   **Separation:** `scr_separate_pops()` each step to push apart overlapping pops by 1 px.
 *   **Depth Sorting:** `depth = -y` for all pops, resource nodes, and relevant objects.
-*   **AI Roles/Priorities:** As society evolves, players can assign roles (Gatherer, Hunter, Crafter, Builder, Thinker/Researcher, Caregiver, Elder). Roles influence which tasks pops prioritize autonomously.
+*   **AI Roles/Priorities:** As society evolves, players can assign roles (Gatherer, Hunter, Crafter, Builder, Thinker/Researcher, Caregiver, Elder). Roles influence which tasks and states pops prioritize autonomously, potentially by modifying state transition logic or available actions within a state.
 
 #### 3.3. Dynamic Portrait & Customization
 *   **Features:** Hair color, hairstyle, hair length, beard style/presence, eye color, mouth shape, nose shape, skin tone, body build (influenced by strength/constitution traits).
@@ -113,32 +117,25 @@ _Lineage: Ancestral Legacies_ invites you to shepherd a tribe of early hominids 
 *   **UI:** Sidebar for selected pop's inventory. Separate UI for viewing communal storage.
 
 #### 3.5. Crafting & Technology System
-*   **Discovery Points (DP) / Research:** Certain actions or "Eureka!" moments (e.g., a pop idly chipping a stone and realizing it's sharper, observing a specific animal behavior, or after a significant social event) generate DP. DP is spent to unlock new crafting recipes, building blueprints, or societal concepts (e.g., "Basic Rituals," "Tool Specialization," "Herbalism Basics").
-    *   **Eureka Triggers:** These can be contextual. For example:
-        *   Repeatedly crafting a crude tool might lead to a "Refined Technique" Eureka for a better version.
-        *   A pop getting sick and recovering after eating a specific plant might trigger an "Edible Plant Identification" or "Basic Herbalism" Eureka.
-        *   Observing an animal using a rock to crack a nut could inspire "Nut Cracker Tool" idea.
-    *   **Thinker/Innovator Role:** Pops with high "Mental" traits or a specific "Innovator" trait could generate DP faster or have a higher chance of Eurekas.
-*   **Crafting Stations:** Some recipes require specific stations (e.g., campfire for cooking, work stump for basic tool-shaping, later a forge, tanning rack, loom, herbalist's table). These stations might also need to be "discovered" or "invented."
-*   **Recipe List & Discovery:**
-    *   A discoverable list of known recipes. Initially very simple (e.g., "Sharpened Stone").
-    *   **Discovery Methods:**
-        *   **DP Unlock:** Primary method for foundational recipes.
-        *   **Trial and Error:** Players/pops could attempt to combine resources at a crafting station. Success (even partial) might reveal a new recipe or hint. Failure might consume resources or yield "Scrap."
-        *   **Observation:** Watching another pop (e.g., from another tribe if peaceful contact is made) craft something could unlock the recipe.
-        *   **Deconstruction (Later Tech):** Taking apart a found item (e.g., from ruins) might reveal its recipe.
-*   **Tool Tiers & Quality:**
-    *   Tools can have different tiers (e.g., crude stone, improved stone, bone, flint, later basic copper).
-    *   **Quality Levels:** Within a tier, crafting skill can influence tool quality (e.g., Poor, Standard, Good, Excellent).
-        *   **Effects of Quality:** Higher durability, better efficiency (e.g., faster chopping, more resources per swing), higher damage for weapons.
-    *   **Crafting Skill Progression:** Repeatedly crafting items, especially successful high-quality ones, improves a pop's relevant skill (e.g., "Stone Shaping," "Woodworking," "Weaving"). Higher skill increases chance of better quality, reduces crafting time, and lowers chance of critical failure.
-*   **Crafting Process & Failure:**
-    *   **Time:** Crafting takes time, influenced by complexity, skill, and tool quality (if a tool is used for crafting).
-    *   **Resource Consumption:** Clearly defined resources needed.
-    *   **Failure States:**
-        *   **Minor Failure:** Item produced is of lower quality, or slightly less durable.
-        *   **Major Failure:** Resources are consumed, but no item is produced (or "Scrap" is produced, which might be a very low-value resource).
-        *   **Critical Failure (Rare):** Resources consumed, no item, and a small chance of the crafting station being slightly damaged or the pop getting a minor injury (e.g., if knapping flint).
+*(Now partially implemented with JSON-defined recipes)*
+*   **Discovery Points (DP) / Research:** (Conceptual) Certain actions or "Eureka!" moments generate DP, spent to unlock new crafting recipes.
+*   **Crafting Stations:** (Conceptual) Some recipes may require specific stations.
+*   **Recipe List & Discovery (`recipes.json`):**
+    *   Recipes are defined in `datafiles/recipes.json` and loaded into `global.GameData.recipes`.
+    *   Each recipe specifies `ingredients` (item IDs and quantities) and a `result` (item ID and quantity).
+    *   **Example `recipes.json` entry:**
+        ```json
+        "wooden_pickaxe": {
+            "ingredients": { "wood": 3, "stone": 2 },
+            "result": { "id": "wooden_pickaxe", "count": 1 }
+        }
+        ```
+    *   The `scr_crafting_functions` script provides:
+        *   `can_craft_recipe(_pop_instance, _recipe_id)`: Checks if the pop has the ingredients.
+        *   `perform_craft_recipe(_pop_instance, _recipe_id)`: Consumes ingredients and adds the result (assumes inventory functions like `inventory_add_item` exist).
+        *   `get_craftable_recipes_for_pop(_pop_instance)`: Lists available recipes.
+*   **Tool Tiers & Quality:** (Conceptual)
+*   **Crafting Process & Failure:** (Conceptual, `perform_craft_recipe` is basic for now)
 
 #### 3.6. Environment & Interactions
 *   **Biomes:** Multiple distinct biomes (Savannah, Temperate Forest, Lush Jungle, Arid Desert, Cold Taiga, Coastal regions, Wetlands, Mountainous areas). Each with unique:
@@ -583,3 +580,73 @@ The language of a tribe is a living record of its history, environment, and coll
     *   **Repeated Actions:** If the player consistently directs the tribe towards a specific activity (e.g., hunting a particular animal), words related to that activity might become more "developed" with more synonyms or related grammatical forms due to frequent use and conceptual importance.
 
 This system, while complex to implement, would offer a truly unique and emergent narrative layer, making each tribe's development feel distinct and deeply tied to their world.
+
+---
+
+### Appendix A: JSON Data Structures
+
+*(This new appendix will detail the format of key JSON files)*
+
+#### A.1. `pop_states.json`
+
+Defines the available behavioral states for pops. Loaded into `global.GameData.pop_states`.
+
+*   **Structure:** A root JSON object where each key is a state name (e.g., "Idle", "Foraging").
+*   **State Profile Fields:**
+    *   `id` (Number): A unique numeric identifier for the state. Used in `obj_pop.current_state_id`.
+    *   `name` (String): The human-readable name of the state. Used in `obj_pop.current_state_name`.
+    *   *(Future fields: `animation_sprite_prefix`, `allowed_transitions`, `interrupt_priority`)*
+
+*   **Example:**
+    ```json
+    {
+        "Idle": { "id": 0, "name": "Idle" },
+        "Foraging": { "id": 1, "name": "Foraging" },
+        "Resting": { "id": 2, "name": "Resting" }
+    }
+    ```
+
+#### A.2. `recipes.json`
+
+Defines crafting recipes. Loaded into `global.GameData.recipes`.
+
+*   **Structure:** A root JSON object where each key is a unique recipe identifier string (e.g., "wooden_pickaxe").
+*   **Recipe Profile Fields:**
+    *   `ingredients` (Object): A sub-object where each key is an `item_id` (string, from `item_data.json`) and the value is the quantity (number) required.
+    *   `result` (Object): A sub-object describing the output.
+        *   `id` (String): The `item_id` of the crafted item.
+        *   `count` (Number): The quantity produced.
+    *   `description` (String, Optional): A brief description of the recipe.
+    *   *(Future fields: `crafting_time_seconds`, `required_skill_id`, `required_station_tag`)*
+
+*   **Example:**
+    ```json
+    {
+        "wooden_pickaxe": {
+            "ingredients": { "wood": 3, "stone": 2 },
+            "result": { "id": "wooden_pickaxe", "count": 1 },
+            "description": "A basic pickaxe for light mining."
+        },
+        "berry_pie": {
+            "ingredients": { "berries": 5, "water": 1 },
+            "result": { "id": "berry_pie", "count": 1 },
+            "description": "A simple, nourishing pie."
+        }
+    }
+    ```
+
+#### A.3. `entity_data.json` (Conceptual for Needs)
+
+While not explicitly detailed for needs yet, `entity_data.json` (loaded into `global.GameData.entities`) would be the place to define base need parameters if they vary by entity type.
+
+*   **Conceptual Fields within an entity profile (e.g., `global.GameData.entities.pop_human`):**
+    *   `base_needs`: (Object)
+        *   `hunger_max`: 100
+        *   `hunger_decay_rate`: 0.01 (units per tick)
+        *   `thirst_max`: 100
+        *   `thirst_decay_rate`: 0.02
+    *   `initial_needs_range`: (Object)
+        *   `hunger_min_start`: 40
+        *   `hunger_max_start`: 80
+
+*(This section would be expanded as the Needs system becomes more deeply integrated with entity definitions.)*

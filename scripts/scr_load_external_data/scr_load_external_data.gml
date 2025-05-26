@@ -257,39 +257,137 @@ function load_json_file(_path) {
 }
 
 /// @function scr_load_external_data_all(_base_path)
-/// Loads all external JSON data files under the specified folder. Falls back to existing data if missing.
 function scr_load_external_data_all(_base_path) {
-    // Ensure GameData map exists
-    if (!variable_global_exists("GameData") || !is_struct(global.GameData)) {
-        global.GameData = {};
+    // =========================================================================
+    // 1. Ensure data folder exists
+    // =========================================================================
+    var _data_folder = working_directory + "/" + _base_path;
+    if (!directory_exists(_data_folder)) {
+        directory_create(_data_folder);
+        show_debug_message("Created missing data directory: " + _data_folder);
     }
 
-    // Items
-    var _item_path = _base_path + "/item_data.json";
+    // =========================================================================
+    // 2. Define helper to ensure file exists or copy default
+    // =========================================================================
+    function _ensure_file(_filename) {
+        var _path = _data_folder + "/" + _filename;
+        if (!file_exists(_path)) {
+            // Copy default from same folder
+            var _default = _data_folder + "/default_" + _filename;
+            if (file_exists(_default)) {
+                file_copy(_default, _path);
+                show_debug_message("Copied default data file for missing " + _filename);
+            } else {
+                show_debug_message("WARNING: Neither " + _filename + " nor default_" + _filename + " found.");
+            }
+        }
+        return _path;
+    }
+
+    // =========================================================================
+    // 3. Items
+    // =========================================================================
+    var _item_path = _ensure_file("item_data.json");
     var _items = load_json_file(_item_path);
-    if (is_struct(_items)) global.GameData.items = _items;
+    if (is_struct(_items)) {
+        global.GameData.items = _items;
+    } else {
+        // Fallback to default JSON
+        var _def_item_path = _ensure_file("default_item_data.json");
+        var _def_items = load_json_file(_def_item_path);
+        if (is_struct(_def_items)) {
+            global.GameData.items = _def_items;
+            show_debug_message("Loaded default item_data.json after parse failure.");
+        }
+    }
 
-    // Resource Nodes
-    var _res_path = _base_path + "/resource_node_data.json";
+    // =========================================================================
+    // 4. Resource Nodes
+    // =========================================================================
+    var _res_path = _ensure_file("resource_node_data.json");
     var _res = load_json_file(_res_path);
-    if (is_struct(_res)) global.GameData.resource_nodes = _res;
+    if (is_struct(_res)) {
+        global.GameData.resource_nodes = _res;
+    } else {
+        var _def_res_path = _ensure_file("default_resource_node_data.json");
+        var _def_res = load_json_file(_def_res_path);
+        if (is_struct(_def_res)) {
+            global.GameData.resource_nodes = _def_res;
+            show_debug_message("Loaded default resource_node_data.json after parse failure.");
+        }
+    }
 
-    // Structures
-    var _struct_path = _base_path + "/structure_data.json";
+    // =========================================================================
+    // 5. Structures
+    // =========================================================================
+    var _struct_path = _ensure_file("structure_data.json");
     var _struct = load_json_file(_struct_path);
-    if (is_struct(_struct)) global.GameData.structures = _struct;
+    if (is_struct(_struct)) {
+        global.GameData.structures = _struct;
+    } else {
+        var _def_struct_path = _ensure_file("default_structure_data.json");
+        var _def_struct = load_json_file(_def_struct_path);
+        if (is_struct(_def_struct)) {
+            global.GameData.structures = _def_struct;
+            show_debug_message("Loaded default structure_data.json after parse failure.");
+        }
+    }
 
-    // Entities (pops, creatures)
-    var _ent_path = _base_path + "/entity_data.json";
+    // =========================================================================
+    // 6. Entities
+    // =========================================================================
+    var _ent_path = _ensure_file("entity_data.json");
     var _ent = load_json_file(_ent_path);
-    if (is_struct(_ent)) global.GameData.entities = _ent;
+    if (is_struct(_ent)) {
+        global.GameData.entities = _ent;
+    } else {
+        var _def_ent_path = _ensure_file("default_entity_data.json");
+        var _def_ent = load_json_file(_def_ent_path);
+        if (is_struct(_def_ent)) {
+            global.GameData.entities = _def_ent;
+            show_debug_message("Loaded default entity_data.json after parse failure.");
+        }
+    }
 
-    // Name Data
-    var _name_path = _base_path + "/pop_name_data.json";
+    // =========================================================================
+    // 7. Pop Name Data
+    // =========================================================================
+    var _name_path = _ensure_file("pop_name_data.json");
     var _names = load_json_file(_name_path);
-    if (is_struct(_names)) global.GameData.pop_name_data = _names;
+    if (is_struct(_names)) {
+        global.GameData.pop_name_data = _names;
+    } else {
+        var _def_name_path = _ensure_file("default_pop_name_data.json");
+        var _def_names = load_json_file(_def_name_path);
+        if (is_struct(_def_names)) {
+            global.GameData.pop_name_data = _def_names;
+            show_debug_message("Loaded default pop_name_data.json after parse failure.");
+        }
+    }
 
     // Names handled by load_name_data (text-based)
     show_debug_message("External data loaded from: " + _base_path);
+
+    // =========================================================================
+    // 8. Linking/Resolution (Second Pass)
+    // =========================================================================
+    // Resolve string IDs in resource nodes to item profile references
+    if (is_struct(global.GameData.resource_nodes)) {
+        var _res_keys = variable_struct_get_names(global.GameData.resource_nodes);
+        for (var i = 0; i < array_length(_res_keys); i++) {
+            var _key = _res_keys[i];
+            var _node = global.GameData.resource_nodes[_key];
+            var _item_id_str = _node.gather_properties.resource_item_id;
+            var _profile = find_item_profile_by_id(_item_id_str);
+            if (is_struct(_profile)) {
+                _node.gather_properties.resource_item_profile = _profile;
+            } else {
+                show_debug_message("Warning: Could not resolve item profile for resource node '" + _key + "'. ID: " + _item_id_str);
+            }
+        }
+    }
+
+    show_debug_message("External data load complete with linking.");
 }
 #endregion

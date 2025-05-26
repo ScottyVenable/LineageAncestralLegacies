@@ -285,6 +285,11 @@ enum FormationType {
     LINE_VERTICAL,              // Entities in a vertical line.
     CIRCLE,                     // Entities arranged in a circle around a central point.
     RANDOM_WITHIN_RADIUS,       // Entities spawned randomly within a specified radius from a central point.
+    SINGLE_POINT,
+    CLUSTERED,
+    PACK_SCATTER
+    
+    
     // Add other formation types as needed, e.g.:
     // STAGGERED_GRID,
     // V_FORMATION,

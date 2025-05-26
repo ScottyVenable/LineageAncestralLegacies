@@ -1,8 +1,8 @@
 # Unified GameData System - Idea Document
 **Project:** Lineage: Ancestral Legacies
 **Author:** Gemini (for Scotty Venable)
-**Version:** 1.0
-**Date:** May 25, 2025
+**Version:** 1.1
+**Date:** May 26, 2025
 
 ## 1. Vision & Goals
 
@@ -110,7 +110,7 @@ Each entity profile is a struct containing all static data required to define an
 
 ### 3.2. Item Definitions (`GameData.Items.<Category>.<ItemName>`)
 
-Each item profile contains all static data for an inventory item.
+Each item profile contains all static data for an inventory item. Loaded from `item_data.json` and `default_item_data.json`.
 
 * **Example Path:** `global.GameData.Items.Resource.FLINT`
 * **Example Data Structure:**
@@ -133,7 +133,7 @@ Each item profile contains all static data for an inventory item.
 
 ### 3.3. Recipe Definitions (`GameData.Recipes.<CraftedItemProfileName>` or `<RecipeIDString>`)
 
-Each recipe profile defines how to craft a specific item.
+Each recipe profile defines how to craft a specific item. Loaded from `recipes.json` and `default_recipes.json`.
 
 * **Example Path:** `global.GameData.Recipes.STONE_AXE`
 * **Example Data Structure:**
@@ -190,6 +190,37 @@ This section defines the *types* of formations and potentially default parameter
 * `GameData.Traits.<Category>.<TraitName>`: Structs defining trait effects, incompatibilities, etc.
 * `GameData.Skills.<SkillName>` or `GameData.Skills.Type.<EnumName>`: Structs defining skill descriptions, how they affect actions, XP progression curves.
 
+### 3.6. Pop State Definitions (`GameData.PopStates.<StateName>`)
+
+Defines the available behavioral states for pops. Loaded from `pop_states.json` and `default_pop_states.json`.
+
+*   **Example Path:** `global.GameData.PopStates.Idle` (Note: The loader script currently places this at `global.GameData.pop_states.Idle` - this document reflects a potential refinement in path, adjust if loader is kept as is).
+*   **Example Data Structure (as loaded):**
+    ```gml
+    // global.GameData.pop_states (actual current structure)
+    // {
+    //   "Idle": { "id": 0, "name": "Idle" },
+    //   "Foraging": { "id": 1, "name": "Foraging" }
+    // }
+
+    // Idealized path in GameData for consistency:
+    // Idle: { // Accessed via global.GameData.PopStates.Idle
+    //     id: 0,
+    //     name: "Idle",
+    //     // Future: animation_prefix, sound_event, interrupt_priority
+    // }
+    ```
+
+### 3.7. Needs System Integration (Conceptual)
+
+The Needs System (`scr_needs_update.gml`) currently initializes needs directly on pop instances (e.g., `pop.needs = { hunger: 50, thirst: 50 }`)
+
+*   **Data-Driven Enhancements:**
+    *   **Base Need Parameters:** Could be loaded from `GameData.Entity.<Category>.<ProfileName>.base_needs` (e.g., `global.GameData.Entity.Pop.GEN1.base_needs = { hunger_max: 100, hunger_decay_rate: 0.01 }`).
+    *   `scr_gamedata_init` or the entity loader would populate these into `global.GameData` from `entity_data.json`.
+    *   Pop initialization would then use these `global.GameData` values to set up their instance-specific `needs` struct.
+    *   `scr_needs_update` would reference these base parameters from the pop's `staticProfileData.base_needs` or a direct link for decay rates and thresholds.
+
 ## 4. Identifiers & Data Access
 
 ### 4.1. `GameData` Paths as Primary Identifiers
@@ -238,12 +269,14 @@ Once you have the profile struct (either directly via path or via `GetProfileFro
 
 ## 5. Key System Implementations
 
-### 5.1. Initialization (`scr_gamedata_init.gml`)
+### 5.1. Initialization (`scr_gamedata_init.gml` & `scr_load_external_data_all.gml`)
 
-* This script is executed once at the very start of the game.
-* It defines `global.GameData = {};` and then meticulously populates all nested structs and their data fields as outlined in Section 3.
-* This will be a substantial script, acting as the game's static content manifest.
-* **Consideration:** For very large games, this data could potentially be loaded from external JSON files at startup and parsed into the `global.GameData` struct format, but direct GML definition offers compile-time checks for struct/variable names.
+*   `scr_gamedata_init.gml`: Sets up the `global.GameData` struct and calls `scr_load_external_data_all`.
+*   `scr_load_external_data_all.gml`:
+    *   Handles loading from JSON files (e.g., `item_data.json`, `resource_node_data.json`, `structure_data.json`, `entity_data.json`, `pop_name_data.json`, `pop_states.json`, `recipes.json`).
+    *   Implements fallback to `default_*.json` files if primary files are missing or corrupt.
+    *   Populates the corresponding sections of `global.GameData` (e.g., `global.GameData.items`, `global.GameData.pop_states`, `global.GameData.recipes`).
+*   **Current Data Loading:** The system now robustly loads JSON definitions for items, resource nodes, structures, entities, pop names, pop states, and recipes into `global.GameData`.
 
 ### 5.2. Entity Spawning System
 
@@ -329,4 +362,11 @@ This system leverages `GameData` for all definitions.
 
 ## 7. TLDR / Summary
 
-The goal is to establish `global.GameData` as the comprehensive, hierarchical database for all static game definitions in *Lineage: Ancestral Legacies*. Accessing a path like `GameData.Entity.Pop.GEN1` will directly yield the complete data profile (stats, sprites, default behaviors, etc.) for that "GEN1" Hominid concept. This approach streamlines data access, enhances code readability, and makes the game highly data-driven, fulfilling the desire for a self-sufficient system where the data structure itself is the primary means of identifying and retrieving game content definitions, rather than relying on separate, large enums as keys to other data tables. Functions like `spawn` will take these `GameData` profile paths (or a simplified `UniqueID` enum that maps to them) as input, directly using the rich profile data to orchestrate complex actions like patterned group spawning.
+The goal is to establish `global.GameData` as the comprehensive, hierarchical database for all static game definitions in *Lineage: Ancestral Legacies*. Accessing a path like `GameData.Entity.Pop.GEN1` will directly yield the complete data profile (stats, sprites, default behaviors, etc.) for that "GEN1" Hominid concept. This approach streamlines data access, enhances code readability, and makes the game highly data-driven. 
+
+**Recent Additions Reflected:**
+*   **Pop States:** Defined in `pop_states.json`, loaded into `global.GameData.pop_states`. Drives `obj_pop` state machine.
+*   **Needs System:** Basic needs (hunger, thirst) managed by `scr_needs_update.gml`, affecting pop state. Future data-driving via `entity_data.json`.
+*   **Crafting System:** Recipes defined in `recipes.json`, loaded into `global.GameData.recipes`. Logic in `scr_crafting_functions.gml` for checking and performing crafts.
+
+This system fulfills the desire for a self-sufficient system where the data structure itself is the primary means of identifying and retrieving game content definitions. Functions like `spawn` will take these `GameData` profile paths (or a simplified `UniqueID` enum that maps to them) as input, directly using the rich profile data to orchestrate complex actions like patterned group spawning.

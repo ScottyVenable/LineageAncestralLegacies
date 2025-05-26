@@ -16,8 +16,10 @@ This repository contains the source code and development progress for the game, 
     * Randomized age and D&D-style ability scores.
     * Age-reflective traits, likes, and dislikes influencing behavior.
     * Developing skills in various areas like foraging, crafting, and construction.
-    * Needs such as hunger, thirst, energy, and social interaction (more to be implemented).
+    * **Needs System:** Pops have needs like hunger and thirst that influence their behavior. (More to be implemented: energy, social interaction).
+    * **Pop State System:** Pops transition between states (e.g., Idle, Foraging, Resting) based on their needs and tasks.
 * **Resource Gathering & Management:** Pops can be commanded to forage for resources like berries and stone. Future plans include more complex resource chains (wood, minerals, etc.).
+* **Basic Crafting System:** Pops can craft items from recipes if they have the required ingredients.
 * **Struct-Based Inventory System:** Efficient and flexible inventory management for each Pop.
 * **Evolving UI:** A draggable generic UI panel system for displaying information, currently showcasing detailed "Pop Info" panels including stats, traits, and inventory.
 * **Dynamic Foraging Efficiency:** A Pop's ability to gather resources is influenced by their stats (e.g., Wisdom, Dexterity) and traits (e.g., "Hardworking," "Lazy").
@@ -31,9 +33,12 @@ This repository contains the source code and development progress for the game, 
 
 ## 🛠️ Current Status
 
-The game is currently in active development. Core systems for Pop creation, basic behaviors (idle, wander, commanded, foraging), item definitions, and the foundational UI panel are in place. Recent focus has been on refining the "Pop Info" UI panel and establishing robust item/sprite definition workflows.
+The game is currently in active development. Core systems for Pop creation, basic behaviors (idle, wander, commanded, foraging), item definitions, and the foundational UI panel are in place. Recent focus has been on implementing core gameplay loops like needs management, pop states, and a basic crafting system.
 
 **Key systems recently implemented or improved:**
+* **Pop State System:** Pops now have defined states (Idle, Foraging, Resting) managed through `datafiles/pop_states.json` and loaded via `scr_load_external_data.gml`. Pop behavior in `obj_pop` is driven by these states.
+* **Needs System:** Pops now have basic needs (hunger, thirst) initialized in `obj_pop` and updated by `scr_needs_update.gml`. Helper functions in `scr_data_helpers.gml` assist with accessing need data.
+* **Basic Crafting System:** A foundational crafting system allows Pops to craft items based on recipes defined in `datafiles/recipes.json` (loaded by `scr_load_external_data.gml`). Crafting logic is handled by `scr_crafting_functions.gml`, with helper functions in `scr_data_helpers.gml`.
 * Dynamic Pop Foraging Efficiency.
 * Safe sprite assignment in item definitions (fallback to `spr_placeholder_icon`).
 * Consolidated global enums (`PopState`, `ItemType`, etc.) in `scr_constants.gml`.
@@ -58,9 +63,10 @@ These quirks are important to keep in mind if troubleshooting or developing furt
 ## 🗺️ Roadmap / Future Goals (Examples - Customize these!)
 
 While the foundation is being laid, here are some potential future directions:
-* **Expanded Pop Needs & Behaviors:** Implement systems for hunger, thirst, sleep, social interaction, and more complex AI decision-making.
+* **Expanded Pop Needs & Behaviors:** Implement systems for energy, social interaction, and more complex AI decision-making based on needs and states.
 * **Skill Progression:** Allow Pops to gain experience and improve their skills over time.
-* **Crafting & Construction:** Introduce systems for Pops to craft tools, clothing, and build structures.
+* **Advanced Crafting & Construction:** Expand the crafting system with more recipes, tool requirements, and introduce systems for Pops to build structures.
+* **UI for Crafting:** Develop a user interface for players to see available recipes and initiate crafting.
 * **World Generation & Exploration:** Develop more dynamic environments for Pops to inhabit.
 * **Tribal Dynamics:** Introduce concepts of leadership, family units, and inter-Pop relationships.
 * **Events & Challenges:** Add dynamic events (e.g., weather, animal attacks, resource booms/busts) to challenge the player.

@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_inventory_is_full",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_inventory_is_full",
+  "parent":{
+    "name":"Inventory",
+    "path":"folders/Scripts/Utilities/Inventory.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

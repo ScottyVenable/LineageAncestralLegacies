@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_interaction_slot_get_by_pop",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_interaction_slot_get_by_pop",
+  "parent":{
+    "name":"Utilities",
+    "path":"folders/Scripts/Utilities.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

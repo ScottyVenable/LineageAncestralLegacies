@@ -129,6 +129,28 @@ global.logged_missing_selection_script = false; // Initialize flag for missing s
 #endregion
 
 // ============================================================================
+// 4.A ENTITY STATE SYSTEM INITIALIZATION
+// ============================================================================
+#region 4.A.1 Initialize Entity State Definitions
+// This section is now handled by obj_entity_state_controller's Create Event.
+// Ensure an instance of obj_entity_state_controller exists in the room, preferably created before obj_controller
+// or early in the room's instance creation order, so global.EntityStateDefinitions is available.
+
+if (!instance_exists(obj_entity_state_controller)) {
+    // Attempt to create it if it's missing, though ideally it should be placed in the room manually.
+    var _controller_layer = "Instances"; // Or a dedicated system layer
+    if (!layer_exists(_controller_layer)) {
+        layer_create(0, _controller_layer); 
+        debug_log($"Dynamically created controller layer: '{_controller_layer}' for obj_entity_state_controller.", "obj_controller:Create", "cyan");
+    }
+    instance_create_layer(0, 0, _controller_layer, obj_entity_state_controller);
+    debug_log("WARNING (obj_controller): obj_entity_state_controller was not found, created dynamically. Ensure it's in the room for proper initialization order.", "obj_controller:Create", "yellow");
+} else {
+    debug_log("INFO (obj_controller): obj_entity_state_controller found. Entity state definitions should be initialized by it.", "obj_controller:Create", "green");
+}
+#endregion
+
+// ============================================================================
 // 4.B PRE-SPAWN DATA INITIALIZATION (e.g. Name data for pops)
 // ============================================================================
 #region 4.B.1 Load Name Data

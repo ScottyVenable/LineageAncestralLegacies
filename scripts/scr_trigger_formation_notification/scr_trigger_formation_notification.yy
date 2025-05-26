@@ -6,7 +6,7 @@
   "name":"scr_trigger_formation_notification",
   "parent":{
     "name":"Formations",
-    "path":"folders/Scripts/Pop/Behaviors/Formations.yy",
+    "path":"folders/Scripts/Entities/Pop/Behaviors/Formations.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

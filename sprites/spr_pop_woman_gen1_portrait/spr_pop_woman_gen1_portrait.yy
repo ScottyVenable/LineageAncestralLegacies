@@ -25,8 +25,8 @@
   "nineSlice":null,
   "origin":0,
   "parent":{
-    "name":"Man",
-    "path":"folders/Sprites/Pop/Man.yy",
+    "name":"Woman",
+    "path":"folders/Sprites/Pop/Woman.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

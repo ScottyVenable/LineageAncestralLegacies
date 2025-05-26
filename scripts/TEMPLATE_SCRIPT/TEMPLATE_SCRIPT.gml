@@ -88,7 +88,7 @@ function scr_template_default(target, amount) {
 
             if (target.berry_count <= 0) {
                 depth           = original_depth;
-                state           = PopState.WAITING;
+                state           = EntityState.WAITING;
                 has_initialized = false;
                 return true;
             }
@@ -101,7 +101,7 @@ function scr_template_default(target, amount) {
     // 5. CLEANUP & RETURN
     // =========================================================================
     #region 5.1 Cleanup & Return
-    if (state == PopState.WAITING) {
+    if (state == EntityState.WAITING) {
         speed = 0;
     }
     // free any temporary DS here, if used

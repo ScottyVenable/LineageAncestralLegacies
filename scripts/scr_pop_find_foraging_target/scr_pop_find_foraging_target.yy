@@ -6,7 +6,7 @@
   "name":"scr_pop_find_foraging_target",
   "parent":{
     "name":"Behavior Functions",
-    "path":"folders/Scripts/Pop/Behaviors/Behavior Functions.yy",
+    "path":"folders/Scripts/Entities/Pop/Behaviors/Behavior Functions.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

@@ -8,7 +8,7 @@
 function scr_pop_idle() {
     // 0) Only run if we’re actually in IDLE (this check is good but often redundant
     //    if scr_pop_behavior already ensures it's only called for the IDLE state)
-    // if (state != PopState.IDLE) return; // Can be removed if scr_pop_behavior handles this
+    // if (state != EntityState.IDLE) return; // Can be removed if scr_pop_behavior handles this
 
     // 1) Animation swap: show idle sprite (animated)
     // This logic might be better in a general sprite update script based on state and direction
@@ -59,7 +59,7 @@ function scr_pop_idle() {
         idle_timer       = 0; // Reset timer for the next idle/wander cycle
         // idle_target_time will be recalculated next time idle_timer is 0
         // is_waiting remains false (it wasn't true for this condition)
-        state            = PopState.WANDERING;
+        state            = EntityState.WANDERING;
         // show_debug_message(pop_identifier_string + " finished idling, now WANDERING.");
     }
     // If 'is_waiting' is true, this condition `!is_waiting` fails, and it won't transition to WANDERING.

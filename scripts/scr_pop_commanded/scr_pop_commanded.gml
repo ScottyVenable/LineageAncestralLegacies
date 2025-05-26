@@ -7,13 +7,13 @@
 ///
 /// Metadata:
 ///   Summary:       Move to target, then enter WAITING state.
-///   Usage:         Called by scr_pop_behavior when state is PopState.COMMANDED.
-///                  e.g., case PopState.COMMANDED: scr_pop_commanded(); break;
+///   Usage:         Called by scr_pop_behavior when state is EntityState.COMMANDED.
+///                  e.g., case EntityState.COMMANDED: scr_pop_commanded(); break;
 ///   Parameters:    none (operates on the calling 'id' instance of obj_pop)
 ///   Returns:       void
 ///   Tags:          [pop_behavior][state][movement][command]
 ///   Version:       1.1 - [Current Date] (Changed arrival state to WAITING and sets is_waiting flag)
-///   Dependencies:  scr_update_walk_sprite, scr_separate_pops, PopState (enum),
+///   Dependencies:  scr_update_walk_sprite, scr_separate_pops, EntityState (enum),
 ///                  Instance variables: x, y, travel_point_x, travel_point_y, speed,
 ///                  direction, image_speed, has_arrived, is_waiting.
 
@@ -26,7 +26,8 @@ function scr_pop_commanded() {
     // but checking has_arrived (if it means "has arrived at previous target") can work.
     // Assuming 'has_arrived' is false when a new command is given.
     if (!variable_instance_exists(id, "_commanded_state_initialized") || !_commanded_state_initialized) {
-        // scr_update_walk_sprite(); // Ensure correct walking sprite is set
+        // _commanded_state_initialized: Flag to ensure this setup runs only once per entry into the COMMANDED state.
+        // scr_update_walk_sprite(); // Ensure correct walking sprite is set - This is called unconditionally below (line 35)
         image_speed = 1.5;          // Example: Faster walk animation for commanded move
                                     // Adjust image_speed based on your sprite's animation.
                                     // If scr_update_walk_sprite handles image_speed, this might be redundant or conflict.
@@ -50,7 +51,7 @@ function scr_pop_commanded() {
     // Ensure travel_point_x and travel_point_y are valid before using them
     if (!is_real(travel_point_x) || !is_real(travel_point_y)) {
         show_debug_message($"ERROR (Pop {id} - Commanded): Invalid travel_point ({travel_point_x},{travel_point_y}). Reverting to WAITING.");
-        state = PopState.WAITING;
+        state = EntityState.WAITING; // Use new WAITING state
         is_waiting = true; // Explicitly set to wait
         speed = 0;
         _commanded_state_initialized = false; // Reset for next time
@@ -61,7 +62,9 @@ function scr_pop_commanded() {
 
     if (_dist_to_target > 2) { // Threshold for movement (e.g., 2 pixels)
         direction = point_direction(x, y, travel_point_x, travel_point_y);
-        speed = pop.base_speed * 2; // Commanded movement speed (adjust as needed)
+        // 'stats' is a struct on this instance, typically initialized in the Create event of obj_pop.
+        // When commanded, the pop should use its run_speed.
+        speed = stats.run_speed; // Commanded movement speed (adjust as needed)
         // scr_update_walk_sprite(); // Called above already
     } else {
         // Close enough to snap to target
@@ -91,9 +94,9 @@ function scr_pop_commanded() {
         // If 'target_object_id' is 'noone', it was a simple move-to-point command.
         if (!instance_exists(target_object_id)) { // Or target_object_id == noone, if that's how you designate pure move commands
             show_debug_message("Pop " + _pop_id_str + ": Command was to an open point. Transitioning to IDLE. No interaction slot needed.");
-            state = PopState.IDLE; // Or PopState.WAITING if you prefer them to wait after a move command
+            state = EntityState.IDLE; // Use new IDLE state
             // is_waiting = true; // if transitioning to WAITING
-            previous_state = PopState.NONE; // Clear previous state as the command is complete.
+            previous_state = EntityState.NONE; // Clear previous state as the command is complete.
             
             // Clear any potentially lingering interaction details from a previous task
             target_interaction_object_id = noone;
@@ -114,7 +117,7 @@ function scr_pop_commanded() {
                 script_execute(_resume_script_asset_index);
             } else {
                 show_debug_message("CRITICAL ERROR (Pop " + _pop_id_str + "): Script '" + _resume_script_name + "' not found! Defaulting to IDLE.");
-                state = PopState.IDLE;
+                state = EntityState.IDLE;
                 target_interaction_object_id = noone; // Ensure clean state
                 target_interaction_slot_index = -1;
             }

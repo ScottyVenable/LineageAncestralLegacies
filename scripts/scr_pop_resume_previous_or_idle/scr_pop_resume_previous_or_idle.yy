@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"scr_pop_resume_previous_or_idle",
   "parent":{
-    "name":"Scripts",
-    "path":"folders/Scripts.yy",
+    "name":"Behavior Functions",
+    "path":"folders/Scripts/Entities/Pop/Behaviors/Behavior Functions.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

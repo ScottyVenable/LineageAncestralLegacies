@@ -12,7 +12,7 @@
 ///    Returns:         void
 ///    Tags:            [rendering][ui][pop_feedback]
 ///    Version:         1.20 - 2024-05-19 // Scotty's Current Date - Name/State visible if solely selected
-///    Dependencies:  PopState enum, PopSex enum, scr_get_state_name, global.selected_pops_list,
+///    Dependencies:  EntityState enum, EntitySex enum, scr_get_state_name, global.selected_pops_list,
 ///                     fnt_pop_displayname, fnt_state, various c_ color constants,
 ///                     Instance variables: selected, state, image_xscale, image_yscale, x, y,
 ///                     is_mouse_hovering, pop_identifier_string, sex, travel_point_x, travel_point_y.
@@ -85,9 +85,9 @@ if (_show_details_text && variable_instance_exists(id, "pop_identifier_string"))
     draw_set_color(c_black); 
     draw_text(_text_x + 1, _text_y + 1, _name_text);
 
-    if (_pop_sex == PopSex.MALE) {
+    if (_pop_sex == EntitySex.MALE) {
         draw_set_color(c_orange); 
-    } else if (_pop_sex == PopSex.FEMALE) {
+    } else if (_pop_sex == EntitySex.FEMALE) {
         draw_set_color(c_fuchsia); 
     } else {
         draw_set_color(c_white); 
@@ -113,20 +113,20 @@ if (_show_details_text) { // Use the new combined condition
 
     #region 3.2 Color by State
     switch (_state_current) {
-        case PopState.IDLE:     draw_set_color(c_white);    break;
-        case PopState.COMMANDED: draw_set_color(c_blue);     break; 
-        case PopState.FORAGING:  draw_set_color(c_lime);     break;
-        case PopState.FLEEING:   draw_set_color(c_yellow);   break;
-        case PopState.ATTACKING: draw_set_color(c_red);      break;
-        case PopState.WANDERING: draw_set_color(c_silver);   break;
-        case PopState.EATING:    draw_set_color(c_orange);   break;
-        case PopState.SLEEPING:  draw_set_color(c_purple);   break;
-        case PopState.WORKING:   draw_set_color(c_olive);    break;
-        case PopState.CRAFTING:  draw_set_color(c_maroon);   break;
-        case PopState.BUILDING:  draw_set_color(c_teal);     break;
-        case PopState.HAULING:   draw_set_color(c_dkgray);   break;
-        case PopState.SOCIALIZING: draw_set_color(c_fuchsia); break;
-        case PopState.WAITING:   draw_set_color(c_gray);     break;
+        case EntityState.IDLE:     draw_set_color(c_white);    break;
+        case EntityState.COMMANDED: draw_set_color(c_blue);     break; 
+        case EntityState.FORAGING:  draw_set_color(c_lime);     break;
+        case EntityState.FLEEING:   draw_set_color(c_yellow);   break;
+        case EntityState.ATTACKING: draw_set_color(c_red);      break;
+        case EntityState.WANDERING: draw_set_color(c_silver);   break;
+        case EntityState.EATING:    draw_set_color(c_orange);   break;
+        case EntityState.SLEEPING:  draw_set_color(c_purple);   break;
+        case EntityState.WORKING:   draw_set_color(c_olive);    break;
+        case EntityState.CRAFTING:  draw_set_color(c_maroon);   break;
+        case EntityState.BUILDING:  draw_set_color(c_teal);     break;
+        case EntityState.HAULING:   draw_set_color(c_dkgray);   break;
+        case EntityState.SOCIALIZING: draw_set_color(c_fuchsia); break;
+        case EntityState.WAITING:   draw_set_color(c_gray);     break;
         default:                draw_set_color(c_gray);     break;
     }
     #endregion
@@ -182,7 +182,7 @@ if (selected) {
 // 5. DRAW COMMAND TARGET INDICATOR
 // ============================================================================
 #region 5.1 Command Target Indicator
-if (_state_current == PopState.COMMANDED && 
+if (_state_current == EntityState.COMMANDED && 
     variable_instance_exists(id, "travel_point_x") && is_real(travel_point_x) && 
     variable_instance_exists(id, "travel_point_y") && is_real(travel_point_y) && 
     (floor(x) != floor(travel_point_x) || floor(y) != floor(travel_point_y))) { 

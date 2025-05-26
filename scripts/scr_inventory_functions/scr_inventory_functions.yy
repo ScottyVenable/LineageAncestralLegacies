@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"scr_inventory_functions",
   "parent":{
-    "name":"Scripts",
-    "path":"folders/Scripts.yy",
+    "name":"Inventory",
+    "path":"folders/Scripts/Utilities/Inventory.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

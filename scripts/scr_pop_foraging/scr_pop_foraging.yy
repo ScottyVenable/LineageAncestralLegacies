@@ -6,7 +6,7 @@
   "name":"scr_pop_foraging",
   "parent":{
     "name":"Behaviors",
-    "path":"folders/Scripts/Pop/Behaviors.yy",
+    "path":"folders/Scripts/Entities/Pop/Behaviors.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

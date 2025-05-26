@@ -47,7 +47,7 @@ show_debug_message($"INFO (obj_creature_ai_controller Create): Initializing Crea
 
 // --- Helper function to safely get a sprite asset index ---
 // Defined here to keep it local to this initialization logic.
-var _get_sprite_asset = function(sprite_asset_name_from_data, fallback_asset = spr_placeholder_creature) {
+function _get_sprite_asset(sprite_asset_name_from_data, fallback_asset = spr_placeholder_creature) {
     // sprite_asset_name_from_data is expected to be a string like "spr_wolf_idle"
     // It can also be undefined or an empty string if the profile doesn't specify it.
     if (is_string(sprite_asset_name_from_data) && string_length(sprite_asset_name_from_data) > 0) {

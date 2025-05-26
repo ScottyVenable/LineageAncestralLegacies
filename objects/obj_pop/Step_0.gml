@@ -51,7 +51,7 @@ if (point_in_circle(_mouse_check_x, _mouse_check_y, x, y, global.hover_detection
 // 3. DEPTH SORTING (Can also be in End Step or Draw Begin for some effects)
 // ============================================================================
 #region 3.1 Update Depth
-if (state != PopState.FORAGING) {
+if (state != EntityState.FORAGING) {
     depth = -y;
 }
 #endregion

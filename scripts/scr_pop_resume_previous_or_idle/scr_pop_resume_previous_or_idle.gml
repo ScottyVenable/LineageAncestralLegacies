@@ -13,7 +13,7 @@
 ///   Returns:       void (directly modifies the pop's state).
 ///   Tags:          [pop][ai][state][behavior][core]
 ///   Version:       1.1 - 2025-05-23 // Updated to full TEMPLATE_SCRIPT structure
-///   Dependencies:  PopState (enum), scr_get_state_name, scr_pop_find_foraging_target, scr_interaction_slot_acquire,
+///   Dependencies:  EntityState (enum), scr_get_state_name, scr_pop_find_foraging_target, scr_interaction_slot_acquire,
 ///                  Instance variables: previous_state, last_foraged_target_id, last_foraged_slot_index,
 ///                                      last_foraged_type_tag, state, target_interaction_object_id, etc.,
 ///                                      pop_identifier_string (for debug), spr_man_idle.
@@ -63,7 +63,7 @@ function scr_pop_resume_previous_or_idle() {
     #region 4.1 Main Behavior / Utility Logic
     // --- Attempt to Resume Previous State ---
     switch (self.previous_state) {
-        case PopState.FORAGING:
+        case EntityState.FORAGING:
             show_debug_message("Pop " + _pop_id_str + " attempting to resume FORAGING.");
             // Try to resume foraging the last target if it's still valid and has resources
             if (instance_exists(self.last_foraged_target_id) &&
@@ -85,11 +85,11 @@ function scr_pop_resume_previous_or_idle() {
                     self.target_interaction_object_id = self.last_foraged_target_id;
                     self.target_interaction_slot_index = self.last_foraged_slot_index;
                     self.target_interaction_type_tag = self.last_foraged_type_tag;
-                    self.state = PopState.FORAGING;
+                    self.state = EntityState.FORAGING;
                     self.has_arrived = false;
                     self.forage_timer = 0;
                     show_debug_message("Pop " + _pop_id_str + " re-acquired previous interaction point " + string(self.target_interaction_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
-                    self.previous_state = PopState.NONE;
+                    self.previous_state = EntityState.NONE;
                     exit;
                 } else {
                     // Could not re-acquire the exact same slot, try any available slot on the same target
@@ -105,11 +105,11 @@ function scr_pop_resume_previous_or_idle() {
                         self.target_interaction_object_id = self.last_foraged_target_id;
                         self.target_interaction_slot_index = _slot_index;
                         self.target_interaction_type_tag = self.last_foraged_type_tag;
-                        self.state = PopState.FORAGING;
+                        self.state = EntityState.FORAGING;
                         self.has_arrived = false;
                         self.forage_timer = 0;
                         show_debug_message("Pop " + _pop_id_str + " acquired new interaction point " + string(_slot_index) + " at " + string(self.target_interaction_object_id) + ". Resuming FORAGING.");
-                        self.previous_state = PopState.NONE;
+                        self.previous_state = EntityState.NONE;
                         exit;
                     }
                 }
@@ -137,12 +137,12 @@ function scr_pop_resume_previous_or_idle() {
                     self.target_interaction_slot_index = _new_slot_details.slot_index;
                     self.target_interaction_type_tag = _new_slot_details.type_tag; // Use the tag from the acquired slot
                     
-                    self.state = PopState.FORAGING;
+                    self.state = EntityState.FORAGING;
                     self.has_arrived = false;
                     self.forage_timer = 0;
                     
                     show_debug_message("Pop " + _pop_id_str + " found and acquired slot at NEW foraging target: " + string(self.target_interaction_object_id) + " slot " + string(self.target_interaction_slot_index) + ". Resuming FORAGING.");
-                    self.previous_state = PopState.NONE;
+                    self.previous_state = EntityState.NONE;
                     // Clear last_foraged_... variables since we are starting fresh with a new target
                     self.last_foraged_target_id = noone;
                     self.last_foraged_slot_index = -1;
@@ -158,29 +158,29 @@ function scr_pop_resume_previous_or_idle() {
             }
             break;
 
-        // case PopState.CONSTRUCTION:
+        // case EntityState.CONSTRUCTION:
         //     // TODO: Implement logic to resume construction
         //     // This would involve checking `last_construction_target_id`, etc.
         //     show_debug_message("Pop " + _pop_id_str + " previous state was CONSTRUCTION. Resume logic not yet implemented.");
         //     break;
 
-        // case PopState.HAULING:
+        // case EntityState.HAULING:
         //     // Typically, hauling completes and then might call this.
         //     // If a pop was hauling, then got commanded, then finishes command, should it re-evaluate hauling?
         //     // For now, if previous was hauling, it likely means it was interrupted mid-haul.
         //     // Let's try to re-trigger hauling state. scr_pop_hauling will check if still necessary.
         //     show_debug_message("Pop " + _pop_id_str + " previous state was HAULING. Attempting to re-enter HAULING state.");
-        //     self.state = PopState.HAULING;
+        //     self.state = EntityState.HAULING;
         //     // self._hauling_state_initialized = false; // If scr_pop_hauling uses an init flag
-        //     self.previous_state = PopState.NONE;
+        //     self.previous_state = EntityState.NONE;
         //     exit;
         //     break;
             
-        case PopState.NONE: // No specific previous state to resume
-        case PopState.IDLE:
-        case PopState.WANDERING:
-        case PopState.COMMANDED: // If previous was commanded, it means the command finished.
-        case PopState.WAITING:   // If previous was waiting, it means it was interrupted while waiting.
+        case EntityState.NONE: // No specific previous state to resume
+        case EntityState.IDLE:
+        case EntityState.WANDERING:
+        case EntityState.COMMANDED: // If previous was commanded, it means the command finished.
+        case EntityState.WAITING:   // If previous was waiting, it means it was interrupted while waiting.
             show_debug_message("Pop " + _pop_id_str + " previous state (" + _scr_get_state_name(self.previous_state) + ") does not require specific resume action or is a default state. Will proceed to IDLE/WANDER.");
             break;
             
@@ -206,7 +206,7 @@ function scr_pop_resume_previous_or_idle() {
     self.last_foraged_slot_index = -1;
     self.last_foraged_type_tag = "";
 
-    self.state = PopState.IDLE;
+    self.state = EntityState.IDLE; // Default to IDLE using new enum
     self.is_waiting = false; // Not truly waiting for a specific event, just idling
     self.has_arrived = true; // Considered "arrived" at its current idle spot
     self.idle_timer = 0;     // Reset idle timer (defined in obj_pop Create or a constants script)
@@ -219,7 +219,7 @@ function scr_pop_resume_previous_or_idle() {
     self.image_speed = 0.2 + random(0.1); // Slow, slightly varied idle animation
     self.speed = 0;
     
-    self.previous_state = PopState.NONE; // Clear previous_state as we are now defaulting.
+    self.previous_state = EntityState.NONE; // Clear previous state using new enum
 
     // The scr_pop_idle script will eventually transition to WANDERING if the pop remains idle for too long.
     // No need to explicitly set WANDERING here unless that's the immediate desired behavior.

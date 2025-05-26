@@ -236,3 +236,55 @@ function load_text_file_lines(_path) {
     #endregion
 }
 #endregion
+
+#region 4.3 JSON Data Loading Functions
+/// @function load_json_file(_path)
+/// Safely loads and parses JSON from a text file, returning a struct or undefined.
+function load_json_file(_path) {
+    if (file_exists(_path)) {
+        var _f = file_text_open_read(_path);
+        var _text = "";
+        if (_f != -1) {
+            while (!file_text_eof(_f)) {
+                _text += file_text_read_string(_f);
+                file_text_readln(_f);
+            }
+            file_text_close(_f);
+            return json_parse(_text);
+        }
+    }
+    return undefined;
+}
+
+/// @function scr_load_external_data_all(_base_path)
+/// Loads all external JSON data files under the specified folder. Falls back to existing data if missing.
+function scr_load_external_data_all(_base_path) {
+    // Ensure GameData map exists
+    if (!variable_global_exists("GameData") || !is_struct(global.GameData)) {
+        global.GameData = {};
+    }
+
+    // Items
+    var _item_path = _base_path + "/item_data.json";
+    var _items = load_json_file(_item_path);
+    if (is_struct(_items)) global.GameData.items = _items;
+
+    // Resource Nodes
+    var _res_path = _base_path + "/resource_node_data.json";
+    var _res = load_json_file(_res_path);
+    if (is_struct(_res)) global.GameData.resource_nodes = _res;
+
+    // Structures
+    var _struct_path = _base_path + "/structure_data.json";
+    var _struct = load_json_file(_struct_path);
+    if (is_struct(_struct)) global.GameData.structures = _struct;
+
+    // Entities (pops, creatures)
+    var _ent_path = _base_path + "/entity_data.json";
+    var _ent = load_json_file(_ent_path);
+    if (is_struct(_ent)) global.GameData.entities = _ent;
+
+    // Names handled by load_name_data (text-based)
+    show_debug_message("External data loaded from: " + _base_path);
+}
+#endregion

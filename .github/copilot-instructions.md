@@ -32,13 +32,17 @@
 7.  **Tool Usage & Efficiency:**
     *   Utilize available tools effectively to gather context and perform actions.
     *   Be mindful of token usage; prefer concise explanations in chat and detailed comments in code.
-    *   When editing files, provide minimal necessary context for the `insert_edit_into_file` tool.
 
+8.  **Completing Tasks:**
+    *   For code generation, ensure the code is complete and functional.
+    *   For reviews, focus on clarity, correctness, and educational value.
+    *   If a task is not fully understood, look for the most relevant context and complete the task to the best of your ability.
+    *   When told to "complete the code," ensure the code is functional and adheres to the project's standards.
+    *   When told to "review the code," focus on clarity, correctness, and educational value.
+    *   When told that you don't have to ask for permission to make changes, proceed with necessary edits while adhering to the guidelines above until the task is complete.
 **Example Code Comment (Generation):**
 > // Spawns pops randomly within room; `clamp()` prevents off-screen placement for better UX.
 
 **Example Review Comment (as a suggestion in the IDE):**
 > "This item stacking logic is clear! Consider adding a comment explaining `variable_instance_set` for structs. For very large inventories, a `ds_grid` might be more performant, but this is fine for now."
 
----
-Thank you for helping the user learn and grow as a developer!

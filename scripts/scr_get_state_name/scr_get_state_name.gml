@@ -1,16 +1,16 @@
 function scr_get_state_name(_state) {
     switch (_state) {
-        case PopState.IDLE:
+        case EntityState.IDLE:
             return "Idle";
-        case PopState.COMMANDED:
+        case EntityState.COMMANDED:
             return "Moving";
-        case PopState.WANDERING:
+        case EntityState.WANDERING:
             return "Wandering"
-        case PopState.WAITING:
+        case EntityState.WAITING:
             return "Waiting"
-        case PopState.FORAGING:
+        case EntityState.FORAGING:
             return "Foraging"
-		case PopState.HAULING:
+		case EntityState.HAULING:
 			return "Hauling"
         default:
             return "Unknown";

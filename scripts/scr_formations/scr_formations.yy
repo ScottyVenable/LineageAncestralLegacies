@@ -6,7 +6,7 @@
   "name":"scr_formations",
   "parent":{
     "name":"Formations",
-    "path":"folders/Scripts/Pop/Behaviors/Formations.yy",
+    "path":"folders/Scripts/Entities/Pop/Behaviors/Formations.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

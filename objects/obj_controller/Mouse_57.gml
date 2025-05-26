@@ -7,7 +7,7 @@
 ///
 /// Metadata:
 ///    Version:        1.12 - [Current Date] (Corrected instance_count, variable_instance_get, and click detection logic)
-///    Dependencies:   obj_pop, par_slot_provider, PopState (enum),
+///    Dependencies:   obj_pop, par_slot_provider, EntityState (enum),
 ///                     scr_interaction_slot_get_free, scr_interaction_slot_claim,
 ///                     scr_interaction_slot_get_world_pos, scr_interaction_slot_release,
 ///                     scr_formations (scr_formation_calculate_slots), global.current_formation_type,
@@ -121,7 +121,7 @@ if (_clicked_interactive_object != noone) {
     with (obj_pop) { 
         if (selected) {
             // If the pop is currently interacting, release its claimed interaction point (slot)
-            if ((state == PopState.FORAGING || state == PopState.WORKING)
+            if ((state == EntityState.FORAGING || state == EntityState.WORKING)
                 && instance_exists(target_interaction_object_id)
                 && target_interaction_slot_index != -1) {
                 // --- NEW SYSTEM: Release by interaction point ID ---
@@ -160,13 +160,13 @@ if (_clicked_interactive_object != noone) {
                         travel_point_x = _slot_details.x;
                         travel_point_y = _slot_details.y;
                         // Set state to FORAGING (or other, based on object type)
-                        state = PopState.FORAGING;
-                        previous_state = PopState.FORAGING;
+                        state = EntityState.FORAGING;
+                        previous_state = EntityState.FORAGING;
                         // Update last_foraged_... for resume/idle logic
                         last_foraged_target_id = _target_object_for_this_command;
                         last_foraged_slot_index = _slot_index;
                         last_foraged_type_tag = _slot_details.type_tag;
-                        if (state == PopState.FORAGING) { forage_timer = 0; }
+                        if (state == EntityState.FORAGING) { forage_timer = 0; }
                         has_arrived = false; is_waiting = false;
                         array_push(_successfully_assigned_pops, id);
                     } else {
@@ -204,7 +204,7 @@ if (_clicked_interactive_object != noone) {
             with (_pop_id) {
                 // --- Only release/assign slot if this pop is being assigned a new slot ---
                 // Release any previous slot (if any)
-                if ((state == PopState.FORAGING || state == PopState.WORKING)
+                if ((state == EntityState.FORAGING || state == EntityState.WORKING)
                     && instance_exists(target_interaction_object_id)
                     && target_interaction_slot_index != -1) {
                     var _old_point_id = scr_interaction_slot_get_by_pop(target_interaction_object_id, id);
@@ -235,8 +235,8 @@ if (_clicked_interactive_object != noone) {
                         target_interaction_point_id = _point_id;
                         travel_point_x = _slot_details.x;
                         travel_point_y = _slot_details.y;
-                        state = PopState.FORAGING;
-                        previous_state = PopState.FORAGING;
+                        state = EntityState.FORAGING;
+                        previous_state = EntityState.FORAGING;
                         last_foraged_target_id = _target_object_for_this_command;
                         last_foraged_slot_index = _slot_index;
                         last_foraged_type_tag = _slot_details.type_tag;
@@ -276,7 +276,7 @@ var _selected_pops_list_for_move = [];
 	
 with (obj_pop) {
     if (selected) {
-        if ((state == PopState.FORAGING || state == PopState.WORKING) && 
+        if ((state == EntityState.FORAGING || state == EntityState.WORKING) && 
             instance_exists(target_interaction_object_id) && 
             target_interaction_slot_index != -1) {
             // If the pop is currently interacting and is now commanded to move, release its slot.
@@ -316,7 +316,7 @@ if (_num_selected_for_move > 0) {
                 if (instance_exists(_pop_id)) { 
                     with (_pop_id) {
                         travel_point_x = _slot.x; travel_point_y = _slot.y;
-                        has_arrived = false; state = PopState.COMMANDED;
+                        has_arrived = false; state = EntityState.COMMANDED;
                         order_id = global.order_counter; is_waiting = false;
                     }
                 }
@@ -328,7 +328,7 @@ if (_num_selected_for_move > 0) {
                 if (instance_exists(_pop_id)) { 
                     with (_pop_id) {
                         travel_point_x = _event_mouse_x_room; travel_point_y = _event_mouse_y_room;
-                        has_arrived = false; state = PopState.COMMANDED;
+                        has_arrived = false; state = EntityState.COMMANDED;
                         order_id = global.order_counter; is_waiting = false;
                     }
                 }
@@ -340,7 +340,7 @@ if (_num_selected_for_move > 0) {
             if (instance_exists(_pop_id)) { 
                 with (_pop_id) {
                     travel_point_x = _event_mouse_x_room; travel_point_y = _event_mouse_y_room;
-                    has_arrived = false; state = PopState.COMMANDED;
+                    has_arrived = false; state = EntityState.COMMANDED;
                     order_id = global.order_counter; is_waiting = false;
                 }
             }

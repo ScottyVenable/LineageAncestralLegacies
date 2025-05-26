@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"str_inventory_struct_management",
   "parent":{
-    "name":"Scripts",
-    "path":"folders/Scripts.yy",
+    "name":"Inventory",
+    "path":"folders/Scripts/Utilities/Inventory.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

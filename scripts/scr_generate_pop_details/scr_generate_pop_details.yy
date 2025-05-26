@@ -6,7 +6,7 @@
   "name":"scr_generate_pop_details",
   "parent":{
     "name":"Pop",
-    "path":"folders/Scripts/Pop.yy",
+    "path":"folders/Scripts/Entities/Pop.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

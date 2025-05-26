@@ -4,7 +4,7 @@
 //          definitions are available when other scripts need them.
 //
 // Metadata:
-//   Summary: Contains global game enums like PopState, ItemType, PopNeeds, BuildingTypes, etc.
+//   Summary: Contains global game enums like EntityState, ItemType, PopNeeds, BuildingTypes, etc.
 //   Usage: Exists in the project; its contents are globally accessible once compiled. Not called as a function.
 //   Parameters: none (This script is not a function and does not accept parameters)
 //   Returns: n/a (This script is not a function and does not return values)
@@ -39,7 +39,7 @@
 #region 2. GLOBAL DEFINITIONS
 
 #region 2.1 Pop Enums
-enum PopState {
+enum EntityState {
 	NONE,
 	
     IDLE,
@@ -58,11 +58,11 @@ enum PopState {
     FORAGING
     // Add other pop states as needed
 }
-enum PopSex {
+enum EntitySex {
 	MALE,
 	FEMALE
 }
-enum PopNeed {
+enum EntityNeed {
     HUNGER,
     THIRST,
     ENERGY,     // Or Rest/Sleep
@@ -74,7 +74,7 @@ enum PopNeed {
     HEALTH      // General physical well-being
 }
 
-enum PopSkill {
+enum EntitySkill {
     FORAGING,
     FARMING,
     MINING,
@@ -93,7 +93,7 @@ enum PopSkill {
     HAULING // Efficiency in carrying things
 }
 
-enum PopRelationship {
+enum EntityRelationship {
     STRANGER,
     ACQUAINTANCE,
     FRIEND,

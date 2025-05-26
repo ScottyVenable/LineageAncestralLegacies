@@ -6,7 +6,7 @@
   "name":"scr_update_walk_sprite",
   "parent":{
     "name":"Art",
-    "path":"folders/Scripts/Pop/Art.yy",
+    "path":"folders/Scripts/Entities/Pop/Art.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

@@ -6,7 +6,7 @@
   "name":"scr_interaction",
   "parent":{
     "name":"Systems",
-    "path":"folders/Scripts/Pop/Systems.yy",
+    "path":"folders/Scripts/Entities/Pop/Systems.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

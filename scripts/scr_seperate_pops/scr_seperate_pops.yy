@@ -6,7 +6,7 @@
   "name":"scr_seperate_pops",
   "parent":{
     "name":"Physics",
-    "path":"folders/Scripts/Pop/Physics.yy",
+    "path":"folders/Scripts/Entities/Pop/Physics.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

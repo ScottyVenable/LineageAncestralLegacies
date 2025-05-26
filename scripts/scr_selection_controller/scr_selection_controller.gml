@@ -80,8 +80,8 @@ function scr_selection_controller(_selected_pop_id_arg) {
             if (_sex_el_id != undefined && is_real(_sex_el_id) && layer_get_element_type(_sex_el_id) != layerelementtype_undefined) {
                 var _sex_value = variable_instance_get(_pop_for_text_update, "sex");
                 var _sex_string = "Unknown"; // Default value
-                if (_sex_value == PopSex.MALE) { _sex_string = "Male"; }
-                else if (_sex_value == PopSex.FEMALE) { _sex_string = "Female"; }
+                if (_sex_value == EntitySex.MALE) { _sex_string = "Male"; }
+                else if (_sex_value == EntitySex.FEMALE) { _sex_string = "Female"; }
                 layer_text_text(_sex_el_id, _sex_string);
                 if (_log_this_call) show_debug_message($"DEBUG (scr_selection_controller): Updated Pop Sex to: {_sex_string}");
             } else {

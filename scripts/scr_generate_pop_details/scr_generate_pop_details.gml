@@ -7,7 +7,7 @@
 ///
 /// Metadata:
 ///    Version:       1.4 - 2024-05-19 // Scotty's Current Date - Added missing vars for UI Panel compatibility
-///    Dependencies:  scr_pop_names, PopSex enum, PopSkill enum (optional)
+///    Dependencies:  scr_pop_names, EntitySex enum, PopSkill enum (optional)
 
 function scr_generate_pop_details(life_stage) {
     // =========================================================================
@@ -15,9 +15,9 @@ function scr_generate_pop_details(life_stage) {
     // =========================================================================
     #region A. Determine Sex
     if (random(1) < 0.5) {
-        sex = PopSex.MALE;
+        sex = EntitySex.MALE;
     } else {
-        sex = PopSex.FEMALE;
+        sex = EntitySex.FEMALE;
     }
     #endregion
 
@@ -31,7 +31,7 @@ function scr_generate_pop_details(life_stage) {
 
     // Check if the pop is in the TRIBAL life stage
     if (life_stage == PopLifeStage.TRIBAL) {
-        if (sex == PopSex.MALE) {
+        if (sex == EntitySex.MALE) {
             _prefixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
             _suffixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
         } else { // FEMALE
@@ -40,7 +40,7 @@ function scr_generate_pop_details(life_stage) {
         }
     } else {
         // Default to global prefixes and suffixes
-        if (sex == PopSex.MALE) {
+        if (sex == EntitySex.MALE) {
             _prefixes_list = global.male_prefixes;
             _suffixes_list = global.male_suffixes;
             _name_base = "MalePop";

@@ -4,7 +4,7 @@
 //          This script should be run once at the very start of the game.
 
 // Ensure prerequisite enums and entity definitions are loaded first.
-scr_constants(); // Defines global enums like FormationType, PopState, etc.
+scr_constants(); // Defines global enums like FormationType, EntityState, etc.
 
 show_debug_message("Initializing scr_database: Populating global.GameData...");
 
@@ -384,6 +384,12 @@ global.GameData.LootTables.WOLF = {
 // };
 
 // =============================================================================
+// SECTION: BEHAVIOR AND AI
+// =============================================================================
+
+
+
+// =============================================================================
 // SECTION: ENTITY PROFILES
 // =============================================================================
 global.GameData.Entity = {
@@ -496,9 +502,25 @@ global.GameData.Entity.Pop.GEN1 = {
         attempts_per_entity: 8      // How many times to try placing before giving up (for dense areas)
     },
 
+    // --- Behavior Settings (NEW) ---
+    // Defines default values for various AI behavior timers and parameters.
+    // These can be overridden by instance logic or specific AI states.
+    behavior_settings: {
+        idle_min_seconds: 2.0,          // Minimum time (in seconds) an instance will idle.
+        idle_max_seconds: 4.0,          // Maximum time (in seconds) an instance will idle.
+        after_command_idle_seconds: 0.5,// Short idle time after completing a direct command.
+        wander_min_points: 1,           // Minimum number of waypoints in a single wander sequence.
+        wander_max_points: 3,           // Maximum number of waypoints in a single wander sequence.
+        wander_min_distance_pixels: 50, // Minimum distance for a single wander leg.
+        wander_max_distance_pixels: 150 // Maximum distance for a single wander leg.
+        // Add other behavior-related settings here as needed, e.g.:
+        // forage_duration_seconds: 10,
+        // social_interaction_chance: 0.1,
+        // flee_health_threshold_percent: 0.25
+    },
+
     // --- Other Information ---
     loot_table_profile_path: undefined, // Path to a loot table in GameData.LootTables (e.g., global.GameData.LootTables.HOMINID_GEN1)
-    brain_size_cc_approx: 600,          // Anthropological reference
     tool_use_level_tags: ["opportunistic_found_tools", "basic_stone_choppers_simple"], // e.g., Oldowan-like
     fire_use_level_tags: ["fire_aware_natural_sources", "no_fire_making_skill"],
     shelter_preference_tags: ["natural_cave_basic", "rock_overhang"]

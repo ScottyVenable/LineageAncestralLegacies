@@ -276,13 +276,18 @@ enum TaskPriority {
     CRITICAL    // System critical, must be done
 }
 
-enum Formation {
-    NONE,                       // Value 0
-    LINE_HORIZONTAL,            // Value 1
-    LINE_VERTICAL,              // Value 2
-    GRID,                       // Value 3
-    STAGGERED_LINE_HORIZONTAL,  // Value 4
-    CIRCLE                      // Value 5 <<<< THIS IS THE NEW HIGHEST
+// Enum to define different ways entities can be arranged when spawned in groups.
+// Used by scr_spawn_system and scr_formations.
+enum FormationType {
+    NONE,                       // No specific formation, entities might spawn at the same point or randomly within a radius.
+    GRID,                       // Entities arranged in a grid.
+    LINE_HORIZONTAL,            // Entities in a horizontal line.
+    LINE_VERTICAL,              // Entities in a vertical line.
+    CIRCLE,                     // Entities arranged in a circle around a central point.
+    RANDOM_WITHIN_RADIUS,       // Entities spawned randomly within a specified radius from a central point.
+    // Add other formation types as needed, e.g.:
+    // STAGGERED_GRID,
+    // V_FORMATION,
 }
 
 enum AlertLevel { // For colony/settlement wide alerts

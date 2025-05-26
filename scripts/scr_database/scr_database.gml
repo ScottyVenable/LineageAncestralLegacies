@@ -1,876 +1,651 @@
-/// scr_database.gml
-///
-/// Purpose:
-///    Defines the EntityType enum, provides the function get_entity_data()
-///    to retrieve base data, and global.EntityCategories for organized enum access.
-///    This script is the central data repository for all interactive entities in "Lineage: Ancestral Legacies".
-///
-/// Metadata:
-///   Summary:       EntityType enums, data, and categorized access for a prehistoric/evolutionary survival game.
-///   Usage:         Enums are global. Call get_entity_data(EntityType.ENUM_VALUE) or use global.EntityCategories.Category.SUBCATEGORY.ENUM.
-///   Tags:          [data][entities][database][definitions][enums][ai][core_game_data][survival][prehistoric][evolution][gdd_aligned][research_informed]
-///   Version:       1.3 - [Current Date] - Hominid research integration, refined species data.
-///   Dependencies:  GML Objects (e.g., obj_pop, obj_redBerryBush from GDD), Item Enum Placeholders, AI State Placeholders. Research Doc: "Hominid Game Development Research"
+// scr_database.gml (or scr_gamedata_init.gml)
+// Purpose: Initializes the global.GameData structure, serving as the central
+//          database for all static game definitions in Lineage: Ancestral Legacies.
+//          This script should be run once at the very start of the game.
 
-// ============================================================================
-// 1. ENTITY TYPE ENUMERATION (Refined based on GDD & Hominid Research)
-// ============================================================================
-#region 1.1 EntityType Enum Definition
-enum EntityType {
-    NONE,
+show_debug_message("Initializing scr_database: Populating global.GameData...");
 
-    // --- HOMINID SPECIES & SPECIALIZED ROLES ---
-    #region 1. Populations & Hominids
-    // Reflecting evolutionary stages from research doc and roles from GDD
-    POP_HOMO_HABILIS_EARLY,     // "Handy Man" [cite: 63]
-    POP_HOMO_ERECTUS_EARLY,     // Efficient biped, fire user, migrator [cite: 82]
-    POP_HOMO_SAPIENS_ARCHAIC,   // Early forms of H. sapiens [cite: 113]
-    POP_HOMO_SAPIENS_MODERN,    // Anatomically and cognitively modern [cite: 113]
+// -----------------------------------------------------------------------------
+// Optional: ID Enum (Flat enum for convenience, maps to GameData paths)
+// -----------------------------------------------------------------------------
+enum ID {
+    // Entity Profiles - Pops
+    POP_GEN1,
+    POP_GEN2,
+    POP_GEN3,
+    POP_GEN4,
+    POP_ROLE_HUNTER, // Example Role
 
-    // Roles/Specializations (can apply to later Hominid types)
-    HOMINID_ROLE_HUNTER,
-    HOMINID_ROLE_GATHERER,
-    HOMINID_ROLE_CRAFTER,
-    HOMINID_ROLE_BUILDER,
-    HOMINID_ROLE_THINKER,       // DP/EP generation, language, innovation [cite: 139]
-    HOMINID_ROLE_ELDER,         // Wisdom, teaching, tradition [cite: 129, 381]
-    HOMINID_ROLE_CHILD,         // Learning, vulnerable
-    HOMINID_ROLE_GUARD,
-    HOMINID_ROLE_SHAMAN,        // Rituals, beliefs [cite: 130, 371]
+    // Entity Profiles - Animals
+    ANIMAL_WOLF,
+    ANIMAL_DEER,
 
-    // Other Hominid Groups/States
-    HOMINID_NOMAD_GROUP,        // Neutral wandering group
-    HOMINID_RIVAL_TRIBE_MEMBER, // Generic rival
-    HOMINID_RIVAL_TRIBE_SCOUT,
-    HOMINID_RIVAL_TRIBE_WARRIOR,
-    HOMINID_RIVAL_TRIBE_CHIEFTAIN,
-    HOMINID_CANNIBAL_DEGENERATE,
-    HOMINID_HERMIT_ISOLATED,
-    HOMINID_TRADER_ITINERANT,
-    // Sickness/Injury are states, not distinct entity types usually
-    // POP_HOMINID_SPIRIT, // Kept for potential special/late game entities
-    // POP_HOMINID_REFUGEE,
-    #endregion
+    // Entity Profiles - Structures
+    STRUCTURE_TOOL_HUT_BASIC,
+    STRUCTURE_STORAGE_PIT,
+    STRUCTURE_FIRE_PIT,
 
-    // --- DOMESTICATED & TAMABLE ANIMALS ---
-    #region 1.2 Domesticated & Tamable Animals
-    DOG_COMPANION,
-    DOG_HUNTING,
-    DOG_GUARD,
-    AUROCH_CALF_TAMABLE,        // Renamed for clarity
-    AUROCH_BULL_DOMESTIC,
-    AUROCH_COW_DOMESTIC,
-    MOUFLON_LAMB_TAMABLE,
-    MOUFLON_RAM_DOMESTIC,
-    MOUFLON_EWE_DOMESTIC,
-    BOAR_PIGLET_TAMABLE,        // Renamed
-    BOAR_SOW_DOMESTIC,
-    BOAR_MALE_DOMESTIC,
-    JUNGLEFOWL_CHICK_TAMABLE,
-    JUNGLEFOWL_ROOSTER_DOMESTIC,
-    JUNGLEFOWL_HEN_DOMESTIC,
-    DONKEY_WILD_TAMABLE,        // Renamed
-    DONKEY_PACK_DOMESTIC,
-    WOLF_PUP_TAMABLE,           // Renamed
-    HYENA_CUB_TAMABLE,          // Renamed
-    FALCON_CHICK_TAMABLE,
-    GIANT_BEETLE_LARVA_TAMABLE,
-    CAT_KITTEN_TAMABLE,         // Renamed
-    HORSE_FOAL_TAMABLE,
-    HORSE_DOMESTIC,
-    REINDEER_CALF_TAMABLE,
-    REINDEER_DOMESTIC,
-    #endregion
+    // Entity Profiles - Resource Nodes
+    NODE_FLINT_DEPOSIT,
+    NODE_BERRY_BUSH_RED,
 
-    // --- CULTIVATED PLANTS (FARMABLE) ---
-    #region 1.3 Cultivated Plants
-    WHEAT_CROP,                 // Simplified, details in data. GDD: FARM_WILD_WHEAT_EARLY
-    BARLEY_CROP,
-    LENTILS_CROP,
-    PEAS_CROP,
-    GOURD_CROP,
-    FLAX_CROP,
-    HEMP_CROP,
-    TARO_CROP,
-    YAM_CROP,
-    MINT_HERB_CROP,
-    BASIL_HERB_CROP,
-    POPPY_MEDICINAL_CROP,
-    ALOE_VERA_MEDICINAL_CROP,
-    MUSHROOM_OYSTER_LOG_CULT,   // More specific
-    MUSHROOM_SHIITAKE_LOG_CULT,
-    BERRY_STRAWBERRY_CULT,
-    FRUIT_FIG_TREE_CULT,        // Trees are distinct
-    SPICE_GINGER_CROP,
-    SPICE_TURMERIC_CROP,
-    DYE_MADDER_PLANT_CROP,
-    DYE_WOAD_PLANT_CROP,
-    COTTON_PLANT_CROP,
-    RICE_PADDY_CROP,
-    #endregion
+    // Entity Profiles - Hazards
+    HAZARD_QUICKSAND,
+    HAZARD_ROCKSLIDE_TRIGGER,
 
-    // --- WILDLIFE - HERBIVORES ---
-    #region 1.4 Wildlife - Herbivores (Fauna mentioned in research [cite: 345, 348, 350])
-    DEER_RED,                   // Data can specify stag, doe, fawn variants
-    HORSE_WILD_PRZEWALSKI,      // Research: H. erectus diet
-    AUROCH_WILD,                // Research: H. erectus diet [cite: 153]
-    MOUFLON_WILD,
-    BOAR_WILD,                  // Research: H. erectus diet [cite: 348]
-    RABBIT_EUROPEAN,
-    HARE_MOUNTAIN,
-    MAMMOTH_WOOLLY,             // Research: H. sapiens diet [cite: 351]
-    GIANT_SLOTH_GROUND,
-    IRISH_ELK_MEGALOCEROS,      // Scientific name for clarity
-    WOOLLY_RHINOCEROS,          // Research: H. erectus diet [cite: 153]
-    GAZELLE_DORCAS,             // Example species
-    IBEX_ALPINE,                // Example species
-    BEAVER_EURASIAN,
-    MUSK_OX,
-    SAIGA_ANTELOPE,
-    GIANT_TORTOISE_MEGALOCHELYS, // Research: H. erectus interaction [cite: 349]
-    GIRAFFE_PREHISTORIC,        // Research: Australopithecus env [cite: 345]
-    ZEBRA_PREHISTORIC,          // Research: Australopithecus env [cite: 345]
-    WILDEBEEST_PREHISTORIC,
-    HIPPOPOTAMUS_PREHISTORIC,   // Research: H. erectus diet [cite: 348]
-    #endregion
+    // Item Profiles
+    ITEM_FLINT,
+    ITEM_STICK,
+    ITEM_STONE_AXE,
+    ITEM_RAW_MEAT,
+    ITEM_COOKED_MEAT,
+    ITEM_BERRY_RED,
 
-    // --- WILDLIFE - PREDATORS & OMNIVORES ---
-    #region 1.5 Wildlife - Predators & Omnivores (Fauna mentioned in research [cite: 194, 196, 345, 347])
-    WOLF_GREY,
-    WOLF_DIRE,
-    SABERTOOTH_CAT_SMILODON,    // Research: Predator to H. habilis [cite: 196]
-    SABERTOOTH_CAT_HOMOTHERIUM,
-    LION_CAVE,                  // Research: Predator to Australopithecus [cite: 345]
-    BEAR_CAVE_OMNIVORE,         // Changed for clarity
-    BEAR_BROWN_OMNIVORE,
-    BEAR_SHORT_FACED_PREDATOR,
-    HYENA_CAVE_SPOTTED,         // Research: Predator to H. habilis [cite: 196] (bear-sized hyenas for Australopithecus [cite: 194])
-    TERROR_BIRD_PHORUSRHACID,
-    WEASEL_GIANT_MUSTELID,
-    WOLVERINE_GLUTTON,
-    CROCODILE_NILE_RIVER,       // Research: Predator to H. habilis [cite: 196]
-    SNAKE_GIANT_PYTHON,
-    EAGLE_LARGE_PREDATOR,       // Research: Taung child killer [cite: 195]
-    VULTURE_CARRION,
-    FOX_RED_OMNIVORE,
-    BADGER_EURASIAN_OMNIVORE,
-    JACKAL_GOLDEN_SCAVENGER,
-    BAT_GIANT_CAVE_PREDATOR,
-    PIRANHA_AGGRESSIVE_SCHOOL,
-    LEOPARD_PREDATOR,           // Research: Predator to H. habilis [cite: 347]
-    #endregion
 
-    // --- FORAGEABLE WILD PLANTS ---
-    #region 1.6 Forageable Wild Plants (Diet sources from research [cite: 45, 46, 69, 94, 124, 157])
-    BERRY_BUSH_GENERIC_RED,     // Simplified, type in data
-    BERRY_BUSH_GENERIC_BLUE,
-    BERRY_BUSH_GENERIC_BLACK,
-    ROOT_TUBER_WILD_GENERIC,    // Research: H. erectus & H. sapiens diet [cite: 94, 157]
-    ROOT_WILD_EDIBLE_GENERIC,
-    ONION_GARLIC_WILD_GENERIC,
-    GREENS_LEAFY_WILD_GENERIC,  // Research: Australopithecus & H. habilis diet [cite: 45, 69]
-    GREENS_NETTLES_FORAGEABLE,
-    MUSHROOM_MOREL_EDIBLE,
-    MUSHROOM_CHANTERELLE_EDIBLE,
-    MUSHROOM_AMANITA_RED_POISON,
-    MUSHROOM_AMANITA_PALE_POISON,
-    MUSHROOM_PSILOCYBE_MAGIC,   // Simplified
-    HERB_YARROW_HEALING,
-    HERB_WILLOW_BARK_PAINRELIEF,
-    HERB_CHAMOMILE_SOOTHING,
-    FIBER_PLANT_REED_FORAGE,
-    FIBER_PLANT_JUTE_FORAGE,
-    SAP_BIRCH_TREE_FORAGE,
-    RESIN_PINE_TREE_FORAGE,
-    NUTS_HAZELNUT_FORAGEABLE_BUSH,
-    NUTS_ACORN_OAK_FORAGEABLE,  // Research: H. sapiens diet [cite: 158] (Neanderthal example relevant)
-    SEAWEED_KELP_FORAGEABLE,    // Research: H. erectus & H. sapiens diet [cite: 94, 125]
-    CATTAIL_FORAGEABLE_PLANT,
-    FERN_FIDDLEHEADS_FORAGEABLE,
-    MUSHROOM_LUMINESCENT_FORAGEABLE,
-    SEEDS_WILD_GRASS_FORAGEABLE, // Research: H. sapiens diet (Neanderthal) [cite: 158] Australopithecus C4/CAM [cite: 46]
-    SUCCULENTS_WILD_FORAGEABLE, // Research: Australopithecus C4/CAM [cite: 46]
-    FRUITS_WILD_TREE_FORAGEABLE,// Research: Australopithecus & H. habilis diet [cite: 45, 69]
-    #endregion
+    // Recipe Profiles
+    RECIPE_STONE_AXE,
+    RECIPE_COOKED_MEAT,
 
-    // --- BASIC GATHERABLE RESOURCES (NON-PLANT/ANIMAL SPECIFIC NODES) ---
-    #region 1.7 Basic Gatherable Resource Nodes
-    NODE_FLINT,                 // Research: Key tool material [cite: 285]
-    NODE_WOOD_BRANCHES_DRY,
-    NODE_WOOD_LOG_SOFT,
-    NODE_WOOD_LOG_HARD,
-    NODE_STONE_RIVER_PEBBLES,
-    NODE_STONE_SLATE_DEPOSIT,
-    NODE_CLAY_PIT,
-    NODE_SAND_PIT,
-    NODE_GRASS_DRY_PATCH,
-    NODE_PLANT_FIBER_PATCH,
-    NODE_ANIMAL_DUNG_DRY,
-    NODE_SEASHELL_BED,
-    NODE_BEESWAX_WILD_HIVE_PART, // Part of a wild hive structure
-    NODE_HONEY_WILD_HIVE_PART,
-    NODE_BIRCH_BARK_TREE_HARVEST, // Harvest point on birch trees
-    NODE_PEAT_BOG_SURFACE,
-    NODE_OCHRE_DEPOSIT_PIGMENT, // Research: H. erectus & H. sapiens use [cite: 98, 131, 361, 364]
-    #endregion
+    // Trait Profiles
+    TRAIT_KEEN_EYES,
+    TRAIT_STRONG_BACK,
+    TRAIT_PRIMITIVE_CRAFTER,
+    TRAIT_FIRE_KEEPER,
+    TRAIT_QUICK_LEARNER,
 
-    // --- MISCELLANEOUS ENVIRONMENTAL OBJECTS ---
-    #region 1.8 Miscellaneous Environmental Objects
-    ENV_BOULDER_LARGE_OBSTRUCTION, // Research: Environmental hazard [cite: 197]
-    ENV_ROCK_OUTCROP_GENERAL,
-    ENV_TREE_DEAD_FALLEN,
-    ENV_TREE_STUMP_OLD,
-    ENV_CAVE_ENTRANCE_NATURAL,   // Research: Shelter for Australopithecus [cite: 50, 177]
-    ENV_WATER_SPRING_FRESH,
-    ENV_PUDDLE_MUDDY,
-    ENV_THORN_BUSH_IMPASSABLE,
-    ENV_VINES_THICK_CLIMBABLE,
-    ENV_SPIDER_WEB_OBSTRUCTION,
-    ENV_ANT_HILL_TERRAIN,
-    ENV_BIRD_NEST_EMPTY,        // Lootable variant for eggs/feathers handled by loot system
-    ENV_CAMPFIRE_REMAINS_COLD,
-    ENV_SKELETON_ANIMAL_DECAYED,
-    ENV_SKELETON_HOMINID_ANCIENT, // Research: Purposeful burials for H. sapiens [cite: 130, 373]
-    ENV_CRYSTAL_FORMATION_INERT,
-    ENV_FUNGUS_LUMINESCENT_STATIC_PATCH,
-    ENV_RIVER_RAPIDS_STATIC_FEATURE,
-    ENV_ICE_PATCH_GROUND_SLICK,
-    ENV_SHELL_MIDDEN_ANCIENT,   // Pile of discarded shells, sign of past activity
-    #endregion
-
-    // --- PLAYER/NPC BUILT STRUCTURES - FUNCTIONAL ---
-    #region 1.9 Structures - Functional (Shelter evolution from research)
-    STRUCTURE_SHELTER_LEAN_TO,
-    STRUCTURE_SHELTER_HUT_RUDIMENTARY, // Research: H. habilis stone hut foundations [cite: 72, 179]
-    STRUCTURE_SHELTER_HUT_ADVANCED,    // Research: H. erectus branch huts[cite: 181], H. sapiens mammoth bone huts [cite: 184]
-    STRUCTURE_FIRE_PIT_HEARTH,         // Research: Controlled fire, hearths (H. erectus/H. heidelbergensis) [cite: 90, 312]
-    STRUCTURE_WORKBENCH_STONE_TOOL,    // For Oldowan/Acheulean tools
-    STRUCTURE_DRYING_RACK,
-    STRUCTURE_STORAGE_PIT_SIMPLE,
-    STRUCTURE_STORAGE_BASKET_WOVEN,    // Research: H. sapiens weaving [cite: 293]
-    STRUCTURE_SMOKER_FOOD_CLAY,
-    STRUCTURE_TANNING_RACK_PRIMITIVE,
-    STRUCTURE_FISHING_WEIR_RIVER,
-    STRUCTURE_SNARE_TRAP_GAME,
-    STRUCTURE_GRINDING_SLAB_STONE,
-    STRUCTURE_WATER_WELL_SIMPLE,       // Research: Early water control [cite: 171]
-    STRUCTURE_DEFENSE_SPIKE_PIT,
-    STRUCTURE_DEFENSE_PALISADE_WOOD,
-    STRUCTURE_BEEHIVE_FRAME_DOMESTIC,
-    STRUCTURE_HERBALIST_TABLE_PREP,
-    STRUCTURE_TOOL_SHARPENER_GRINDSTONE,
-    STRUCTURE_BRIDGE_LOG_BASIC,
-    STRUCTURE_ANIMAL_PEN_FENCED,
-    STRUCTURE_COMPOST_HEAP_ORGANIC,
-    STRUCTURE_OBSERVATION_POST_BASIC,
-    STRUCTURE_KILN_POTTERY_PIT,        // Research: H. sapiens pottery [cite: 293]
-    STRUCTURE_WORK_STUMP_BASIC,
-    STRUCTURE_LOOM_HAND_PRIMITIVE,
-    STRUCTURE_FORGE_BLOOMERY_EARLY_METAL, // For potential later game copper/bronze
-    STRUCTURE_BOAT_DUGOUT_CANOE_RIVER, // Research: H. erectus boats implied [cite: 269]
-    #endregion
-
-    // --- PLAYER/NPC BUILT STRUCTURES - RITUAL/DECORATIVE ---
-    #region 1.10 Structures - Ritual/Decorative (Symbolism/Art from research)
-    STRUCTURE_TOTEM_TRIBAL_SPIRIT,
-    STRUCTURE_BURIAL_SITE_MARKED,      // Research: H. sapiens burials [cite: 130, 373]
-    STRUCTURE_CAVE_ART_WALL_DESIGNATED, // Player designates a wall for art
-    STRUCTURE_BONE_WINDCHIME,
-    STRUCTURE_OFFERING_ALTAR_STONE,
-    STRUCTURE_PATH_MARKER_CARVED,
-    STRUCTURE_EFFIGY_TERRITORIAL,
-    STRUCTURE_DRUM_CEREMONIAL_HIDE,    // Research: H. sapiens musical instruments [cite: 130]
-    STRUCTURE_RITUAL_CIRCLE_STONES,    // Research: Deep cave collective rituals [cite: 376]
-    STRUCTURE_OBSERVATORY_ALIGNMENT_STONES,
-    STRUCTURE_ANCESTOR_SHRINE_RELICS,
-    STRUCTURE_FEASTING_AREA_COMMUNAL,
-    STRUCTURE_STORYTELLING_FIRE_MAIN,
-    STRUCTURE_GARDEN_ORNAMENTAL_WILDPLANTS,
-    STRUCTURE_BANNER_TRIBAL_PAINTED_HIDE,
-    STRUCTURE_MEMORIAL_CARVED_POST,
-    STRUCTURE_FOUNTAIN_DECORATIVE_SPRING,
-    STRUCTURE_STATUE_CLAY_SYMBOLIC,
-    STRUCTURE_SUN_DIAL_PRIMITIVE,
-    STRUCTURE_SACRED_GROVE_ENCLOSURE,
-    STRUCTURE_LANGUAGE_TEACHING_AREA, // GDD Language system: School/Scribe's hut
-    STRUCTURE_LOREKEEPERS_HUT_STORIES, // GDD Language system
-    STRUCTURE_ENGRAVED_STONE_MONUMENT, // Research: H. erectus engravings [cite: 98, 359]
-    #endregion
-
-    // --- ADVANCED/RARE MINERAL RESOURCES (NODES) ---
-    #region 1.11 Resources - Mineral Advanced Nodes
-    NODE_ORE_COPPER,
-    NODE_ORE_TIN,
-    NODE_ORE_IRON_HEMATITE,
-    NODE_ORE_GOLD_VEIN,
-    NODE_ORE_SILVER_VEIN,
-    NODE_GEM_QUARTZ_CLUSTER,
-    NODE_GEM_AMETHYST_GEODE,
-    NODE_GEM_TURQUOISE_VEIN,
-    NODE_OBSIDIAN_VOLCANIC_DEPOSIT,
-    // Pigment deposits are covered by NODE_OCHRE_DEPOSIT_PIGMENT in basic resources
-    NODE_SALT_ROCK_MINEABLE,    // Renamed for clarity
-    NODE_SULFUR_VENT_CRYSTALS,
-    NODE_COAL_SEAM_EXPOSED,
-    NODE_PUMICE_STONE_QUARRY,
-    NODE_LIMESTONE_DEPOSIT_QUARRYABLE,
-    NODE_MARBLE_DEPOSIT_QUARRYABLE,
-    NODE_FLINT_HIGH_GRADE_NODULES,
-    NODE_NATIVE_COPPER_DEPOSIT,
-    NODE_METEORITE_IMPACT_REMAINS,
-    #endregion
-
-    // --- SPECIALTY FLORA & TREES (SPECIFIC INTERACTABLE TYPES) ---
-    #region 1.12 Flora - Trees & Specialty Plants
-    TREE_TYPE_OAK,              // Generic type, specific instance data defines age/size
-    TREE_TYPE_PINE,
-    TREE_TYPE_BIRCH,
-    TREE_TYPE_WILLOW,
-    TREE_TYPE_MAPLE_SAP,
-    TREE_TYPE_FRUIT_APPLE_WILD,
-    TREE_TYPE_NUT_WALNUT_WILD,
-    PLANT_BAMBOO_LARGE_GROVE_HARVESTABLE, // Represents a harvestable patch
-    PLANT_VINE_THICK_ROPELIKE,
-    PLANT_NETTLE_FIBER_PATCH,
-    PLANT_INDIGO_DYE_SOURCE_PATCH,
-    PLANT_GINSENG_MEDICINAL_ROOT_PATCH,
-    PLANT_HEMLOCK_POISONOUS_PATCH,
-    TREE_HOLLOW_USABLE,         // Empty hollow, can be used/interacted with
-    PLANT_SPICE_PEPPER_WILD_GROWTH,
-    TREE_TYPE_ELDER_BERRY_FLOWER,
-    TREE_TYPE_SEQUOIA_GIANT,
-    PLANT_COTTON_WILD_FIBER_SOURCE,
-    TREE_TYPE_RUBBER_LATEX_YIELDING,
-    PLANT_TOBACCO_WILD_LEAF_SOURCE,
-    FLOWER_ORCHID_RARE_COLLECTIBLE,
-    #endregion
-
-    // --- MYTHICAL, LEGENDARY, & BOSS FAUNA ---
-    #region 1.13 Fauna - Mythical & Bosses
-    BOSS_MAMMOTH_SPIRIT,
-    BOSS_SABERTOOTH_PHANTOM,
-    BOSS_SPIDER_QUEEN_CAVE,
-    BOSS_ELEMENTAL_EARTH_GUARDIAN,
-    BOSS_THUNDERBIRD_YOUNG_STORM,
-    BOSS_WYRM_PRIMAL_FOREST,
-    BOSS_SHADOW_BEAST_NIGHTMARE,
-    BOSS_CROCODILE_TITAN_ANCIENT,
-    BOSS_SALAMANDER_VOLCANIC_FIRE,
-    BOSS_ICE_WORM_GLACIAL_DEEP,
-    BOSS_GRIFFIN_STONECLAW_PEAK,
-    BOSS_CHIMERA_UNNATURAL_HYBRID,
-    BOSS_CYCLOPS_ANCIENT_FORGEMASTER,
-    BOSS_TROLL_CAVE_STONEGUARD,
-    BOSS_NAGA_SERPENT_SWAMPWITCH,
-    BOSS_BEHEMOTH_TITANIC_LANDWALKER,
-    BOSS_KRAKEN_ABYSSAL_LAKEFIEND,
-    BOSS_PHOENIX_REBORN_EMBERLING,
-    BOSS_UNICORN_ELUSIVE_FORESTHEALER,
-    BOSS_DRAGON_SKELETAL_WYRMLING,
-    BOSS_MANTICORE_DESERT_RIDDLER,
-    BOSS_BAT_ALPHA_ECHOING_CAVES,
-    #endregion
-
-    // --- ENVIRONMENTAL HAZARDS & COMPLEX INTERACTABLES ---
-    #region 1.14 Environmental Hazards & Interactables
-    HAZARD_AREA_QUICKSAND,
-    HAZARD_EVENT_ROCKSLIDE_TRIGGER_ZONE,
-    HAZARD_AREA_GEYSER_STEAM_VENT_PERIODIC,
-    HAZARD_TERRAIN_ICE_SHEET_SLIPPERY,
-    HAZARD_AREA_SWAMP_GAS_POCKET_FLAMMABLE,
-    HAZARD_FLOW_LAVA_SURFACE_HOT,
-    HAZARD_VENT_POISON_GAS_CAVE,
-    HAZARD_TRAP_FALLING_TREE_NATURAL,
-    HAZARD_CURRENT_WHIRLPOOL_WATER_STRONG,
-    HAZARD_TERRAIN_EARTHQUAKE_FISSURE_TEMPORARY,
-    HAZARD_EFFECT_BLIZZARD_ZONE_COLD,
-    HAZARD_EFFECT_SANDSTORM_ZONE_ABRASIVE,
-    HAZARD_POOL_ACID_CORROSIVE,
-    HAZARD_TERRAIN_CRYSTAL_SHARD_FIELD_SHARP,
-    HAZARD_EFFECT_FOG_BANK_OBSCURING,
-    HAZARD_EVENT_LIGHTNING_STRIKE_POINT,
-    HAZARD_TRAP_RUIN_PRESSURE_MECHANISM,
-    HAZARD_TERRAIN_ILLUSIONARY_DECEPTIVE,
-    HAZARD_AREA_RADIATED_MUTAGENIC,
-    HAZARD_CLOUD_SPORE_FUNGAL_INFECTIOUS,
-    HAZARD_ANOMALY_TEMPORAL_DISTORTION,
-    HAZARD_EVENT_FOREST_FIRE_SPREADING,
-    HAZARD_EVENT_FLOOD_WATER_RISING,
-    HAZARD_CLOUD_DISEASE_STAGNANT_AIR,
-    #endregion
+    // Skill Profiles
+    SKILL_FORAGING,
+    SKILL_CRAFTING_PRIMITIVE,
+    SKILL_HUNTING_BASIC,
+    SKILL_FIRE_MAKING
 }
-show_debug_message("Enum 'EntityType' (scr_database) Initialized with " + string(enum_size(EntityType)) + " entries. (v3 Research Integrated)");
-#endregion
 
-// ============================================================================
-// 2. GLOBAL ENTITY CATEGORIES STRUCT (for organized enum access)
-// ============================================================================
-#region 2.1 global.EntityCategories Definition
-global.EntityCategories = {
-    Hominids: { // Changed from Populations for clarity with research
-        Species: {
-            AUSTRALOPITHECUS: EntityType.POP_AUSTRALOPITHECUS_EARLY,
-            HOMO_HABILIS: EntityType.POP_HOMO_HABILIS_EARLY,
-            HOMO_ERECTUS: EntityType.POP_HOMO_ERECTUS_EARLY,
-            HOMO_SAPIENS_ARCHAIC: EntityType.POP_HOMO_SAPIENS_ARCHAIC,
-            HOMO_SAPIENS_MODERN: EntityType.POP_HOMO_SAPIENS_MODERN,
-        },
-        Roles: { // These can be applied to H. sapiens or later H. erectus
-            HUNTER: EntityType.HOMINID_ROLE_HUNTER,
-            GATHERER: EntityType.HOMINID_ROLE_GATHERER,
-            CRAFTER: EntityType.HOMINID_ROLE_CRAFTER,
-            BUILDER: EntityType.HOMINID_ROLE_BUILDER,
-            THINKER: EntityType.HOMINID_ROLE_THINKER,
-            ELDER: EntityType.HOMINID_ROLE_ELDER,
-            CHILD: EntityType.HOMINID_ROLE_CHILD, // Child state/type common to species
-            GUARD: EntityType.HOMINID_ROLE_GUARD,
-            SHAMAN: EntityType.HOMINID_ROLE_SHAMAN,
-        },
-        OtherGroupsStates: {
-            NOMAD_GROUP: EntityType.HOMINID_NOMAD_GROUP,
-            RIVAL_MEMBER: EntityType.HOMINID_RIVAL_TRIBE_MEMBER,
-            // ... (add other RIVAL enums here if needed)
-            CANNIBAL: EntityType.HOMINID_CANNIBAL_DEGENERATE,
-            HERMIT: EntityType.HOMINID_HERMIT_ISOLATED,
-            TRADER: EntityType.HOMINID_TRADER_ITINERANT,
-        }
+// -----------------------------------------------------------------------------
+// global.GameData Definition
+// -----------------------------------------------------------------------------
+global.GameData = {};
+
+// =============================================================================
+// SECTION: SPAWN FORMATIONS
+// =============================================================================
+global.GameData.SpawnFormations = {
+    Type: { // Enum-like struct for formation types
+        SINGLE_POINT: 0,
+        CLUSTERED: 1,
+        LINE: 2,
+        GRID: 3,
+        PACK_SCATTER: 4 // For more organic animal groups
     },
-    Fauna: {
-        Domesticated: {
-            DOG_COMPANION: EntityType.DOG_COMPANION,
-            AUROCH_COW: EntityType.AUROCH_COW_DOMESTIC,
-            // ... (full list of domesticated)
-        },
-        Tamable_Wild: {
-            AUROCH_CALF: EntityType.AUROCH_CALF_TAMABLE,
-            WOLF_PUP: EntityType.WOLF_PUP_TAMABLE,
-            // ... (full list of tamable young)
-        },
-        Wildlife_Herbivores: {
-            DEER: EntityType.DEER_RED, // Main type, data handles variants
-            MAMMOTH: EntityType.MAMMOTH_WOOLLY,
-            // ... (full list of herbivores)
-        },
-        Wildlife_Predators_Omnivores: {
-            WOLF: EntityType.WOLF_GREY,
-            SABERTOOTH_SMILODON: EntityType.SABERTOOTH_CAT_SMILODON, // Main type
-            CAVE_BEAR: EntityType.BEAR_CAVE_OMNIVORE,
-            // ... (full list of predators)
-        },
-        Mythical_Bosses: {
-            MAMMOTH_SPIRIT: EntityType.BOSS_MAMMOTH_SPIRIT,
-            SPIDER_QUEEN: EntityType.BOSS_SPIDER_QUEEN_CAVE,
-            // ... (full list of bosses)
-        }
+    // Default parameters for formations could be defined here too if desired,
+    // or they can live within the entity profiles that use them by default.
+    // Example:
+    // DefaultParams: {
+    //     CLUSTERED: { default_radius: 50, default_min_spacing: 16, default_attempts_per_entity: 5 },
+    //     PACK_SCATTER: { default_radius: 80, default_min_spacing: 32, default_attempts_per_entity: 3 }
+    // }
+};
+
+// =============================================================================
+// SECTION: MOVEMENT EFFECTS (NEW)
+// =============================================================================
+global.GameData.MovementEffects = {
+    Type: { // Enum-like struct for movement effect types
+        NONE: 0,
+        SLOWED_MILD: 1,
+        SLOWED_MODERATE: 2,
+        SLOWED_SEVERE: 3,
+        IMPASSABLE_TEMPORARY: 4, // e.g., a fallen tree that might be cleared
+        IMPASSABLE_TRAPPED: 5,   // e.g., quicksand, tar pit
+        IMPASSABLE_SOLID: 6,     // e.g., cliff wall
+        HASTENED_MILD: 7,
+        SLIPPERY: 8
+        // ... more movement altering effects
     },
-    Flora: {
-        Cultivated_Crops: {
-            WHEAT: EntityType.WHEAT_CROP,
-            FLAX: EntityType.FLAX_CROP,
-            // ... (full list of crops)
-        },
-        Forageable_Wild: {
-            BERRY_BUSH_RED: EntityType.BERRY_BUSH_GENERIC_RED,
-            MUSHROOM_MOREL: EntityType.MUSHROOM_MOREL_EDIBLE,
-            // ... (full list of forageables)
-        },
-        Trees_Specialty_Interactable: { // Interactable tree types (not just resource nodes)
-            OAK_TREE: EntityType.TREE_TYPE_OAK,
-            PINE_TREE: EntityType.TREE_TYPE_PINE,
-            BAMBOO_PATCH: EntityType.PLANT_BAMBOO_LARGE_GROVE_HARVESTABLE, // Represent a patch
-            // ... (full list of specialty trees/plants)
-        }
+    // Profiles for specific movement effects could be defined here if they need more data
+    // than just an enum, e.g.:
+    // Profiles: {
+    //     SLOWED_MUD: { type_enum: global.GameData.MovementEffects.Type.SLOWED_MODERATE, speed_multiplier: 0.5, visual_effect: "vfx_mud_splash" }
+    // }
+};
+
+// =============================================================================
+// SECTION: STATUS EFFECTS (NEW - Placeholder, expand as needed)
+// =============================================================================
+global.GameData.StatusEffects = {
+    Type: { // Enum-like struct for status effect types
+        POISONED: 0,
+        BLEEDING: 1,
+        STUNNED: 2,
+        BURNING: 3,
+        FROZEN: 4,
+        SINKING: 5, // For Quicksand
+        // ... more status effects
     },
-    Resources_Nodes: {
-        Basic_Nodes: { // Renamed for clarity
-            FLINT: EntityType.NODE_FLINT,
-            CLAY: EntityType.NODE_CLAY_PIT,
-            OCHRE_PIGMENT: EntityType.NODE_OCHRE_DEPOSIT_PIGMENT,
-            // ... (full list of basic resource nodes)
-        },
-        Mineral_Advanced_Nodes: {
-            COPPER_ORE: EntityType.NODE_ORE_COPPER,
-            IRON_ORE: EntityType.NODE_ORE_IRON_HEMATITE,
-            // ... (full list of advanced mineral nodes)
-        }
+    // Profiles for specific status effects could be defined here, e.g.:
+    // Profiles: {
+    //     POISON_WEAK: { type_enum: global.GameData.StatusEffects.Type.POISONED, dps: 1, duration: 10, stat_modifiers: [{stat:"STR", mod: -2}] }
+    // }
+};
+
+// =============================================================================
+// SECTION: HAZARD TRIGGER TYPES (NEW - Placeholder, expand as needed)
+// =============================================================================
+global.GameData.Hazards = {
+    TriggerType: {
+        PROXIMITY_ENTER: 0, // Triggers when an entity enters the AoE
+        PROXIMITY_STAY: 1,  // Triggers repeatedly while an entity is in the AoE
+        ON_INTERACT: 2,     // Triggers when an entity interacts with the hazard object
+        TIMED_EVENT: 3,     // Triggers after a certain time or at specific game events
+        DAMAGE_RECEIVED: 4  // e.g., a crystal that shatters and explodes when damaged
+        // ... more trigger types
+    }
+    // Other hazard-related enums or data can go here
+};
+
+// =============================================================================
+// SECTION: SKILLS
+// =============================================================================
+global.GameData.Skills = {
+    Type: { // Enum-like struct for skill types
+        FORAGING: 0,
+        CRAFTING_PRIMITIVE: 1,
+        HUNTING_BASIC: 2,
+        FIRE_MAKING: 3,
+        CONSTRUCTION_BASIC: 4,
+        SOCIAL_COMMUNICATION: 5,
+        // ... more skills
     },
-    Structures: {
-        Functional: {
-            SHELTER_LEAN_TO: EntityType.STRUCTURE_SHELTER_LEAN_TO,
-            FIRE_PIT_HEARTH: EntityType.STRUCTURE_FIRE_PIT_HEARTH,
-            WORKBENCH_STONE_TOOL: EntityType.STRUCTURE_WORKBENCH_STONE_TOOL,
-            // ... (full list of functional structures)
-        },
-        Ritual_Decorative: {
-            TOTEM_TRIBAL: EntityType.STRUCTURE_TOTEM_TRIBAL_SPIRIT,
-            BURIAL_SITE: EntityType.STRUCTURE_BURIAL_SITE_MARKED,
-            // ... (full list of ritual/decorative structures)
-        }
+    Profiles: {} // Will be populated below
+};
+
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FORAGING] = {
+    skill_id_enum: global.GameData.Skills.Type.FORAGING,
+    display_name_key: "skill_name_foraging",
+    description_key: "skill_desc_foraging",
+    max_level: 100,
+    xp_curve_id: "CURVE_STANDARD" // ID to look up an XP curve formula
+};
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = {
+    skill_id_enum: global.GameData.Skills.Type.CRAFTING_PRIMITIVE,
+    display_name_key: "skill_name_crafting_primitive",
+    description_key: "skill_desc_crafting_primitive",
+    max_level: 100,
+    xp_curve_id: "CURVE_STANDARD"
+};
+// ... Add other skill profiles
+
+// =============================================================================
+// SECTION: TRAITS
+// =============================================================================
+global.GameData.Traits = {
+    Type: { // Enum-like struct for trait categories or specific trait IDs if preferred
+        PHYSICAL: 0,
+        MENTAL: 1,
+        SOCIAL: 2,
+        // Specific Traits if not categorizing heavily here
+        KEEN_EYES_ID: 100,
+        STRONG_BACK_ID: 101,
+        PRIMITIVE_CRAFTER_ID: 102,
+        FIRE_KEEPER_ID: 103,
+        QUICK_LEARNER_ID: 104,
     },
-    Environment: { // Renamed from Misc for clarity
-        Static_Objects: { // Renamed
-            BOULDER: EntityType.ENV_BOULDER_LARGE_OBSTRUCTION,
-            CAVE_ENTRANCE: EntityType.ENV_CAVE_ENTRANCE_NATURAL,
-            // ... (full list of static env objects)
-        },
-        Hazards_Complex_Interactables: { // Renamed
-            QUICKSAND: EntityType.HAZARD_AREA_QUICKSAND,
-            ROCKSLIDE_ZONE: EntityType.HAZARD_EVENT_ROCKSLIDE_TRIGGER_ZONE, // Renamed
-            FOREST_FIRE: EntityType.HAZARD_EVENT_FOREST_FIRE_SPREADING,
-            // ... (full list of hazards)
-        }
+    Profiles: {} // Will be populated below
+};
+
+global.GameData.Traits.Profiles[$ ID.TRAIT_KEEN_EYES] = { // Using ID for keying trait profiles
+    trait_id_enum: global.GameData.Traits.Type.KEEN_EYES_ID, // The internal ID
+    display_name_key: "trait_name_keen_eyes",
+    description_key: "trait_desc_keen_eyes",
+    effects: [{ stat_to_modify: "perception_radius_pixels", modifier_type: "ADD", value: 20 }],
+    category_enum: global.GameData.Traits.Type.PHYSICAL,
+    tags: ["perception", "sensory"]
+};
+global.GameData.Traits.Profiles[$ ID.TRAIT_STRONG_BACK] = {
+    trait_id_enum: global.GameData.Traits.Type.STRONG_BACK_ID,
+    display_name_key: "trait_name_strong_back",
+    description_key: "trait_desc_strong_back",
+    effects: [{ stat_to_modify: "base_carrying_capacity", modifier_type: "MULTIPLY", value: 1.25 }], // 25% more capacity
+    category_enum: global.GameData.Traits.Type.PHYSICAL,
+    tags: ["physical", "strength", "hauling"]
+};
+global.GameData.Traits.Profiles[$ ID.TRAIT_PRIMITIVE_CRAFTER] = {
+    trait_id_enum: global.GameData.Traits.Type.PRIMITIVE_CRAFTER_ID,
+    display_name_key: "trait_name_primitive_crafter",
+    description_key: "trait_desc_primitive_crafter",
+    effects: [{ skill_to_modify_enum: global.GameData.Skills.Type.CRAFTING_PRIMITIVE, modifier_type: "BONUS_LEVEL", value: 5 }],
+    category_enum: global.GameData.Traits.Type.MENTAL,
+    tags: ["crafting", "skill_related"]
+};
+// ... Add other trait profiles
+
+// =============================================================================
+// SECTION: ITEMS
+// =============================================================================
+global.GameData.Items = {
+    Resource: {},
+    Tool: {},
+    Food: {},
+    Apparel: {}
+};
+
+global.GameData.Items.Resource.FLINT = {
+    item_id_string: "ITEM_RESOURCE_FLINT",
+    display_name_key: "item_name_flint",
+    description_key: "item_desc_flint",
+    sprite_inventory: "spr_item_icon_flint", // Store sprite name as a string
+    max_stack_size: 50,
+    tags: ["resource", "stone", "crafting_material", "tool_component", "sharp"],
+    value_barter_base: 2,
+    weight_per_unit: 0.1
+};
+
+global.GameData.Items.Resource.BERRY_RED = {
+    item_id_string: "ITEM_RESOURCE_BERRY_RED",
+    display_name_key: "item_name_berry_red",
+    description_key: "item_desc_berry_red",
+    sprite_inventory: "spr_item_icon_berry_red", // Store sprite name as a string
+    max_stack_size: 50,
+    tags: ["resource", "berry", "crafting_material", "food"],
+    value_barter_base: 2,
+    weight_per_unit: 0.02
+};
+
+global.GameData.Items.Resource.STICK = {
+    item_id_string: "ITEM_RESOURCE_STICK",
+    display_name_key: "item_name_stick",
+    description_key: "item_desc_stick",
+    sprite_inventory: "spr_item_icon_stick",
+    max_stack_size: 100,
+    tags: ["resource", "wood", "crafting_material", "fuel_basic"],
+    value_barter_base: 1,
+    weight_per_unit: 0.05
+};
+
+// Define WOOD_LOG and PLANT_FIBER before they are referenced
+global.GameData.Items.Resource.WOOD_LOG = {
+    item_id_string: "ITEM_RESOURCE_WOOD_LOG",
+    display_name_key: "item_name_wood_log",
+    description_key: "item_desc_wood_log",
+    sprite_inventory: "spr_item_icon_wood_log", // Assuming this sprite exists
+    max_stack_size: 20,
+    tags: ["resource", "wood", "crafting_material", "construction_material", "fuel_good"],
+    value_barter_base: 5,
+    weight_per_unit: 2.0
+};
+
+global.GameData.Items.Resource.PLANT_FIBER = {
+    item_id_string: "ITEM_RESOURCE_PLANT_FIBER",
+    display_name_key: "item_name_plant_fiber",
+    description_key: "item_desc_plant_fiber",
+    sprite_inventory: "spr_item_icon_plant_fiber", // Assuming this sprite exists
+    max_stack_size: 100,
+    tags: ["resource", "plant", "crafting_material", "binding"],
+    value_barter_base: 1,
+    weight_per_unit: 0.03
+};
+
+
+// ... More items (RAW_MEAT etc. can be defined here or after Tool section)
+
+global.GameData.Items.Tool.STONE_AXE = {
+    item_id_string: "ITEM_TOOL_STONE_AXE",
+    display_name_key: "item_name_stone_axe",
+    description_key: "item_desc_stone_axe",
+    sprite_inventory: "spr_item_icon_stone_axe",
+    sprite_world_equipped: "spr_stone_axe_equipped", // For showing on pop - ensure this is a string
+    max_stack_size: 1,
+    tags: ["tool", "axe", "cutting", "woodcutting", "weapon_crude"],
+    value_barter_base: 10,
+    weight_per_unit: 1.5,
+    durability_max: 100,
+    tool_properties: {
+        damage_bonus_melee: 5,
+        gathering_bonus_wood: 1.5, // 50% faster wood gathering
+        effective_against_tags: ["wood_source", "animal_small_hide"]
     }
 };
-show_debug_message("Global 'EntityCategories' struct initialized. (v3 Research Integrated)");
+
+// Define RAW_WOLF_MEAT and WOLF_PELT before they are referenced in LootTables
+global.GameData.Items.Food.RAW_WOLF_MEAT = {
+    item_id_string: "ITEM_FOOD_RAW_WOLF_MEAT",
+    display_name_key: "item_name_raw_wolf_meat",
+    description_key: "item_desc_raw_wolf_meat",
+    sprite_inventory: "spr_item_icon_raw_meat", // Generic raw meat icon or specific
+    max_stack_size: 10,
+    tags: ["food", "meat", "raw", "wolf_product", "cookable"],
+    value_barter_base: 4,
+    weight_per_unit: 0.5,
+    // Food-specific properties
+    nutrition_value: 30, // Example value
+    spoilage_rate_modifier: 1.5 // Spoils faster than some other foods
+};
+
+global.GameData.Items.Resource.WOLF_PELT = {
+    item_id_string: "ITEM_RESOURCE_WOLF_PELT",
+    display_name_key: "item_name_wolf_pelt",
+    description_key: "item_desc_wolf_pelt",
+    sprite_inventory: "spr_item_icon_wolf_pelt", // Assuming this sprite exists
+    max_stack_size: 5,
+    tags: ["resource", "pelt", "animal_product", "crafting_material", "clothing_material"],
+    value_barter_base: 15,
+    weight_per_unit: 1.0
+};
+
+
+// =============================================================================
+// SECTION: LOOT TABLES
+// =============================================================================
+// This section defines the actual data for loot tables. Each key (e.g., WOLF)
+// corresponds to a specific loot table profile that entities can reference.
+// The loot system will use these profiles to determine drops.
+global.GameData.LootTables = {}; // Initialize as an empty struct
+
+// --- Loot Table: WOLF ---
+// Defines the items dropped by a wolf.
+global.GameData.LootTables.WOLF = {
+    loot_table_id_string: "LOOT_WOLF_STANDARD", // A unique identifier string for this loot table.
+    description: "Standard loot dropped by a grey wolf.",
+    // 'entries' is an array of structs, each defining a potential item drop.
+    // - item_profile_ref: A direct reference to the item's definition in global.GameData.Items.
+    // - min_quantity: The minimum number of this item to drop if selected.
+    // - max_quantity: The maximum number of this item to drop if selected.
+    // - chance: The probability (0.0 to 1.0) of this specific entry dropping.
+    //           Each entry is rolled independently.
+    entries: [
+        { 
+            item_profile_ref: global.GameData.Items.Food.RAW_WOLF_MEAT, 
+            min_quantity: 1, 
+            max_quantity: 2, 
+            chance: 0.80 // 80% chance to drop 1-2 raw wolf meat
+        },
+        { 
+            item_profile_ref: global.GameData.Items.Resource.WOLF_PELT,  
+            min_quantity: 1, 
+            max_quantity: 1, 
+            chance: 0.60 // 60% chance to drop 1 wolf pelt
+        }
+        // TODO: Add other potential drops like 'wolf_fang' or 'wolf_bone' items
+        // once they are defined in the global.GameData.Items section.
+    ]
+};
+
+// Example for adding another loot table (e.g., for a DEER):
+// global.GameData.LootTables.DEER = {
+//     loot_table_id_string: "LOOT_DEER_STANDARD",
+//     description: "Standard loot dropped by a deer.",
+//     entries: [
+//         // Assuming global.GameData.Items.Food.RAW_VENISON and global.GameData.Items.Resource.DEER_HIDE are defined
+//         //{ item_profile_ref: global.GameData.Items.Food.RAW_VENISON, min_quantity: 2, max_quantity: 3, chance: 0.90 },
+//         //{ item_profile_ref: global.GameData.Items.Resource.DEER_HIDE, min_quantity: 1, max_quantity: 1, chance: 0.70 }
+//     ]
+// };
+
+// =============================================================================
+// SECTION: ENTITY PROFILES
+// =============================================================================
+global.GameData.Entity = {
+    Pop: {},
+    Animal: { Predator: {}, Herbivore: {}, Domesticated: {}, Tamable: {} },
+    Structure: { Functional: {}, Storage: {}, Defensive: {}, Ritual: {} },
+    ResourceNode: {},
+    Hazard: { AreaEffect: {}, EventBased: {} }
+};
+
+// --- Entity.Pop Profiles ---
+global.GameData.Entity.Pop.GEN1 = {
+    // --- Core Identification & Classification ---
+    ID: 1, // Unique numerical ID for this profile (optional, if you use it)
+    profile_id_string: "POP_GEN1_PIONEERS", // Descriptive unique string ID
+    name_display_type: "Hominid (Gen 1)", // Display name for this TYPE of pop.
+                                        // Individual instance names (e.g., "Uga", "Groka")
+                                        // will be generated randomly at spawn time.
+    type_tag: "Hominid",    // Broad category
+    species_concept: "Early Hominid (Habilis-inspired)", // Anthropological inspiration
+
+    // --- Spawning & Visuals ---
+    object_to_spawn: obj_pop, // The GameMaker object asset to instance
+    // Sprite information will now be structured to support sex-specific sprites.
+    // The actual sprite (e.g., spr_pop_man_idle, spr_pop_woman_idle) will be chosen
+    // by the obj_pop's initialize_from_profile method based on the instance's assigned sex.
+    sprite_info: {
+        male_idle: "spr_pop_man_idle", // Store sprite name as a string
+        female_idle: "spr_pop_woman_idle", // Store sprite name as a string
+        male_walk_prefix: "spr_pop_man_gen1_walk_", 
+        female_walk_prefix: "spr_pop_woman_gen1_walk_",
+        male_portrait: "spr_pop_man_gen1_portrait", // Store sprite name as a string
+        female_portrait: "spr_pop_woman_gen1_portrait", // Store sprite name as a string
+        // Consider: attack_prefix, gather_prefix, craft_prefix, death_sprite for both sexes
+    },
+    base_scale: 1.0,
+    // Default sex assignment can be 50/50 or weighted if desired.
+    // The instance will determine its actual sex in its initialize_from_profile method.
+    // This profile field can indicate typical sex distribution or be used if not randomizing.
+    // For now, we'll let obj_pop handle the 50/50 randomization.
+
+    // --- Ability Score RANGES (for randomization at instance creation) ---
+    AbilityScoreRanges: {
+        Strength:     { min: 8,  max: 12 }, // Physical power
+        Dexterity:    { min: 6,  max: 10 }, // Agility, coordination
+        Constitution: { min: 10, max: 14 }, // Health, resilience
+        Intelligence: { min: 4,  max: 8  }, // Problem-solving, learning basic tools
+        Wisdom:       { min: 5,  max: 9  }, // Environmental awareness, basic foresight
+        Charisma:     { min: 3,  max: 7  }  // Basic social interaction
+    },
+
+    // --- Base Stats & Formulas (Static definitions for the type) ---
+    // Instance-specific runtime stats (current_health, current_stamina, actual_carrying_capacity)
+    // will be derived from these bases and the instance's rolled AbilityScores at spawn time.
+    StatsBase: {
+        Health: {
+            base_max: 75 // Starting point for max health calculation
+            // This can be modified by the instance's rolled Constitution.
+            // Example: instance_max_health = base_max + (rolled_constitution - 10) * 5
+        },
+        Stamina: {
+            base_max: 80 // Starting point for max stamina
+            // Can be modified by Constitution/Dexterity.
+        },
+        Speed: { // Typically static for the type, but could have slight variance
+            walk: 1.7, // units per second
+            run: 2.5
+        },
+        Perception: {
+            base_radius: 120 // pixels
+            // Can be modified by Wisdom/Traits.
+        },
+        // Defines HOW max carrying capacity is calculated, not a fixed value.
+        carrying_capacity_formula: {
+            base_value: 0, // A flat base if any
+            strength_multiplier: 2 // e.g., max_carry = base + (rolled_strength * multiplier)
+        }
+    },
+
+    // --- Behavioral & Gameplay Tags ---
+    tags: ["hominid", "pop", "gen1", "pioneer", "scavenger", "simple_tools", "early_game"],
+    diet_type_tags: ["omnivorous_opportunistic", "eats_berries", "eats_roots", "scavenges_meat_small"],
+
+    // --- Skill Aptitudes (How well they learn or their starting inclination) ---
+    // These are base values; actual skill levels are per instance.
+    // The scale (e.g., 1-10) depends on your skill system design.
+    base_skill_aptitudes: {}, // Initialize as an empty struct first
+    // Then populate using enum keys with the $ accessor
+    // (This section will be populated immediately after the GEN1 struct definition)
+
+    // --- Innate Traits (References to Trait Profiles in GameData.Traits.Profiles) ---
+    innate_trait_profile_paths: [ // Array of paths to full trait profiles
+        // Example: "ID.Trait.CURIOUS_MIND_LOW"
+        // These should be string identifiers that GetProfileFromID can resolve.
+        // Add actual string paths here, e.g.:
+        // "ID.Trait.KEEN_EYES", // Assuming ID.Trait.KEEN_EYES is a string path
+        // "ID.Trait.STRONG_BACK"  // Or however your ID strings are formatted
+    ],
+
+    // --- AI & Faction ---
+    default_ai_behavior_package_id: "AI_POP_GEN1_SURVIVALIST", // ID for AI controller logic
+    faction_default_id: "FACTION_PLAYER_TRIBE_DAWN", // Default faction alignment
+
+    // --- World Generation & Default Spawning Parameters ---
+    default_spawn_amount_range: { min: 3, max: 6 },
+    default_spawn_formation_type: global.GameData.SpawnFormations.Type.CLUSTERED, // Enum value
+    default_formation_params: { // Parameters for its preferred CLUSTERED formation
+        radius: 40,
+        min_spacing_from_others: 20, // Min distance between spawned entities
+        attempts_per_entity: 8      // How many times to try placing before giving up (for dense areas)
+    },
+
+    // --- Other Information ---
+    loot_table_profile_path: undefined, // Path to a loot table in GameData.LootTables (e.g., global.GameData.LootTables.HOMINID_GEN1)
+    brain_size_cc_approx: 600,          // Anthropological reference
+    tool_use_level_tags: ["opportunistic_found_tools", "basic_stone_choppers_simple"], // e.g., Oldowan-like
+    fire_use_level_tags: ["fire_aware_natural_sources", "no_fire_making_skill"],
+    shelter_preference_tags: ["natural_cave_basic", "rock_overhang"]
+};
+
+// Populate base_skill_aptitudes for GEN1 using enum keys
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.FORAGING] = 4;
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = 3;
+// global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.SCAVENGING] = 4; Assuming SCAVENGING is defined in Skills.Type
+
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.SOCIAL_COMMUNICATION] = 3;
+
+
+#region --- Entity.Animal Profiles ---
+global.GameData.Entity.Animal.Predator.WOLF = {
+    profile_id_string: "ANIMAL_WOLF_GREY",
+    display_name_concept: "Grey Wolf",
+    object_to_spawn: obj_creature_ai_controller, // Changed from obj_animal_wolf
+    sprite_info: {default: "spr_wolf_idle", walk_prefix: "spr_wolf_walk_" }, // Store sprite name as a string
+    base_max_health: 70,
+    base_speed_walk: 3.5,
+    base_speed_run: 6.0,
+    base_attack_damage: 12,
+    attack_range: 32,
+    tags: ["animal", "predator", "carnivore", "canine", "pack_hunter"],
+    diet_type_tags: ["carnivore_hunts_deer_boar"],
+    default_ai_behavior_package_id: "AI_ANIMAL_WOLF_PACK_HUNTER",
+    faction_default_id: "FACTION_WILDLIFE_PREDATOR",
+    default_spawn_amount_range: { min: 2, max: 5 },
+    default_spawn_formation_type: global.GameData.SpawnFormations.Type.PACK_SCATTER,
+    default_formation_params: { radius: 100, min_spacing_from_others: 40, attempts_per_entity: 5 },
+    loot_table_profile_path: global.GameData.LootTables.WOLF // Path to where loot tables will be defined
+};
+
+// --- Entity.Structure Profiles ---
+global.GameData.Entity.Structure.Functional.TOOL_HUT_BASIC = {
+    profile_id_string: "STRUCTURE_TOOL_HUT_BASIC",
+    display_name_concept: "Basic Tool Hut",
+    object_to_spawn: obj_structure_controller, // Generic structure controller
+    sprite_info: { default: "spr_tool_hut_basic" }, // Store sprite name as a string
+    base_max_health: 200,
+    is_destructible: true,
+    tags: ["structure", "crafting_station", "tools", "functional"],
+    build_materials_cost: [ // Array of { item_profile_path: ..., quantity: ... }
+        { item_profile_path: global.GameData.Items.Resource.WOOD_LOG, quantity: 10 },
+        { item_profile_path: global.GameData.Items.Resource.PLANT_FIBER, quantity: 5 }
+    ],
+    build_time_seconds: 60,
+    worker_slots_max: 1,
+    supported_recipe_tags: ["stone_tools_basic", "wood_tools_simple"], // Tags for recipes craftable here
+    // Other structure-specific properties from the Idea Document...
+    inventory_capacity: 10, // Small internal storage for crafting
+    provided_buffs: [{ buff_type: "CRAFTING_SPEED_PRIMITIVE", value: 0.1, radius: 0 }] // 10% speed boost if working at it
+};
+
+// --- Entity.ResourceNode Profiles ---
+global.GameData.Entity.ResourceNode.FLINT_DEPOSIT = {
+    profile_id_string: "NODE_FLINT_DEPOSIT",
+    display_name_concept: "Flint Deposit",
+    object_to_spawn: obj_resource_node_controller, // Generic node controller
+    sprite_info: { default: "spr_flint_deposit_full", depleted: "spr_flint_deposit_empty" }, // Store sprite names as strings
+    base_max_health: 50, // "Health" of the node, i.e., how much can be gathered
+    is_destructible: true, // Depletes
+    tags: ["resource_node", "stone", "flint", "gatherable"],
+    yielded_item_profile_path: global.GameData.Items.Resource.FLINT,
+    yield_amount_per_gather_action: irandom_range(1,3),
+    gather_time_per_action_seconds: 5,
+    required_tool_tags: ["tool_pickaxe_crude", "tool_hammerstone"], // Optional: tags of tools that are effective
+    respawn_time_seconds: -1 // -1 for no respawn, or time in seconds
+};
+
+// --- Entity.Hazard Profiles ---
+global.GameData.Entity.Hazard.AreaEffect.QUICKSAND = {
+    profile_id_string: "HAZARD_QUICKSAND",
+    display_name_concept: "Quicksand Pit",
+    object_to_spawn: obj_hazard_controller, // Generic hazard controller
+    // ... properties from the hazard idea document:
+    hazard_category_tag: "TerrainTrap",
+    tags: ["movement_impairing", "dangerous_terrain"],
+    damage_type_enum: undefined, // Or a suffocation damage type
+    damage_on_enter_amount: 0,
+    status_effects_applied: [{ effect_enum: global.GameData.StatusEffects.Type.SINKING, potency: 0.1, duration_seconds_on_entity: -1 }], // -1 while in
+    area_of_effect_shape_enum: global.GameData.SpawnFormations.Type.SINGLE_POINT, // Visually might be a decal/area
+    area_dimensions: { radius: 64 }, // Example
+    trigger_condition_enum: global.GameData.Hazards.TriggerType.PROXIMITY_ENTER, // Need to define these enums
+    is_temporary: false,
+    lifespan_seconds_active: -1,
+    movement_modifier_enum: global.GameData.MovementEffects.Type.IMPASSABLE_TRAPPED // Need to define
+    // ... visual and audio properties
+};
 #endregion
 
-// ============================================================================
-// 3. ENTITY DATA ACCESS FUNCTION & DATABASE
-// ============================================================================
-#region 3.1 get_entity_data() Function
 
-/// @function get_entity_data(entity_enum_id)
-/// @description Returns a struct containing the base properties for the given entity type.
-/// @param {enum.EntityType} entity_enum_id The enum ID of the entity.
-/// @returns {Struct|undefined} A new copy of the entity data struct, or undefined if not found.
-function get_entity_data(entity_enum_id) {
-    static entity_database = __internal_init_entity_database();
+// =============================================================================
+// SECTION: RECIPES
+// =============================================================================
+global.GameData.Recipes = {};
 
-    if (struct_exists(entity_database, entity_enum_id)) {
-        return struct_clone(entity_database[$ entity_enum_id]);
+global.GameData.Recipes[$ ID.RECIPE_STONE_AXE] = { // Keyed by ID for convenience
+    recipe_id_string: "RECIPE_TOOL_STONE_AXE",
+    display_name_key: "recipe_name_stone_axe",
+    produces_item_profile_path: global.GameData.Items.Tool.STONE_AXE,
+    produces_quantity: 1,
+    ingredients: [
+        { item_profile_path: global.GameData.Items.Resource.FLINT, quantity: 2 },
+        { item_profile_path: global.GameData.Items.Resource.STICK, quantity: 1 }
+    ],
+    base_crafting_time_seconds: 15, // From previous example
+    required_skill_profile: {
+        skill_profile_path: global.GameData.Skills.Profiles[global.GameData.Skills.Type.CRAFTING_PRIMITIVE],
+        min_level_required: 1
+    },
+    required_crafting_station_tags: ["crafting_surface_basic", "tool_making_spot"], // e.g., a flat rock or work stump entity
+    xp_reward_skill_path: global.GameData.Skills.Profiles[global.GameData.Skills.Type.CRAFTING_PRIMITIVE],
+    xp_reward_amount: 8
+};
+// ... More recipes
+
+// -----------------------------------------------------------------------------
+// Helper Function: GetProfileFromID (Maps ID enum to GameData paths)
+// -----------------------------------------------------------------------------
+function GetProfileFromID(id_enum) {
+    switch (uid_enum) {
+        // Entity Profiles
+        case ID.POP_GEN1: return global.GameData.Entity.Pop.GEN1;
+        // case ID.POP_ROLE_HUNTER: return global.GameData.Entity.Pop.Role.HUNTER; // Assuming Role path
+
+        case ID.ANIMAL_WOLF: return global.GameData.Entity.Animal.Predator.WOLF;
+        // ... many more mappings for all ID members ...
+
+        // Item Profiles
+        case ID.ITEM_FLINT: return global.GameData.Items.Resource.FLINT;
+        case ID.ITEM_STICK: return global.GameData.Items.Resource.STICK;
+        case ID.ITEM_STONE_AXE: return global.GameData.Items.Tool.STONE_AXE;
+
+        // Recipe Profiles
+        case ID.RECIPE_STONE_AXE: return global.GameData.Recipes[ID.RECIPE_STONE_AXE]; // Recipes keyed by ID
+
+        // Trait Profiles
+        case ID.TRAIT_KEEN_EYES: return global.GameData.Traits.Profiles[ID.TRAIT_KEEN_EYES];
+
+        // Skill Profiles
+        case ID.SKILL_FORAGING: return global.GameData.Skills.Profiles[global.GameData.Skills.Type.FORAGING];
+
+
+        default:
+            show_debug_message($"ERROR (GetProfileFromID): Unhandled ID enum: {uid_enum}");
+            return undefined;
     }
-    show_debug_message($"Warning (get_entity_data): No data found for entity enum: {entity_enum_id}.");
-    return undefined;
 }
-#endregion
 
-#region 3.2 __internal_init_entity_database() Helper Function
 
-/// @function __internal_init_entity_database()
-/// @description Initializes and returns the master database of entity properties.
-/// @returns {Struct} The master entity database.
-function __internal_init_entity_database() {
-    show_debug_message("Initializing Entity Database (scr_database)... (v3 Hominid Research Integrated)");
-    var _db = {};
-
-    // --- SECTION: Hominids (Refined based on Research Doc) ---
-    #region Hominids Data (GDD: obj_pop, Research: Species Profiles)
-    _db[$ EntityType.POP_AUSTRALOPITHECUS_EARLY] = {
-        name: "Early Australopithecine", // Research: Australopithecus [cite: 39]
-        description: "An early bipedal hominin, adapted to both woodlands and emerging savannas. Vulnerable but resourceful.",
-        object_index: obj_pop, // GDD: obj_pop
-        default_sprite: undefined, // TODO: Sprite for Australopithecus. GDD: Visual distinction for age/traits.
-        tags: ["hominid", "australopithecus", "early_ancestor", "bipedal_early_inefficient", "tree_climber_retained", "sentient_basic", "social_small_kin_groups", "needs_food_plant_based_scavenged_meat", "needs_shelter_natural", "vulnerable_to_predators", "uses_simple_found_tools_opportunistic"], // Research: [cite: 41, 43, 26, 45, 48, 50, 51]
-        faction: "PlayerTribe_AncestralDawn", // Represents the earliest playable stage
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 70, // Less robust than later hominids
-        loot_table_placeholders: undefined,
-        // Species specific data based on research
-        base_speed_units_sec: 1.7, // Less efficient bipedalism [cite: 43, 53]
-        perception_radius_pixels: 130, // Good for predator detection [cite: 42]
-        default_ai_state_placeholder: "PopState.IDLE_FORAGING_CAUTIOUS",
-        ai_behavior_archetype: "Forager_Scavenger_CautiousSurvivor",
-        base_attack_damage: 3, // Primarily defensive, using found objects
-        attack_range_pixels: 12,
-        attack_cooldown_seconds: 2.0,
-        diet_type_tags: ["primarily_herbivorous_fruits_leaves", "eats_c4_cam_fallback_foods_grasses_sedges", "scavenges_meat_opportunistic"], // Research: [cite: 45, 46, 47, 48]
-        carrying_capacity_units: 5, // Hands freed by bipedalism [cite: 42]
-        skill_aptitude_foraging: 1.2, // Key survival skill
-        skill_aptitude_tree_climbing: 1.5, // Retained ability [cite: 43, 54]
-        skill_aptitude_tool_use_basic: 0.8, // Simple tools [cite: 26]
-        brain_size_cc_approx: 450, // Research: 375-612cc [cite: 22, 44]
-        shelter_preference_tags: ["natural_cave", "dense_bush", "large_tree_canopy"], // Research: [cite: 50, 177]
-        communication_tags: ["gestural", "simple_vocalizations_ape_like"], // Research: [cite: 236]
-        social_structure_tags: ["small_kin_groups", "multi_male_multi_female_inferred"], // Research: [cite: 27, 250, 251]
-        fire_use_level_tag: "fire_none_opportunistic_fearful", // Research: No fire use [cite: 27]
-        tool_industry_level_tag: "tool_opportunistic_unmodified_stone_wood_A_garhi_simple_stone", // Research: [cite: 26]
-        flavor_text_lore_snippet: "Taking its first upright steps into a world of giants and uncertainty.",
-        // IDEA: GDD - "Efficient Bipedalism I" & "Tree Climbing Proficiency" as early traits[cite: 57].
-        // IDEA: Research - Vulnerability to specific predators like eagles, large hyenas, sabertooths[cite: 194, 195].
-        // TODO: Implement specific AI for tree climbing escape.
-    };
-
-    _db[$ EntityType.POP_HOMO_HABILIS_EARLY] = {
-        name: "Early Homo habilis ('Handy Man')", // Research: Homo habilis [cite: 63]
-        description: "A transitional hominin with increased brain size, known for consistent Oldowan tool use and scavenging.",
-        object_index: obj_pop,
-        default_sprite: undefined, // TODO: Sprite for H. habilis
-        tags: ["hominid", "homo_habilis", "early_homo", "increased_brain_size", "bipedal_with_arboreal_capacity", "oldowan_tool_user", "scavenger_primary", "rudimentary_shelter_builder", "social_larger_groups_cooperative_defense"], // Research: [cite: 64, 65, 66, 69, 72, 253, 266]
-        faction: "PlayerTribe_ToolMakersDawn",
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 80,
-        loot_table_placeholders: undefined,
-        base_speed_units_sec: 1.8,
-        perception_radius_pixels: 140,
-        default_ai_state_placeholder: "PopState.IDLE_SCAVENGING_TOOLMAKING",
-        ai_behavior_archetype: "Scavenger_Crafter_GroupDefense",
-        base_attack_damage: 4, // With simple tools
-        diet_type_tags: ["omnivorous_fruits_leaves_woody_plants", "scavenged_meat_marrow_primary_animal_protein"], // Research: [cite: 69, 150, 152]
-        carrying_capacity_units: 7,
-        skill_aptitude_foraging: 1.0,
-        skill_aptitude_tree_climbing: 1.0, // Still some capacity [cite: 65]
-        skill_aptitude_tool_use_oldowan: 1.5, // Key trait [cite: 66]
-        skill_aptitude_scavenging: 1.3, // Research: [cite: 68, 71]
-        skill_aptitude_crafting_basic_stone_tools: 1.2, // Oldowan choppers/flakes
-        brain_size_cc_approx: 650, // Research: 500-800cc [cite: 22, 64]
-        shelter_preference_tags: ["rudimentary_stone_hut_circle", "natural_cave_improved", "windbreak_branches"], // Research: [cite: 72, 179]
-        communication_tags: ["gestural_expanded", "basic_vocalizations_coordinated", "proto_symbolic_tool_meaning"], // Research: [cite: 238]
-        social_structure_tags: ["multi_male_groups_defense_oriented", "estimated_group_size_70_85", "communal_butchering_eating_grounds"], // Research: [cite: 30, 253, 254, 266]
-        fire_use_level_tag: "fire_none_likely_opportunistic_harvesting_natural_fires", // Research: [cite: 30]
-        tool_industry_level_tag: "tool_oldowan_mode1_choppers_flakes_consistent_use", // Research: [cite: 29, 66, 285]
-        flavor_text_lore_snippet: "With a sharper mind and a clever hand, they carve a new path from the scraps of the old world.",
-        // IDEA: GDD - Unlocks "Tool Efficiency I," "Scavenging Expertise" traits[cite: 75].
-        // IDEA: Research - Environmental pressure (cooler, drier grasslands) drove reliance on scavenging[cite: 70, 71, 79].
-        // TODO: AI for cooperative defense using thrown stones/sticks.
-    };
-
-    _db[$ EntityType.POP_HOMO_ERECTUS_EARLY] = {
-        name: "Early Homo erectus", // Research: Homo erectus [cite: 82]
-        description: "A highly successful, adaptable hominin with modern body proportions, efficient bipedalism, controlled fire use, and Acheulean tool technology. The first great migrator.",
-        object_index: obj_pop,
-        default_sprite: undefined, // TODO: Sprite for H. erectus
-        tags: ["hominid", "homo_erectus", "efficient_bipedal_long_distance", "controlled_fire_user", "acheulean_tool_maker_handaxes_spears", "active_hunter_large_game", "migratory_species_out_of_africa", "cooperative_social_groups_care_for_weak", "proto_language_user", "rudimentary_symbolic_behavior_ochre_engravings"], // Research: [cite: 83, 90, 87, 89, 93, 85, 95, 97, 98, 99]
-        faction: "PlayerTribe_FireBearersJourney",
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 120, // More robust
-        loot_table_placeholders: undefined,
-        base_speed_units_sec: 2.5, // Efficient long-distance walking/running [cite: 83]
-        perception_radius_pixels: 160,
-        default_ai_state_placeholder: "PopState.IDLE_HUNTING_MAINTAINING_FIRE_EXPLORING",
-        ai_behavior_archetype: "HunterGatherer_Explorer_FireKeeper_Cooperative",
-        base_attack_damage: 8, // With Acheulean tools
-        diet_type_tags: ["omnivorous_meat_rich_active_hunting", "eats_cooked_food", "eats_aquatic_resources_fish_shellfish", "eats_tubers_roots"], // Research: [cite: 93, 94, 106, 153, 155]
-        carrying_capacity_units: 12,
-        skill_aptitude_hunting_large_game: 1.5,
-        skill_aptitude_tool_use_acheulean: 1.5, // Handaxes, spears [cite: 87, 89]
-        skill_aptitude_fire_management: 1.3, // Controlled fire, hearths, cooking [cite: 90, 91, 101]
-        skill_aptitude_endurance_running: 1.2, // Long-distance travel [cite: 83]
-        skill_aptitude_crafting_advanced_stone_tools: 1.3,
-        brain_size_cc_approx: 900, // Research: 650-1100cc [cite: 22, 84]
-        shelter_preference_tags: ["constructed_branch_huts_stone_bracing", "long_huts_communal", "cave_shelters_improved_with_hearths"], // Research: [cite: 181, 182]
-        communication_tags: ["proto_language_complex_coordination", "instructional_communication_tool_making_voyages"], // Research: [cite: 97, 239, 240]
-        social_structure_tags: ["cooperative_multi_male_groups_large_hunts_quarrying", "social_care_for_old_weak", "larger_social_groups_complex_interactions", "group_size_over_20_inferred"], // Research: [cite: 95, 96, 255, 256, 277]
-        fire_use_level_tag: "fire_controlled_hearths_cooking_warmth_protection_pyrotechnology_tool_treatment", // Research: [cite: 90, 91, 92, 106, 302, 311]
-        tool_industry_level_tag: "tool_acheulean_mode2_bifacial_handaxes_wooden_spears_levallois_technique_later", // Research: [cite: 32, 87, 88, 89, 301]
-        symbolic_behavior_tags: ["rudimentary_engravings_trinil_shell", "ochre_use_early"], // Research: [cite: 34, 98, 99, 359, 361]
-        flavor_text_lore_snippet: "They carried fire and finely wrought stone across new horizons, their stride long and their gaze fixed on the unknown.",
-        // IDEA: GDD - "Migration Challenges" requiring tech/traits[cite: 112]. Unlocks long-distance travel.
-        // IDEA: Research - Feedback loop: cognitive advance -> tech progress -> better diet -> brain dev[cite: 107, 108].
-        // TODO: Implement hearth mechanics and cooking benefits. AI for cooperative hunting of large game.
-    };
-
-    _db[$ EntityType.POP_HOMO_SAPIENS_ARCHAIC] = { // Represents early H. sapiens or intermediate forms like H. heidelbergensis if needed
-        name: "Archaic Homo sapiens", // Research: Early H. sapiens[cite: 113], H. heidelbergensis as precursor [cite: 312]
-        description: "An early form of Homo sapiens, demonstrating significant cognitive advancements, more sophisticated tool use, and increasingly complex social behaviors. Building hearths and expanding their world.",
-        object_index: obj_pop,
-        default_sprite: undefined, // TODO: Sprite for Archaic H. sapiens
-        tags: ["hominid", "homo_sapiens_archaic", "advanced_cognition_early", "sophisticated_tool_use_hafting", "complex_social_behavior_early_burials_maybe", "controlled_fire_hearths_consistent", "active_hunter_diversified_prey", "early_symbolic_thought_pigments"], // Research: [cite: 116, 312, 304] (Neanderthal fire use also relevant context)
-        faction: "PlayerTribe_HearthBuildersMindAwakens",
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 130,
-        loot_table_placeholders: undefined,
-        base_speed_units_sec: 2.3,
-        perception_radius_pixels: 170,
-        default_ai_state_placeholder: "PopState.IDLE_GROUP_HUNT_ADVANCED_CRAFTING_RITUAL_EARLY",
-        ai_behavior_archetype: "HunterGatherer_CommunityBuilder_EarlyThinker",
-        base_attack_damage: 10, // With better hafted tools
-        diet_type_tags: ["omnivorous_highly_varied_cooked_food", "specialized_hunting_fishing_techniques_early", "diverse_plant_exploitation"], // Research: [cite: 124, 125, 156, 158]
-        carrying_capacity_units: 15,
-        skill_aptitude_hunting_specialized: 1.3,
-        skill_aptitude_tool_use_levallois_hafted: 1.4, // More advanced stone working, hafting
-        skill_aptitude_fire_engineering: 1.5, // Consistent hearths, pyrotechnology [cite: 303, 312]
-        skill_aptitude_abstract_thought_early: 1.2, // Precursor to full symbolic thought
-        skill_aptitude_cooperative_planning: 1.4,
-        brain_size_cc_approx: 1200, // Transitional towards modern H. sapiens [cite: 115] (H. heidelbergensis ~1100-1400cc)
-        shelter_preference_tags: ["constructed_huts_more_durable", "organized_cave_living_spaces_with_hearths", "semi_permanent_settlements_seasonal"], // Research: [cite: 123]
-        communication_tags: ["proto_language_more_complex_nuanced", "teaching_knowledge_transfer_more_efficient"], // Research:
-        social_structure_tags: ["larger_kin_groups_extended_families", "evidence_of_care_for_injured_elderly_more_pronounced", "early_ritualistic_behavior_around_death_maybe"], // Research: [cite: 128, 277]
-        fire_use_level_tag: "fire_mastery_engineered_hearths_systematic_pyrotechnology_cooking_essential", // Research: [cite: 303, 312, 314]
-        tool_industry_level_tag: "tool_middle_paleolithic_levallois_prepared_core_hafted_points_early_blades", // Research: (Context from Neanderthal/early H. sapiens tech)
-        symbolic_behavior_tags: ["ochre_use_systematic_pigments", "early_engravings_bone_stone", "possible_simple_ornamentation"], // Research: [cite: 131, 364]
-        flavor_text_lore_snippet: "The mind expands, the fire burns brighter, and the first true stories begin to be told around the communal hearth.",
-        // IDEA: Could represent H. heidelbergensis or other transitional forms before full H. sapiens.
-        // TODO: Define specific "hafting" recipes and benefits.
-    };
-
-    _db[$ EntityType.POP_HOMO_SAPIENS_MODERN] = {
-        name: "Modern Homo sapiens", // Research: Early H. sapiens (anatomically modern) [cite: 113]
-        description: "Anatomically and cognitively modern human, capable of complex language, abstract thought, sophisticated toolmaking, intricate social structures, and profound artistic and symbolic expression. The ultimate adapter.",
-        object_index: obj_pop,
-        default_sprite: undefined, // TODO: Sprite for H. sapiens
-        tags: ["hominid", "homo_sapiens_modern", "complex_language_user", "abstract_thinker_planner", "specialized_composite_tool_maker_bow_arrow_needles", "global_dispersal_extreme_environment_adapter", "complex_cultural_groups_large_social_networks", "symbolic_art_music_ritual_burial_creator", "highly_cooperative_knowledge_transfer_advanced"], // Research: [cite: 116, 117, 119, 121, 122, 127, 129, 130, 132]
-        faction: "PlayerTribe_LineageLegacyBuilders",
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 150, // Peak hominid health
-        loot_table_placeholders: undefined,
-        base_speed_units_sec: 2.2, // Adapted for varied terrains
-        perception_radius_pixels: 180,
-        default_ai_state_placeholder: "PopState.IDLE_ENGAGED_IN_COMPLEX_TASK_SOCIALIZING_CREATING",
-        ai_behavior_archetype: "Innovator_CulturalLeader_MasterSurvivor_StrategicPlanner",
-        base_attack_damage: 12, // With advanced weapons
-        diet_type_tags: ["omnivorous_highly_adaptable_global_diet", "cooked_food_specialized_processing", "fishing_shellfish_hunting_trapping_agriculture_rudimentary_eventually"], // Research: [cite: 124, 125, 126, 157]
-        carrying_capacity_units: 20, // With carrying aids (baskets, bags)
-        skill_aptitude_all_max_potential: 1.5, // Highest learning potential
-        skill_aptitude_language_complex: 2.0, // Key trait [cite: 117, 242]
-        skill_aptitude_artistic_symbolic_expression: 1.8, // [cite: 130, 366]
-        skill_aptitude_teaching_knowledge_transfer: 1.6, // [cite: 129, 386]
-        brain_size_cc_approx: 1350, // Research: ~1300cc avg [cite: 22, 115]
-        shelter_preference_tags: ["constructed_semi_permanent_huts_mammoth_bone_animal_skin", "organized_settlements_central_hearths_specialized_areas", "adapted_shelters_for_extreme_climates"], // Research: [cite: 123, 184]
-        communication_tags: ["complex_syntactic_language_abstract_concepts_storytelling_planning", "symbolic_communication_art_music_ritual"], // Research: [cite: 117, 130, 137, 242]
-        social_structure_tags: ["complex_multi_family_cultural_groups_alliances_trade_networks", "elaborate_social_rules_traditions_leadership_roles", "purposeful_burials_with_grave_goods_ritual_significance", "dunbars_number_group_cohesion_challenges_large_scale_cooperation"], // Research: [cite: 127, 130, 259, 260, 271, 373, 374]
-        fire_use_level_tag: "fire_mastery_advanced_applications_kilns_lamps_complex_cooking", // Beyond just hearths
-        tool_industry_level_tag: "tool_upper_paleolithic_specialized_blades_microliths_composite_tools_bow_arrow_spear_thrower_sewing_needles_fishing_hooks_harpoons_weaving_pottery", // Research: [cite: 36, 119, 120, 291, 292, 293]
-        symbolic_behavior_tags: ["advanced_cave_art_painting_engraving_sculpture_ceramics", "musical_instruments_flutes_drums", "personal_ornamentation_jewelry_beads_body_paint", "complex_burial_rituals_grave_goods"], // Research: [cite: 130, 131, 132, 365, 366, 374]
-        flavor_text_lore_snippet: "With minds ablaze and voices shaping new realities, they weave the tapestry of culture and walk paths to every corner of the world.",
-        // IDEA: GDD - "Cultural Tech Tree" unlocks[cite: 139]. "Language System" fully developed[cite: 135].
-        // IDEA: Research - "Cognitive Revolution"[cite: 136]. Adaptation to extreme climates[cite: 122, 140, 143].
-        // TODO: Implement advanced crafting chains for composite tools, pottery, weaving.
-    };
-
-    // ... (Specialized Role data structs like HOMINID_ROLE_HUNTER would inherit from a base species like POP_HOMO_SAPIENS_MODERN but have different default AI, skill boosts, and equipment preferences)
-    _db[$ EntityType.HOMINID_ROLE_HUNTER] = { // Example of a role, applied to a H. sapiens base
-        name: "Skilled Hunter (H. sapiens)",
-        description: "A Homo sapiens specializing in tracking, stalking, and taking down prey, vital for the tribe's sustenance.",
-        // Many fields would be similar to POP_HOMO_SAPIENS_MODERN, but with overrides:
-        // object_index, default_sprite (maybe slightly different attire/gear), faction would be same.
-        // max_health could be slightly higher or have damage resistance.
-        // loot_table: might carry more hunting tools.
-        // --- Overrides & Additions ---
-        // extends_entity_type: EntityType.POP_HOMO_SAPIENS_MODERN, // Hypothetical field for inheritance if system supports it
-        tags: ["hominid", "homo_sapiens_modern", "role_hunter", "specialized_tracker", "expert_marksman_thrower", "stealthy_ambusher", "knows_animal_behavior", "logic_prioritizes_hunting_tasks", "logic_leads_hunting_parties"],
-        base_speed_units_sec: 2.4, // Slightly faster or better stamina for chase
-        perception_radius_pixels: 200, // Better at spotting prey
-        default_ai_state_placeholder: "PopState.HUNTING_TRACKING_PREY",
-        ai_behavior_archetype: "Specialist_Hunter_Stalker",
-        base_attack_damage: 15, // Assumes proficient with hunting weapons
-        skill_aptitude_hunting_specialized: 1.8, // Higher aptitude for their role
-        skill_aptitude_tracking: 1.7,
-        skill_aptitude_stealth: 1.5,
-        skill_aptitude_ranged_weapons_bow_spear_thrower: 1.6,
-        carrying_capacity_units: 18, // Carries back more game
-        sound_placeholders: { alert: "snd_hunter_signal_call", attack: "snd_hominid_attack_focused_grunt" },
-        flavor_text_lore_snippet: "Their senses are tuned to the rhythm of the wild, their aim true as the flight of an eagle.",
-        // IDEA: GDD - Might generate more DP/EP from successful hunts.
-        // IDEA: Unlocks ability to hunt more dangerous/elusive prey.
-    };
-    #endregion // End Hominids Data
-
-    // --- SECTION: Wildlife - Herbivores (Example update with research context) ---
-    #region Wildlife - Herbivores Data
-    _db[$ EntityType.MAMMOTH_WOOLLY] = { // Represents a generic adult, variants for juvenile/matriarch could exist or be AI states
-        name: "Woolly Mammoth", // Research: Hunted by H. sapiens [cite: 351]
-        description: "A colossal, shaggy herbivore of the ice ages, its massive tusks a formidable defense and a prized resource.",
-        object_index: obj_placeholder_entity, // Intended: obj_mammoth_ai
-        default_sprite: undefined, // TODO: Sprite
-        tags: ["fauna", "animal", "mammal", "herbivore", "megafauna", "wildlife", "source_meat_mammoth_massive", "source_hide_thick_furry_cold_insulation", "source_ivory_tusks_valuable_crafting_art", "source_bones_shelter_tools", "herd_animal_family_groups", "dangerous_when_threatened_or_protecting_young", "slow_but_powerful_charge", "ice_age_creature", "logic_resistant_to_cold", "logic_leaves_large_footprints_tracks"],
-        faction: "Wildlife_Megafauna_NeutralDefensiveHerd",
-        is_interactive: true,
-        is_destructible: true,
-        max_health: 800,
-        loot_table_placeholders: [
-            { item_enum_placeholder: "ITEM_RAW_MAMMOTH_MEAT_HUGE", quantity_min: 25, quantity_max: 40, chance: 1.0 },
-            { item_enum_placeholder: "ITEM_MAMMOTH_HIDE_THICKEST_FUR", quantity_min: 3, quantity_max: 5, chance: 1.0 },
-            { item_enum_placeholder: "ITEM_IVORY_TUSK_LARGE_PAIR_UNCARVED", quantity_min: 1, quantity_max: 1, chance: 0.9 },
-            { item_enum_placeholder: "ITEM_MAMMOTH_BONE_GIANT", quantity_min: 5, quantity_max: 10, chance: 0.8 } // Research: H. sapiens used mammoth bones for huts [cite: 184]
-        ],
-        base_speed_units_sec: 1.7,
-        perception_radius_pixels: 180, // Relies on smell and hearing too
-        default_ai_state_placeholder: "AnimalState.GRAZING_HERD_PROTECTIVE",
-        ai_behavior_archetype: "Megafauna_HerdGuardian_ChargeThreats_ProtectCalves",
-        base_attack_damage: 45, // Tusk gore, stomp
-        attack_range_pixels: 35,
-        attack_cooldown_seconds: 4.5,
-        attack_effect_tags: ["knockback_massive", "stun_chance_high", "area_of_effect_stomp_large_radius_tremor"],
-        diet_type_tags: ["herbivore_grazer_browser", "eats_grasses_sedges_large_volume", "eats_shrubs_willow_birch_alder", "eats_tree_bark_winter_survival"],
-        sound_placeholders: { alert: "snd_mammoth_trumpet_alarm_deep", attack: "snd_mammoth_charge_earthshaking_roar", death: "snd_mammoth_death_bellow_resounding", idle: "snd_mammoth_rumble_low_breathing_snow_crunch" },
-        footstep_sfx_type: "MegafaunaHeavyThudSnow",
-        primary_threats_tags: ["pop_homo_sapiens_modern_hunting_party_coordinated_traps", "saberthooth_cat_smilodon_pack_desperate_on_juveniles", "dire_wolf_pack_large_harassing_weak_individuals", "cave_lion_pride_opportunistic"],
-        flavor_text_lore_snippet: "A walking mountain of fur and might, patriarch of the frozen plains, its memory etched in ice and ivory.",
-        // IDEA: Research - Hunting mammoths a major endeavor requiring cooperation, advanced tools, and planning[cite: 270, 351].
-        // IDEA: GDD - Could be a "key species" for certain biomes or eras, driving specific Hominid adaptations (e.g., "Mammoth Hunter" traits/culture).
-    };
-    #endregion
-
-    // --- SECTION: Structures - Functional (Example update with research context) ---
-    #region Structures - Functional Data
-    _db[$ EntityType.STRUCTURE_FIRE_PIT_HEARTH] = {
-        name: "Communal Hearth", // Research: H. erectus/heidelbergensis hearths [cite: 90, 312]
-        description: "A well-maintained fire pit, often lined with stones. The heart of the camp, providing warmth, light, protection, and a place to cook food and socialize.",
-        object_index: obj_placeholder_entity, // Intended: obj_structure_hearth
-        default_sprite: undefined, // TODO: Sprite (inactive, active fire small, active fire large)
-        tags: ["structure", "player_built", "functional_building", "fire_source_controlled", "cooking_station_basic", "warmth_source_cold_protection", "light_source_night_deterrent", "social_gathering_spot", "craftable_homo_erectus_era_onwards", "requires_fuel_wood_dung", "logic_deters_predators_small_medium", "logic_enables_cooking_recipes", "logic_provides_comfort_buff_aura"], // Research: Benefits of fire [cite: 91, 314, 315, 316]
-        faction: "PlayerTribe_BuiltStructure_Essential",
-        is_interactive: true, // Add fuel, cook, extinguish
-        is_destructible: true, // Can be destroyed by weather or attack
-        max_health: 120,
-        build_materials_cost_placeholders: [
-            { item_placeholder: "ITEM_STONE_RIVER_PEBBLE", quantity: 10 }, // For lining
-            { item_placeholder: "ITEM_WOOD_BRANCH_DRY", quantity: 5 } // Initial fuel
-        ],
-        shelter_quality_rating: 0, // Is not shelter itself, but enhances it
-        crafting_recipes_unlocked_tags: ["recipe_group_food_cooked_basic_meat_fish_roots"], // Enables cooking [cite: 91, 106]
-        storage_capacity_slots: 0, // Or small for fuel
-        allowed_placement_terrain_tags: ["terrain_flat_dirt_sheltered", "terrain_cave_floor_dry"], // Needs safe placement
-        decay_rate_health_per_day: 2, // Needs maintenance if exposed
-        worker_slots_max: 1, // For tending/cooking
-        aura_effect_radius_pixels: 150, // Warmth/light/comfort radius
-        aura_effect_tags: ["aura_buff_warmth_small", "aura_buff_comfort_small", "aura_deterrent_predator_weak"],
-        is_repairable_flag: true,
-        upgrade_to_entity_type_placeholder: "STRUCTURE_KILN_POTTERY_PIT", // If hearth can be upgraded for pyrotechnology
-        structural_integrity_rating: 0.3,
-        flavor_text_lore_snippet: "The crackling heart of the tribe, where stories are shared and the chill of the wild is kept at bay.",
-        // IDEA: Research - Fire management as a skill[cite: 317]. Pyrotechnology for tool treatment[cite: 92, 303].
-        // IDEA: GDD - "Mastery of Fire" is a key discovery. Needs fuel management.
-    };
-    #endregion
-
-    // --- SECTION: Forageable Wild Plants (Updated BERRY_BUSH_GENERIC_RED) ---
-    #region Forageable Wild Plants Data
-    _db[$ EntityType.BERRY_BUSH_GENERIC_RED] = {
-        name: "Red Berry Bush (Generic)",
-        description: "A common bush bearing edible red berries. A vital early food source.",
-        object_index: obj_resource_node_controller, // NOW USES GENERIC CONTROLLER
-        default_sprite: spr_berry_bush_red_full, // Ensure this sprite exists (e.g., spr_berry_bush_red_full)
-        sprite_depleted: spr_berry_bush_red_empty, // Ensure this sprite exists (e.g., spr_berry_bush_red_empty)
-        tags: ["flora", "plant", "forageable", "resource_node", "source_food_berries_red", "early_game_food_source", "regenerates_seasonally_or_over_time", "logic_attracts_herbivores_small", "logic_provides_minimal_cover"],
-        faction: "Nature_WildFlora_Harvestable",
-        is_interactive: true, // For gathering
-        is_destructible: false, // Typically not destroyed by gathering, just depleted/regenerates
-        max_health: 50, // Or not applicable if not destructible in the traditional sense
-        
-        // --- Resource Node Specific Data ---
-        item_yielded_enum: "ITEM_BERRIES_RED_GENERIC", // Placeholder for actual item enum/ID from your item system
-        max_yield: 25,          // Total berries before depletion
-        yield_per_gather: 5,    // Berries obtained per gather action
-        regeneration_time_steps: 1800, // Time in game steps to regenerate (e.g., 30 seconds at 60 FPS)
-        tool_required_tag: "none", // No tool needed to gather berries
-        harvest_skill_tag: "foraging", // Skill associated with gathering
-        
-        // --- Other Potential Fields ---
-        // sound_placeholders: { gather: "snd_bush_rustle_gather", depleted: "snd_bush_empty_rustle" },
-        // particle_effect_on_gather: "ptl_berry_leaf_burst",
-        // map_icon_sprite: spr_map_icon_berry_bush,
-        // season_availability_tags: ["spring_fruit", "summer_fruit"], // If seasons affect availability
-        // biome_suitability_tags: ["forest_edge", "grassland_patchy", "temperate_climate"],
-
-        flavor_text_lore_snippet: "Clusters of ruby-red jewels hanging invitingly from thorny branches, a sweet promise against hunger."
-    };
-    #endregion // End Forageable Wild Plants Data
-
-    // Add other sections and entities, refining with research and GDD...
-    // For example, tool entities (though not directly in this script, their requirements are defined by pop capabilities):
-    // Tool: Oldowan Chopper - Usable by: POP_HOMO_HABILIS_EARLY onwards. Materials: NODE_FLINT. Tags: ["tool_oldowan", "early_game_cutting_scraping"] [cite: 66, 286]
-    // Tool: Acheulean Handaxe - Usable by: POP_HOMO_ERECTUS_EARLY onwards. Materials: NODE_FLINT_HIGH_GRADE. Tags: ["tool_acheulean", "mid_game_butchering_digging_woodworking"] [cite: 87, 288]
-    // Tool: Hafted Spear - Usable by: POP_HOMO_SAPIENS_ARCHAIC onwards. Materials: ITEM_WOOD_LOG_HARD, ITEM_FLINT_SHARD_PREPARED, ITEM_PLANT_FIBER_STRONG. Tags: ["tool_composite", "hunting_weapon_thrusting_throwing"] [cite: 290, 304]
-    // Tool: Bow and Arrow - Usable by: POP_HOMO_SAPIENS_MODERN. Materials: ITEM_WOOD_FLEXIBLE, ITEM_SINEW_ANIMAL, ITEM_FEATHERS_FLETCHING, ITEM_FLINT_ARROWHEAD. Tags: ["tool_ranged_weapon_advanced", "hunting_precision"] [cite: 119, 292]
-
-    show_debug_message($"Entity Database Initialized. {struct_names_count(_db)} entities defined. (v3 Hominid Research Integrated)");
-    return _db;
-}
-#endregion
-
+show_debug_message("global.GameData populated successfully in scr_database. Version with GEN1-4 Pops.");

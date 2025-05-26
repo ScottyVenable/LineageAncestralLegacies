@@ -12,8 +12,8 @@ function scr_pop_idle() {
 
     // 1) Animation swap: show idle sprite (animated)
     // This logic might be better in a general sprite update script based on state and direction
-    if (sprite_index != spr_man_idle) { // Assuming spr_man_idle is the correct generic idle
-        sprite_index = spr_man_idle;
+    if (sprite_index != spr_pop_man_idle) { // Assuming spr_man_idle is the correct generic idle
+        sprite_index = spr_pop_man_idle;
         image_speed  = 0.2; // e.g., 5 FPS on a 60 FPS game (0.2 * 30 = 6 frames per anim loop over 0.5s)
                             // Adjust based on your animation length and desired speed.
         image_index  = 0;

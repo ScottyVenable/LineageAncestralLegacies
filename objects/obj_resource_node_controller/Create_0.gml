@@ -8,78 +8,94 @@
 ///    Summary:         Sets up resource node properties from data.
 ///    Usage:           Called when a resource node controller is spawned.
 ///    Tags:            [controller][resource_node][init][data_driven]
-///    Version:         1.0 - YYYY-MM-DD
-///    Dependencies:    scr_spawn_entity, scr_entities (get_entity_data)
+///    Version:         1.1 - 2025-05-25 // Updated to current date and reflect ongoing dev
+///    Dependencies:    scr_spawn_entity, scr_database (get_entity_data)
 
 // This controller instance expects entity_type and entity_data to be injected by scr_spawn_entity
 // entity_type = undefined; // Example: EntityType.BERRY_BUSH_GENERIC_RED
 // entity_data = undefined; // Struct containing all data from get_entity_data()
 
-// Method to initialize the instance based on the provided entity_data
-initialize_from_data = function() {
-    // Ensure entity_data has been set by the spawner
-    if (is_struct(entity_data)) {
-        // Store the entity_data for easy access, if preferred
-        // self.node_data = entity_data; // Or directly use entity_data.field
-
-        // --- Core Properties ---
-        // Set the sprite based on the entity data
-        if (variable_struct_exists(entity_data, "default_sprite") && entity_data.default_sprite != undefined) {
-            sprite_index = entity_data.default_sprite;
-        } else {
-            // Fallback sprite if none is defined in data (consider a placeholder sprite)
-            sprite_index = spr_placeholder_resource; // Ensure spr_placeholder_resource exists
-            debug_log($"Warning (obj_resource_node_controller): EntityType '{entity_type_to_string(entity_type)}' has no default_sprite defined. Using placeholder.", "ResourceNode:Init", "yellow");
-        }
-        
-        // Set image speed, if applicable (e.g., for animated resources)
-        if (variable_struct_exists(entity_data, "image_speed")) {
-            image_speed = entity_data.image_speed;
-        } else {
-            image_speed = 0; // Default for static sprites
-        }
-
-        // --- Resource-Specific Properties ---
-        // Max yield (how much can be gathered in total before depletion)
-        self.max_yield = variable_struct_exists(entity_data, "max_yield") ? entity_data.max_yield : 100;
-        self.current_yield = self.max_yield; // Start with full yield
-
-        // Yield per gather action (how much is given per interaction)
-        self.yield_per_gather = variable_struct_exists(entity_data, "yield_per_gather") ? entity_data.yield_per_gather : 1;
-        
-        // Item yielded (enum or string identifier for the item)
-        self.item_yielded_enum = variable_struct_exists(entity_data, "item_yielded_enum") ? entity_data.item_yielded_enum : undefined; // e.g., ItemType.BERRIES_RED
-
-        // Regeneration time (in game steps or seconds, if the node regenerates)
-        // -1 or undefined could mean it does not regenerate
-        self.regeneration_time_steps = variable_struct_exists(entity_data, "regeneration_time_steps") ? entity_data.regeneration_time_steps : -1; 
-        self.current_regeneration_timer = 0;
-
-        // Tool required to harvest (e.g., "axe", "pickaxe", "none")
-        self.tool_required_tag = variable_struct_exists(entity_data, "tool_required_tag") ? entity_data.tool_required_tag : "none";
-        
-        // Skill associated with harvesting (e.g., "foraging", "mining", "woodcutting")
-        self.harvest_skill_tag = variable_struct_exists(entity_data, "harvest_skill_tag") ? entity_data.harvest_skill_tag : "foraging";
-
-        // Durability / Health (if the node can be "destroyed" or depleted through gathering)
-        // This might be tied to max_yield or be a separate health pool.
-        // For simplicity, we can tie it to current_yield. When current_yield is 0, it's depleted.
-
-        // --- State Variables ---
-        self.is_depleted = false;
-        self.is_regenerating = false;
-
-        // --- Debug Logging ---
-        debug_log($"Resource Node Initialized: '{entity_data.name}' (Type: {entity_type_to_string(entity_type)}). Yield: {self.current_yield}/{self.max_yield} of {self.item_yielded_enum}. Regen: {self.regeneration_time_steps} steps.", "ResourceNode:Init", "green");
-
-    } else {
-        show_error("ERROR (obj_resource_node_controller): entity_data was not provided or is not a struct. Cannot initialize.", true);
+// Method to initialize the instance based on the provided profile data
+initialize_from_profile = function() {
+    // Ensure staticProfileData has been set by the spawner (spawn_single_instance)
+    if (!is_struct(self.staticProfileData)) {
+        show_error($"ERROR (obj_resource_node_controller.initialize_from_profile): self.staticProfileData was not provided or is not a struct for profile_id '{self.entity_profile_id_string}'. Cannot initialize.", true);
         instance_destroy(); // Destroy self if no data
         return;
     }
+
+    var _profile = self.staticProfileData; // Convenience alias
+
+    // --- Core Properties ---
+    // Set the sprite based on the profile data
+    // Assuming profile structure: sprite_info: { default: spr_..., depleted: spr_... }
+    if (variable_struct_exists(_profile, "sprite_info") && is_struct(_profile.sprite_info) && variable_struct_exists(_profile.sprite_info, "default")) {
+        if (_profile.sprite_info.default != undefined) {
+            sprite_index = _profile.sprite_info.default;
+        } else {
+            sprite_index = spr_placeholder_resource; // Ensure spr_placeholder_resource exists
+            debug_log($"Warning (obj_resource_node_controller.initialize_from_profile): Profile '{self.entity_profile_id_string}' has no sprite_info.default defined. Using placeholder.", "ResourceNode:Init", "yellow");
+        }
+    } else {
+        sprite_index = spr_placeholder_resource; // Fallback
+        debug_log($"Warning (obj_resource_node_controller.initialize_from_profile): Profile '{self.entity_profile_id_string}' has no sprite_info or sprite_info.default. Using placeholder.", "ResourceNode:Init", "yellow");
+    }
+    
+    // Set image speed, if applicable (e.g., for animated resources)
+    // Assuming image_speed is directly in the profile, or could be in sprite_info
+    if (variable_struct_exists(_profile, "image_speed")) {
+        image_speed = _profile.image_speed;
+    } else {
+        image_speed = 0; // Default for static sprites
+    }
+
+    // --- Resource-Specific Properties (matching your new scr_database.gml structure for ResourceNode) ---
+    // Max yield (how much can be gathered in total before depletion)
+    // Your new structure uses "base_max_health" for the node's "health" or total yield.
+    self.max_yield = variable_struct_exists(_profile, "base_max_health") ? _profile.base_max_health : 100;
+    self.current_yield = self.max_yield; // Start with full yield
+
+    // Yield per gather action (how much is given per interaction)
+    self.yield_per_gather = variable_struct_exists(_profile, "yield_amount_per_gather_action") ? _profile.yield_amount_per_gather_action : 1;
+    
+    // Item yielded (path to item profile in GameData)
+    // The profile has 'yielded_item_profile_path' which is a direct reference to the item struct.
+    self.yielded_item_profile = variable_struct_exists(_profile, "yielded_item_profile_path") ? _profile.yielded_item_profile_path : undefined;
+    if (is_undefined(self.yielded_item_profile)) {
+        debug_log($"ERROR (obj_resource_node_controller.initialize_from_profile): Profile '{self.entity_profile_id_string}' missing 'yielded_item_profile_path'. Node will not yield items.", "ResourceNode:Init", "red");
+    }
+
+    // Regeneration time (in game steps or seconds, if the node regenerates)
+    // Your new structure uses "respawn_time_seconds". Convert to steps if needed, or use as seconds.
+    // For now, let's assume game logic will handle seconds vs steps conversion if necessary.
+    self.regeneration_time_seconds = variable_struct_exists(_profile, "respawn_time_seconds") ? _profile.respawn_time_seconds : -1; 
+    self.current_regeneration_timer = 0; // Timer in seconds or steps, consistent with regeneration_time_seconds
+
+    // Tool required to harvest (tags)
+    self.required_tool_tags = variable_struct_exists(_profile, "required_tool_tags") && is_array(_profile.required_tool_tags) ? _profile.required_tool_tags : [];
+    
+    // Skill associated with harvesting (path to skill profile)
+    // Your new structure has 'skill_used_for_harvest_profile_path' (example from my earlier gamedata_init)
+    // Let's assume it's 'skill_used_for_harvest_profile_path' or similar in your actual profile.
+    // For now, I'll use a generic placeholder if it's not directly in your provided FLINT_DEPOSIT example.
+    // Based on your BERRY_BUSH example, it was `skill_used_for_harvest_profile_path`
+    // The FLINT_DEPOSIT example in your new scr_database doesn't explicitly show this, so I'll make it optional.
+    self.harvest_skill_profile = variable_struct_exists(_profile, "skill_used_for_harvest_profile_path") ? _profile.skill_used_for_harvest_profile_path : undefined;
+    self.xp_gained_on_harvest = variable_struct_exists(_profile, "xp_gained_on_harvest") ? _profile.xp_gained_on_harvest : 0;
+
+
+    // --- State Variables ---
+    self.is_depleted = false;
+    self.is_regenerating = false;
+
+    // --- Debug Logging ---
+    var _display_name = variable_struct_exists(_profile, "display_name_concept") ? _profile.display_name_concept : self.entity_profile_id_string;
+    var _item_name = (!is_undefined(self.yielded_item_profile) && variable_struct_exists(self.yielded_item_profile, "display_name_key")) ? self.yielded_item_profile.display_name_key : "Undefined Item";
+    debug_log($"Resource Node Initialized: '{_display_name}' (Profile: {self.entity_profile_id_string}). Yield: {self.current_yield}/{self.max_yield} of item '{_item_name}'. Regen: {self.regeneration_time_seconds} sec.", "ResourceNode:Init", "green");
+
 };
 
-// Note: The actual call to initialize_from_data() is expected to be made by scr_spawn_entity
+// Note: The actual call to initialize_from_profile() is expected to be made by spawn_single_instance
 // after this instance is created and entity_type/entity_data are injected.
 // Example:
 // var _inst = instance_create_layer(x, y, layer, obj_resource_node_controller);
@@ -95,8 +111,19 @@ initialize_from_data = function() {
 /// @param {Id.Instance} gatherer_instance_id The instance attempting to gather.
 /// @returns {Struct|undefined} A struct with item_enum and quantity if successful, else undefined.
 self.gather_resource = function(gatherer_instance_id) {
+    // Check if the entity_data struct exists, if not, the node wasn't initialized correctly.
+    if (!is_struct(self.entity_data)) {
+        debug_log("Error (obj_resource_node_controller:Gather): entity_data is not a struct. Node may not be initialized.", "ResourceNode:Gather", "red");
+        return undefined;
+    }
+
+    // Ensure self.entity_data.name is accessible for logging, provide a fallback.
+    // var _node_name = variable_struct_exists(self.entity_data, "name") ? self.entity_data.name : "Unknown Node";
+    // With the new system, we use staticProfileData and its display_name_concept
+    var _node_name = (is_struct(self.staticProfileData) && variable_struct_exists(self.staticProfileData, "display_name_concept")) ? self.staticProfileData.display_name_concept : self.entity_profile_id_string;
+
     if (self.is_depleted) {
-        debug_log($"Node '{self.entity_data.name}' is depleted. Cannot gather.", "ResourceNode:Gather", "orange");
+        debug_log($"Node '{_node_name}' is depleted. Cannot gather.", "ResourceNode:Gather", "orange");
         return undefined;
     }
 
@@ -107,31 +134,39 @@ self.gather_resource = function(gatherer_instance_id) {
     
     if (_gathered_amount > 0) {
         self.current_yield -= _gathered_amount;
-        debug_log($"Gathered {_gathered_amount} of {self.item_yielded_enum} from '{self.entity_data.name}'. Remaining: {self.current_yield}", "ResourceNode:Gather", "cyan");
+        // Use yielded_item_profile for item name
+        var _item_name_gathered = (!is_undefined(self.yielded_item_profile) && variable_struct_exists(self.yielded_item_profile, "display_name_key")) ? self.yielded_item_profile.display_name_key : "Unknown Item";
+        debug_log($"Gathered {_gathered_amount} of item '{_item_name_gathered}' from '{_node_name}'. Remaining: {self.current_yield}", "ResourceNode:Gather", "cyan");
 
         if (self.current_yield <= 0) {
             self.is_depleted = true;
-            debug_log($"Node '{self.entity_data.name}' is now depleted.", "ResourceNode:Gather", "orange");
+            debug_log($"Node '{_node_name}' is now depleted.", "ResourceNode:Gather", "orange");
             
             // Handle depletion:
-            // 1. Change sprite to depleted version (if one exists in entity_data)
-            if (variable_struct_exists(self.entity_data, "sprite_depleted") && self.entity_data.sprite_depleted != undefined) {
-                sprite_index = self.entity_data.sprite_depleted;
+            // 1. Change sprite to depleted version (if one exists in profile.sprite_info.depleted)
+            if (is_struct(self.staticProfileData) && variable_struct_exists(self.staticProfileData, "sprite_info") && is_struct(self.staticProfileData.sprite_info) && variable_struct_exists(self.staticProfileData.sprite_info, "depleted")) {
+                if (self.staticProfileData.sprite_info.depleted != undefined) {
+                    sprite_index = self.staticProfileData.sprite_info.depleted;
+                } else {
+                    // Option: self-destruct if not regenerating, or become non-interactive
+                    // instance_destroy(); 
+                }
             } else {
-                // Option: self-destruct if not regenerating, or become non-interactive
-                // instance_destroy(); 
+                 // Optional: Log if depleted sprite is missing
+                 debug_log($"Node '{_node_name}' depleted, but no 'sprite_info.depleted' found in profile '{self.entity_profile_id_string}'.", "ResourceNode:Gather", "yellow");
             }
 
             // 2. Start regeneration if applicable
-            if (self.regeneration_time_steps > 0) {
+            // Using regeneration_time_seconds from profile
+            if (self.regeneration_time_seconds > 0) {
                 self.is_regenerating = true;
-                self.current_regeneration_timer = self.regeneration_time_steps;
-                debug_log($"Node '{self.entity_data.name}' starting regeneration ({self.regeneration_time_steps} steps).", "ResourceNode:Gather", "yellow");
+                self.current_regeneration_timer = self.regeneration_time_seconds; // Assuming timer is in seconds
+                debug_log($"Node '{_node_name}' starting regeneration ({self.regeneration_time_seconds} seconds).", "ResourceNode:Gather", "yellow");
             }
         }
         
         return {
-            item_enum: self.item_yielded_enum,
+            item_profile: self.yielded_item_profile, // Return the actual item profile struct
             quantity: _gathered_amount
         };
     }
@@ -139,23 +174,6 @@ self.gather_resource = function(gatherer_instance_id) {
 };
 
 // --- Step Event (for regeneration) ---
-// (This would typically be in the Step Event of obj_resource_node_controller)
-/*
-if (self.is_regenerating) {
-    self.current_regeneration_timer--;
-    if (self.current_regeneration_timer <= 0) {
-        self.is_regenerating = false;
-        self.is_depleted = false;
-        self.current_yield = self.max_yield;
-        
-        // Change sprite back to normal
-        if (variable_struct_exists(self.entity_data, "default_sprite") && self.entity_data.default_sprite != undefined) {
-            sprite_index = self.entity_data.default_sprite;
-        }
-        debug_log($"Node '{self.entity_data.name}' has regenerated.", "ResourceNode:Step", "green");
-    }
-}
-*/
-
+// The regeneration logic has been moved to the Step Event of obj_resource_node_controller (Step_0.gml)
 // Make sure to add a Step Event to the obj_resource_node_controller object in GameMaker
-// and move the regeneration logic there.
+// and move the regeneration logic there. // This comment is now outdated, logic moved.

@@ -53,7 +53,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
         has_arrived = true;
         speed = pop.base_speed;
         image_speed = 1.0;
-        sprite_index = spr_man_idle;
+        sprite_index = spr_pop_man_idle;
         show_debug_message($"Pop {pop_identifier_string} (ID: {id}) has invalid interaction target/slot (new system). Reverting to WAITING.");
         exit;
     }
@@ -70,7 +70,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             if (_point_id != noone) scr_interaction_slot_release(_point_id, id);
         }
         target_interaction_object_id = noone; target_interaction_slot_index = -1; target_interaction_type_tag = "";
-        state = PopState.WAITING; is_waiting = true; depth = -y; has_arrived = true; speed = 0; image_speed = 1.0; sprite_index = spr_man_idle;
+        state = PopState.WAITING; is_waiting = true; depth = -y; has_arrived = true; speed = 0; image_speed = 1.0; sprite_index = spr_pop_man_idle;
         exit;
     }
     var _slot_target_x = _slot_details.x;
@@ -132,7 +132,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             // Foraging animation speed uses sprite's default if image_speed was reset to 1.0 on arrival.
             break; 
         case "forage_right": // SLOT is on the RIGHT of the bush
-            sprite_index = spr_man_foraging_left;  // Pop FACES LEFT (towards bush)
+            sprite_index = spr_pop_man_foraging_left;  // Pop FACES LEFT (towards bush)
             // Foraging animation speed uses sprite's default.
             break;
             
@@ -143,7 +143,7 @@ function scr_pop_foraging() { // Consider renaming to scr_pop_perform_interactio
             
         default:
             // Unknown or generic interaction type tag
-            sprite_index = spr_man_idle; // Fallback to idle animation
+            sprite_index = spr_pop_man_idle; // Fallback to idle animation
             image_speed = 0.2; // Example for a generic idle if no specific animation
             show_debug_message($"Pop {pop_identifier_string} (ID: {id}) at slot with unhandled tag: '{target_interaction_type_tag}'. Using fallback sprite.");
             break;

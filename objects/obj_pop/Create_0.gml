@@ -17,7 +17,7 @@ state = PopState.IDLE;
 selected = false;
 depth = -y;
 image_speed = 1;
-sprite_index = spr_man_idle; // Default sprite, can be overridden by entity_data
+sprite_index = spr_pop_man_idle; // Default sprite, can be overridden by entity_data
 image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
@@ -125,112 +125,242 @@ if (!variable_instance_exists(id, "last_foraged_type_tag")) {
 #endregion
 
 // =========================================================================
-// X. INITIALIZE FROM DATA METHOD (Called by scr_spawn_entity)
+// X. INITIALIZE FROM PROFILE METHOD (Called by scr_spawn_system)
 // =========================================================================
-#region X.1 Initialize From Data Method
-initialize_from_data = function() {
-    // This function is called by scr_spawn_entity after the instance is created
-    // and self.entity_type and self.entity_data have been assigned.
+#region X.1 Initialize From Profile Method
+initialize_from_profile = function() {
+    // This function is called by scr_spawn_system after the instance is created
+    // and self.staticProfileData and self.profileIDStringRef have been assigned.
 
-    // Ensure entity_data is valid (it should be, as scr_spawn_entity checks)
-    if (is_undefined(self.entity_data)) {
-        var _msg = $\"FATAL (obj_pop.initialize_from_data): self.entity_data is undefined for entity_type {entity_type_to_string(self.entity_type)}. This should not happen if spawned via scr_spawn_entity.\";
+    var _profile = self.staticProfileData; // Convenience alias for the pop's static data
+
+    // Ensure staticProfileData is valid (it should be, as scr_spawn_system checks)
+    if (is_undefined(_profile)) {
+        var _msg = $"FATAL (obj_pop.initialize_from_profile): self.staticProfileData is undefined for profile ID '{self.profileIDStringRef}'. This should not happen if spawned via scr_spawn_system.";
         show_error(_msg, true);
-        return; // Stop further initialization if data is missing
+        instance_destroy(); // Critical error, remove the pop
+        return; // Stop further initialization
     }
 
-    // Assign the received entity_data to the instance variable 'pop'
-    // This 'pop' variable is used throughout the existing obj_pop code.
-    pop = self.entity_data; // 'self.pop = self.entity_data;' also works
+    show_debug_message($"INFO (obj_pop.initialize_from_profile): Initializing Pop with Profile ID '{self.profileIDStringRef}', Defined Name: '{_profile.name}'.");
 
-    // --- Initialize/Re-initialize variables that depend on 'pop' (i.e., entity_data) ---
+    // --- Helper function to safely get a sprite asset index ---
+    // Defined here to keep it local to this initialization logic.
+    var _get_sprite_asset = function(sprite_asset_name_from_profile, fallback_value = undefined) {
+        // sprite_asset_name_from_profile is expected to be a string like "spr_pop_man_idle"
+        // It can also be undefined or an empty string if the profile doesn't specify it.
+        if (is_string(sprite_asset_name_from_profile) && string_length(sprite_asset_name_from_profile) > 0) {
+            if (asset_exists(sprite_asset_name_from_profile)) {
+                var _asset_index = asset_get_index(sprite_asset_name_from_profile);
+                if (asset_get_type(_asset_index) == asset_sprite) {
+                    return _asset_index; // Successfully found and it's a sprite
+                } else {
+                    show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.profileIDStringRef}): Asset '{sprite_asset_name_from_profile}' found but is NOT a sprite. Using fallback.");
+                    return fallback_value;
+                }
+            } else {
+                show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.profileIDStringRef}): Sprite asset name '{sprite_asset_name_from_profile}' NOT FOUND. Using fallback.");
+                return fallback_value;
+            }
+        }
+        // If sprite_asset_name_from_profile was undefined, empty, or not a string, silently use fallback.
+        // This allows profiles to intentionally omit sprites.
+        return fallback_value;
+    };
 
-    // Sprite Initialization (from Section 1)
-    if (struct_exists(pop, "default_sprite") && !is_undefined(pop.default_sprite)) {
-        sprite_index = pop.default_sprite;
-        current_sprite = pop.default_sprite;
+    // --- 1. Sex Assignment ---
+    // Determines the biological sex of the pop, influencing sprites and potentially other attributes.
+    self.sex = choose("male", "female"); // Randomly assign sex
+    show_debug_message($"INFO (obj_pop.initialize_from_profile): Pop '{_profile.name}' (ID: {self.profileIDStringRef}) assigned sex: {self.sex}.");
+
+    // --- 2. Sprite Initialization (Sex-Specific) ---
+    // Sets sprites based on assigned sex and data from _profile.sprite_info.
+    // Includes safety checks for missing assets.
+    if (struct_exists(_profile, "sprite_info")) {
+        var _sprite_info = _profile.sprite_info; // This is the struct like { male_idle: "spr_pop_man_idle", ... }
+        var _fallback_sprite_asset = undefined; // Default fallback if a specific placeholder (e.g., spr_pop_undefined) isn't available
+
+        // Idle Sprite
+        var _idle_sprite_name_key = (self.sex == "male") ? 
+            (struct_exists(_sprite_info, "male_idle") ? _sprite_info.male_idle : undefined) :
+            (struct_exists(_sprite_info, "female_idle") ? _sprite_info.female_idle : undefined);
+        self.spr_idle = _get_sprite_asset(_idle_sprite_name_key, _fallback_sprite_asset);
+        self.sprite_index = self.spr_idle; // Set current sprite to idle
+        
+        // Walk Sprite Prefix String (e.g., "spr_pop_man_walk")
+        // This string is used by movement logic to find specific directional sprites (e.g., spr_pop_man_walk_left)
+        self.spr_walk_prefix_string = (self.sex == "male") ? 
+            (struct_exists(_sprite_info, "male_walk_prefix") ? _sprite_info.male_walk_prefix : undefined) :
+            (struct_exists(_sprite_info, "female_walk_prefix") ? _sprite_info.female_walk_prefix : undefined);
+        if (is_undefined(self.spr_walk_prefix_string)) {
+             show_debug_message($"WARNING (obj_pop.initialize_from_profile for {_profile.name}): Walk sprite prefix string not found in sprite_info for sex '{self.sex}'. Movement animations may fail.");
+        }
+
+        // Portrait Sprite
+        var _portrait_sprite_name_key = (self.sex == "male") ? 
+            (struct_exists(_sprite_info, "male_portrait") ? _sprite_info.male_portrait : undefined) :
+            (struct_exists(_sprite_info, "female_portrait") ? _sprite_info.female_portrait : undefined);
+        self.spr_portrait = _get_sprite_asset(_portrait_sprite_name_key, _fallback_sprite_asset);
+        
+        // Death Sprite
+        var _death_sprite_name_key = (self.sex == "male") ? 
+            (struct_exists(_sprite_info, "male_death") ? _sprite_info.male_death : undefined) :
+            (struct_exists(_sprite_info, "female_death") ? _sprite_info.female_death : undefined);
+        self.spr_death = _get_sprite_asset(_death_sprite_name_key, _fallback_sprite_asset);
+
+        // Example for other sprites (e.g., attack, gather - add to sprite_info in database if needed)
+        // var _attack_sprite_name_key = (self.sex == "male") ? _sprite_info.male_attack : _sprite_info.female_attack;
+        // self.spr_attack = _get_sprite_asset(_attack_sprite_name_key, _fallback_sprite_asset);
+
     } else {
-        // Fallback to the already set spr_man_idle or log a warning
-        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No default_sprite in entity_data for '{pop.name}'. Using current sprite: {sprite_get_name(sprite_index)}.\");
+        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {_profile.name}): 'sprite_info' struct not found in profile. Sprites will use Create event defaults or be undefined.");
+        // Instance will use whatever defaults were set in Create event (e.g. self.sprite_index = spr_pop_man_idle was an initial default)
+        // Or, explicitly set them to undefined here to ensure no accidental carry-over if profile is truly minimal.
+        self.spr_idle = undefined;
+        self.sprite_index = undefined; 
+        self.spr_walk_prefix_string = undefined;
+        self.spr_portrait = undefined;
+        self.spr_death = undefined;
     }
-    image_index = 0; // Reset animation frame
+    self.current_sprite = self.sprite_index; // Ensure current_sprite reflects the chosen idle sprite
+    self.image_index = 0; // Reset animation frame
+    // If sprite_index is undefined or noone, image_speed 0 prevents errors. Otherwise, standard speed.
+    self.image_speed = (is_undefined(self.sprite_index) || self.sprite_index == noone) ? 0 : 1;
 
-    // Movement Speed (from Section 2)
-    if (struct_exists(pop, "base_speed_units_sec")) {
-        speed = pop.base_speed_units_sec;
+    // --- 3. Name Generation ---
+    // Generates a name for the pop. Assumes scr_generate_pop_name(profile_struct, sex_string) exists.
+    if (script_exists(asset_get_index("scr_generate_pop_name"))) {
+        // Pass the whole profile and the determined sex to the name generator
+        self.pop_name = scr_generate_pop_name(_profile, self.sex); 
     } else {
-        speed = 1; // Fallback speed if not defined in data
-        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No base_speed_units_sec in entity_data for '{pop.name}'. Using fallback speed: {speed}.\");
+        self.pop_name = _profile.name + " (Unnamed Pop)"; // Fallback name if script is missing
+        show_debug_message("WARNING (obj_pop.initialize_from_profile): scr_generate_pop_name script not found. Using fallback name.");
+    }
+    // pop_identifier_string is used for more detailed logging/identification
+    self.pop_identifier_string = self.pop_name + " [InstanceID:" + string(id) + ", Profile:" + self.profileIDStringRef + "]";
+
+    // --- 4. Core Attributes & Stats (based on profile) ---
+    // Initialize base stats, abilities, health, speed, etc.
+
+    // Base Movement Speed (from profile, fallback to a default if not specified)
+    if (struct_exists(_profile, "base_speed_units_sec")) {
+        self.speed = _profile.base_speed_units_sec;
+    } else {
+        self.speed = 1.0; // Default speed if not in profile
+        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): No 'base_speed_units_sec' in profile. Using fallback speed: {self.speed}.");
     }
     
-    // Inventory Capacity (from Section 5)
-    if (struct_exists(pop, "carrying_capacity_units")) {
-        max_inventory_capacity = pop.carrying_capacity_units;
-        hauling_threshold = pop.carrying_capacity_units; // Assuming threshold is same as max capacity
+    // Ability Scores (Example: Direct assignment or roll based on profile)
+    self.ability_scores = {}; // Initialize as an empty struct
+    if (struct_exists(_profile, "base_ability_scores")) {
+        var _base_scores_profile = _profile.base_ability_scores; // e.g., { STRENGTH: 10, DEXTERITY: 12 }
+        var _score_names = variable_struct_get_names(_base_scores_profile);
+        for (var i = 0; i < array_length(_score_names); i++) {
+            var _name = _score_names[i]; // e.g., "STRENGTH"
+            // TODO: Implement rolling logic if desired, e.g., _base_scores_profile[$ _name] + irandom_range(-2, 2)
+            self.ability_scores[$ _name] = _base_scores_profile[$ _name]; // Direct assignment for now
+        }
     } else {
-        max_inventory_capacity = 10; // Fallback capacity
-        hauling_threshold = 10;    // Fallback threshold
-        show_debug_message($\"WARNING (obj_pop.initialize_from_data): No carrying_capacity_units in entity_data for '{pop.name}'. Using fallback capacity: {max_inventory_capacity}.\");
+        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): 'base_ability_scores' not in profile. Abilities not initialized from profile.");
+        // Optionally, initialize with default scores if profile is missing this
+        // self.ability_scores[$ "STRENGTH"] = 8; // etc.
     }
 
-    // Generate Pop Details (from Section 4)
-    // This script (scr_generate_pop_details) likely uses the 'pop' struct and other instance variables.
-    // It's crucial that 'pop' is correctly assigned from self.entity_data before this call.
-    // Also ensure global.life_stage is available.
-    if (variable_global_exists("life_stage")) {
-        scr_generate_pop_details(global.life_stage);
+    // Derived Stats (e.g., Health)
+    var _base_health_from_profile = struct_exists(_profile, "max_health") ? _profile.max_health : 50; // Default base health if not in profile
+    var _constitution_bonus = 0;
+    // Example: if (struct_exists(self.ability_scores, "CONSTITUTION")) { _constitution_bonus = (self.ability_scores.CONSTITUTION - 10) * 5; }
+    self.max_health_stat = _base_health_from_profile + _constitution_bonus;
+    self.current_health_stat = self.max_health_stat; // Start with full health
+
+    // --- 5. Skills Initialization ---
+    // Sets initial skill aptitudes based on the pop's profile.
+    self.skills = {}; // Initialize as an empty struct for skill data
+    if (struct_exists(_profile, "base_skill_aptitudes")) {
+        var _aptitudes_profile = _profile.base_skill_aptitudes; // e.g., { FORAGING: 0.3, CRAFTING: 0.1 }
+        var _skill_enum_keys = variable_struct_get_names(_aptitudes_profile); // These are strings like "FORAGING"
+        for (var i = 0; i < array_length(_skill_enum_keys); i++) {
+            var _skill_key_str = _skill_enum_keys[i]; // The string key, e.g., "FORAGING"
+            var _aptitude_value = _aptitudes_profile[$ _skill_key_str];
+            
+            // Store skill data. Using the string key from the profile.
+            // This assumes skill keys are consistent (e.g., always "FORAGING").
+            self.skills[$ _skill_key_str] = {
+                aptitude: _aptitude_value, // Innate learning speed/potential
+                level: 1,                  // Starting level
+                experience: 0,             // Current XP in this level
+                progress_to_next_level: 0  // For UI or calculations, typically (current_xp / xp_for_next_level)
+                // xp_for_next_level: calculate_xp_for_level(1) // Could be added
+            };
+        }
     } else {
-        // This error is critical as pop generation depends on it.
-        show_error("FATAL (obj_pop.initialize_from_data): Global variable 'life_stage' is not initialized prior to calling scr_generate_pop_details. Ensure obj_controller or game setup initializes it.", true);
-    }
-    
-    // Initialize health (example, actual health stats might be set within scr_generate_pop_details)
-    // If scr_generate_pop_details sets stats like 'current_health_stat' and 'max_health_stat' based on 'pop.max_health',
-    // then this explicit setting might not be needed. Verify how health is handled by that script.
-    if (struct_exists(pop, "max_health")) {
-        // Assuming 'health' is the variable for current health and 'max_health_stat' for max.
-        // Adjust if your variables are named differently (e.g., current_hp, max_hp).
-        // self.health = pop.max_health; // Set current health to max
-        // self.max_health_stat = pop.max_health; // Set max health stat
-        // If scr_generate_pop_details handles this, these lines might be redundant or need adjustment.
-    } else {
-         show_debug_message($\"WARNING (obj_pop.initialize_from_data): No max_health in entity_data for '{pop.name}'. Health may not be set correctly unless handled by scr_generate_pop_details.\");
+        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): 'base_skill_aptitudes' not in profile. Skills not initialized from profile.");
     }
 
-    // Log successful initialization
-    var _pop_id_string = "Unknown Pop";
-    if (variable_instance_exists(id, "pop_identifier_string")) {
-        _pop_id_string = pop_identifier_string; // This should be set by scr_generate_pop_details
+    // --- 6. Traits Initialization ---
+    // Assigns innate traits from the profile and applies their initial effects.
+    self.traits = ds_list_create(); // Initialize a list to store trait profile structs
+    if (struct_exists(_profile, "innate_trait_profile_paths") && !is_undefined(_profile.innate_trait_profile_paths) && ds_exists(_profile.innate_trait_profile_paths, ds_type_list)) {
+        var _trait_paths_list = _profile.innate_trait_profile_paths;
+        for (var i = 0; i < ds_list_size(_trait_paths_list); i++) {
+            var _trait_id_string = _trait_paths_list[| i]; // e.g., "TRAIT_STRONG"
+            // Assuming global.GameData.GetProfileFromID(id_string) is available and returns the trait's data profile
+            var _trait_profile_data = global.GameData.GetProfileFromID(_trait_id_string);
+
+            if (!is_undefined(_trait_profile_data)) {
+                ds_list_add(self.traits, _trait_profile_data); // Store the actual trait profile struct
+
+                // TODO: Apply initial effects of the trait here.
+                // This is a placeholder for logic that would modify the pop's stats or state based on the trait.
+                // Example:
+                // if (struct_exists(_trait_profile_data, "on_acquire_effect_script")) {
+                //     script_execute(_trait_profile_data.on_acquire_effect_script, id); // Pass instance id to the script
+                // } else if (struct_exists(_trait_profile_data, "stat_modifiers")) {
+                //     // Apply stat_modifiers directly
+                // }
+                show_debug_message($"INFO (obj_pop.initialize_from_profile for {self.pop_identifier_string}): Added innate trait '{_trait_profile_data.name}'.");
+            } else {
+                show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): Innate trait profile ID '{_trait_id_string}' not found in GameData. Trait not added.");
+            }
+        }
+    } else {
+        // This is not necessarily a warning if a pop type simply has no innate traits.
+        // show_debug_message($"INFO (obj_pop.initialize_from_profile for {self.pop_identifier_string}): No 'innate_trait_profile_paths' list in profile or list is empty/invalid. No innate traits assigned from profile.");
     }
-    show_debug_message($\"INFO (obj_pop.initialize_from_data): Pop '{_pop_id_string}' (Entity: '{pop.name}') initialized with data for type {entity_type_to_string(self.entity_type)}.\");
-}
+
+    // --- 7. Inventory Initialization ---
+    // Sets up the pop's inventory capacity and data structure.
+    // Assumes scr_inventory_create() exists and returns an inventory data structure (e.g., a ds_list or a custom struct).
+    if (script_exists(asset_get_index("scr_inventory_create"))) {
+        self.inventory_items = scr_inventory_create(); // This script should return the initialized inventory structure
+    } else {
+        self.inventory_items = ds_list_create(); // Fallback: simple ds_list if script is missing
+        show_debug_message("WARNING (obj_pop.initialize_from_profile): scr_inventory_create script not found. Using basic ds_list for inventory.");
+    }
+
+    // Set inventory capacity from profile, with fallback
+    if (struct_exists(_profile, "carrying_capacity_units")) {
+        self.max_inventory_capacity = _profile.carrying_capacity_units;
+        // Hauling threshold might be the same as capacity, a fraction of it, or its own value in the profile
+        self.hauling_threshold = _profile.carrying_capacity_units; // Defaulting to full capacity for now
+    } else {
+        self.max_inventory_capacity = 10; // Default capacity if not in profile
+        self.hauling_threshold = 10;    // Default threshold
+        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): No 'carrying_capacity_units' in profile. Using fallback capacity: {self.max_inventory_capacity}.");
+    }
+
+    // --- 8. Initialize other necessary pop-specific runtime variables ---
+    // (e.g., needs, current action, relationships, etc.)
+    // These are typically not from the static profile but are part of the pop's dynamic state.
+    // self.needs = { hunger: 50, thirst: 50, rest: 100 }; // Example starting needs
+    // self.current_task_id = undefined; // No task assigned initially
+
+    // Ensure essential movement variables are set (some might be initialized in Create event, this confirms/overrides)
+    self.travel_point_x = self.x; // Start at current position
+    self.travel_point_y = self.y;
+    self.has_arrived = true;      // Considered arrived at starting point
+
+    // Final log to confirm completion of this initialization stage
+    show_debug_message($"INFO (obj_pop.initialize_from_profile): Pop '{self.pop_identifier_string}' (Profile Name: '{_profile.name}') has completed profile-based initialization.");
+} // <<< THIS BRACE WAS MISSING
 #endregion
-
-// SECTION 6 (Pre-defined Name Colors) HAS BEEN REMOVED as the Draw event will use c_ltblue and c_fuchsia directly.
-
-// SAFETY: Ensure global.game_speed is set before using it
-if (!variable_global_exists("game_speed")) {
-    // Fallback to room_get_speed(room) if not set, which is the standard
-    global.game_speed = room_get_speed(room); 
-}
-forage_rate = global.game_speed;
-
-// Ensure global.life_stage is initialized before proceeding
-if (!variable_global_exists("life_stage")) {
-    show_error("Global variable 'life_stage' is not initialized. Ensure obj_controller is created first.", true);
-    exit; // Stop further execution to prevent errors
-}
-
-// Assign the PopLifeStage in the Create Event of the pop object
-if (global.first_load) {
-    life_stage = PopLifeStage.TRIBAL; // Set to TRIBAL for the first game load
-    debug_log("Assigned life stage TRIBAL to pop on first load.", "obj_pop:Create");
-} else {
-    // Dynamically determine the life stage based on game state
-    life_stage = scr_determine_life_stage(); // Placeholder for dynamic logic
-    debug_log("Life stage dynamically determined for this pop.", "obj_pop:Create", "yellow");
-}
-
-// Post-generation debug message is intentionally disabled for production.
-// Uncomment the line below for debugging purposes during development.
-// debug_log($\"Pop {pop_identifier_string} fully created. State: {state}\", "obj_pop:Create", "blue"); // Enable for detailed pop creation debug

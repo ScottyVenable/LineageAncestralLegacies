@@ -14,7 +14,7 @@
 ///   Returns:       instance id — The ID of the spawned instance, or noone if creation failed.
 ///   Tags:          [entity, spawning, world]
 ///   Version:       1.0 — 2025-05-25
-///   Dependencies:  scr_entities.gml, controller objects
+///   Dependencies:  scr_database.gml, controller objects
 
 function scr_spawn_entity(entity_type, spawn_x, spawn_y, layer_id = "Instances") {
     // =========================================================================

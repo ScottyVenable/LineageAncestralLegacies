@@ -215,7 +215,7 @@ function scr_pop_resume_previous_or_idle() {
     // Ensure sprite is appropriate for idling
     // LEARNING POINT: Using `self` explicitly can improve clarity when instance variables are being modified,
     // especially in scripts that could potentially be called by different contexts (though this one is pop-specific).
-    self.sprite_index = spr_man_idle; // Or a generic idle sprite
+    self.sprite_index = spr_pop_man_idle; // Or a generic idle sprite
     self.image_speed = 0.2 + random(0.1); // Slow, slightly varied idle animation
     self.speed = 0;
     

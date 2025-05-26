@@ -4,8 +4,8 @@
 
 function scr_pop_waiting() {
     // Animation swap (reuse your idle animation or create a special one)
-    if (sprite_index != spr_man_idle) {
-        sprite_index = spr_man_idle;
+    if (sprite_index != spr_pop_man_idle) {
+        sprite_index = spr_pop_man_idle;
         image_index  = 0;
     }
 

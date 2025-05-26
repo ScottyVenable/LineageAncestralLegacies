@@ -110,8 +110,8 @@ function scr_pop_hauling() {
     // =========================================================================
     if (has_arrived && instance_exists(target_object_id) && target_object_id.object_index == obj_structure_gatheringHut) {
         // --- Perform Drop-off Logic (Sprite, Slot, Inventory) ---
-        if (sprite_index != spr_man_idle) { 
-            sprite_index = spr_man_idle; 
+        if (sprite_index != spr_pop_man_idle) { 
+            sprite_index = spr_pop_man_idle; 
             image_index = 0;
         }
 

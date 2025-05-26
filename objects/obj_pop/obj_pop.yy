@@ -45,8 +45,8 @@
   "resourceVersion":"2.0",
   "solid":true,
   "spriteId":{
-    "name":"spr_man_idle",
-    "path":"sprites/spr_man_idle/spr_man_idle.yy",
+    "name":"spr_pop_man_idle",
+    "path":"sprites/spr_pop_man_idle/spr_pop_man_idle.yy",
   },
   "spriteMaskId":null,
   "visible":true,

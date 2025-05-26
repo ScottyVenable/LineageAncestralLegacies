@@ -3,6 +3,9 @@
 //          database for all static game definitions in Lineage: Ancestral Legacies.
 //          This script should be run once at the very start of the game.
 
+// Ensure prerequisite enums and entity definitions are loaded first.
+scr_constants(); // Defines global enums like FormationType, PopState, etc.
+
 show_debug_message("Initializing scr_database: Populating global.GameData...");
 
 // -----------------------------------------------------------------------------
@@ -592,33 +595,56 @@ global.GameData.Entity.Hazard.AreaEffect.QUICKSAND = {
 // =============================================================================
 // SECTION: RECIPES
 // =============================================================================
+// Assign the frequently accessed skill profile to a temporary variable
+var _crafting_skill_profile_ref = undefined;
+if (is_struct(global.GameData.Skills.Profiles) && variable_struct_exists(global.GameData.Skills.Profiles, string(global.GameData.Skills.Type.CRAFTING_PRIMITIVE))) {
+    // Corrected: Use the $ accessor for enum/integer keys with structs.
+    // This was causing the "trying to index a variable which is not an array" error.
+    // The $ accessor converts the enum value (which is an integer) to its string representation
+    // for the struct lookup, matching how it was stored (e.g., Profiles[$ 1] = ...).
+    _crafting_skill_profile_ref = global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE];
+} else {
+    // It's good practice to log an error if a critical reference cannot be established.
+    // This helps in debugging if recipes fail to load or behave unexpectedly.
+    show_debug_message("ERROR (scr_database): Could not assign _crafting_skill_profile_ref for recipes. global.GameData.Skills.Profiles might be invalid or the CRAFTING_PRIMITIVE key is missing.");
+}
+
 global.GameData.Recipes = {};
 
+/// @desc Recipe definition for crafting a Stone Axe.
+/// @educational
+/// This struct defines all the data needed for the crafting system to allow players to create a Stone Axe.
+/// Each property is explained below to help beginners understand how recipes work in this project.
+
 global.GameData.Recipes[$ ID.RECIPE_STONE_AXE] = { // Keyed by ID for convenience
-    recipe_id_string: "RECIPE_TOOL_STONE_AXE",
-    display_name_key: "recipe_name_stone_axe",
-    produces_item_profile_path: global.GameData.Items.Tool.STONE_AXE,
-    produces_quantity: 1,
+    recipe_id_string: "RECIPE_TOOL_STONE_AXE", // Unique string ID for this recipe (used for lookups and debugging)
+    display_name_key: "recipe_name_stone_axe", // Localization key for the recipe's display name
+    produces_item_profile_path: global.GameData.Items.Tool.STONE_AXE, // Reference to the item profile this recipe creates
+    produces_quantity: 1, // Number of items produced per craft
     ingredients: [
-        { item_profile_path: global.GameData.Items.Resource.FLINT, quantity: 2 },
-        { item_profile_path: global.GameData.Items.Resource.STICK, quantity: 1 }
+        // Each ingredient is a struct with a reference to the item profile and the required quantity
+        { item_profile_path: global.GameData.Items.Resource.FLINT, quantity: 2 }, // Requires 2 flint
+        { item_profile_path: global.GameData.Items.Resource.STICK, quantity: 1 }  // Requires 1 stick
     ],
-    base_crafting_time_seconds: 15, // From previous example
+    base_crafting_time_seconds: 15, // How long crafting takes (in seconds) before any skill or station modifiers
     required_skill_profile: {
-        skill_profile_path: global.GameData.Skills.Profiles[global.GameData.Skills.Type.CRAFTING_PRIMITIVE],
-        min_level_required: 1
+        skill_profile_path: _crafting_skill_profile_ref, // Use temporary variable
+        min_level_required: 1 // Minimum skill level required to craft this recipe
     },
-    required_crafting_station_tags: ["crafting_surface_basic", "tool_making_spot"], // e.g., a flat rock or work stump entity
-    xp_reward_skill_path: global.GameData.Skills.Profiles[global.GameData.Skills.Type.CRAFTING_PRIMITIVE],
-    xp_reward_amount: 8
+    required_crafting_station_tags: ["crafting_surface_basic", "tool_making_spot"], // Tags for stations where this recipe can be crafted (e.g., flat rock, work stump)
+    xp_reward_skill_path: _crafting_skill_profile_ref, // Use temporary variable
+    xp_reward_amount: 8 // Amount of XP awarded for crafting this item
+    // This structure makes it easy to add more recipes and ensures consistency across all crafting data.
 };
 // ... More recipes
 
 // -----------------------------------------------------------------------------
 // Helper Function: GetProfileFromID (Maps ID enum to GameData paths)
 // -----------------------------------------------------------------------------
-function GetProfileFromID(id_enum) {
-    switch (uid_enum) {
+function GetProfileFromID(id_enum) { // Parameter is id_enum
+    // Corrected: Changed 'uid_enum' to 'id_enum' to match the function parameter.
+    // This ensures the switch statement correctly uses the provided ID.
+    switch (id_enum) {
         // Entity Profiles
         case ID.POP_GEN1: return global.GameData.Entity.Pop.GEN1;
         // case ID.POP_ROLE_HUNTER: return global.GameData.Entity.Pop.Role.HUNTER; // Assuming Role path
@@ -642,7 +668,8 @@ function GetProfileFromID(id_enum) {
 
 
         default:
-            show_debug_message($"ERROR (GetProfileFromID): Unhandled ID enum: {uid_enum}");
+            // Corrected: Changed 'uid_enum' to 'id_enum' for accurate debugging.
+            show_debug_message($"ERROR (GetProfileFromID): Unhandled ID enum: {id_enum}");
             return undefined;
     }
 }

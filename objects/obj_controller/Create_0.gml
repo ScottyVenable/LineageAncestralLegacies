@@ -110,7 +110,7 @@ global.game_time_display_string = "Morning"; // Or a numerical time
 #endregion
 
 #region 4.2 Formation System Globals
-global.current_formation_type   = Formation.GRID; // Ensure Formation enum exists
+global.current_formation_type   = FormationType.GRID; // Ensure Formation enum exists
 global.formation_spacing        = 48;
 // Formation Notification Globals
 global.formation_notification_text  = "";
@@ -174,15 +174,18 @@ if (!layer_exists(_pop_spawn_layer)) {
 
 // Check if the spawn entity script exists
 if (script_exists(scr_spawn_entity)) {
-    // SAFETY CHECK: Ensure pop entity data is valid before spawning pops
-    // We'll use a specific Hominid species for initial spawning.
-    // This assumes EntityType.POP_HOMO_HABILIS_EARLY is defined in your scr_database.gml
-    // and is intended for the initial pops.
-    var _initial_pop_entity_type = EntityType.POP_HOMO_HABILIS_EARLY; 
-    var _pop_entity_data = get_entity_data(_initial_pop_entity_type);
+    // Entity data is fetched using GetProfileFromID, which resolves the ID enum
+    // to the correct path within the global.GameData structure.
+    // This ensures consistency with how other parts of the game might access entity profiles.
+    var _initial_pop_entity_type = ID.POP_GEN1; // Use the ID enum for the initial pop type.
+    
+    // Get the entity data profile by resolving the ID.
+    // GetProfileFromID is defined in scr_database.gml and maps enums to actual data paths.
+    var _pop_entity_data = GetProfileFromID(_initial_pop_entity_type); 
 
     if (_pop_entity_data == undefined) {
-        show_error("ERROR: EntityType '" + entity_type_to_string(_initial_pop_entity_type) + "' is not defined in the entity database. Cannot spawn initial pops!", true);
+        // Updated error message to reflect that an ID enum is used.
+        show_error("ERROR: EntityType ID '" + string(_initial_pop_entity_type) + "' (resolved to undefined by GetProfileFromID) is not defined or accessible in the entity database. Cannot spawn initial pops!", true);
     } else {
         // Find the game start object to determine spawn location
         // Ensure obj_gameStart exists and is placed in the room.

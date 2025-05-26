@@ -99,6 +99,7 @@
     {"id":{"name":"obj_gui_controller","path":"objects/obj_gui_controller/obj_gui_controller.yy",},},
     {"id":{"name":"obj_hazard_controller","path":"objects/obj_hazard_controller/obj_hazard_controller.yy",},},
     {"id":{"name":"obj_interaction_point","path":"objects/obj_interaction_point/obj_interaction_point.yy",},},
+    {"id":{"name":"obj_placeholder_entity","path":"objects/obj_placeholder_entity/obj_placeholder_entity.yy",},},
     {"id":{"name":"obj_pop","path":"objects/obj_pop/obj_pop.yy",},},
     {"id":{"name":"obj_redBerryBush","path":"objects/obj_redBerryBush/obj_redBerryBush.yy",},},
     {"id":{"name":"obj_resource_node_controller","path":"objects/obj_resource_node_controller/obj_resource_node_controller.yy",},},

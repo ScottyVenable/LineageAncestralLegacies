@@ -83,7 +83,7 @@ function debug_log(_msg, _section = "General", _color = "gray") { // Added defau
     // but they can be useful for manual searching or if logs are parsed by another tool.
     // Example format: {color_name}Log message{/}
     // The {/} tag is a hypothetical closing tag for external parsers.
-    _formatted_message = "{" + _color + "}" + _formatted_message + "{/}";
+    
     #endregion
 
     #region 4.2 Outputting the Message

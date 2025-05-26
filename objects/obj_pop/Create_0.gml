@@ -22,11 +22,6 @@ image_index = 0;
 current_sprite = sprite_index;
 is_mouse_hovering = false;
 
-// Entity data placeholders - these will be populated by scr_spawn_entity
-entity_type = EntityType.NONE; // The specific enum ID (e.g., EntityType.POP_HOMO_HABILIS_EARLY)
-entity_data = undefined;       // The full data struct for this entity type
-pop = undefined;               // This instance variable will hold entity_data for convenience, used by existing code
-
 // REMOVED: Old hardcoded pop initialization:
 // // Updated to use a specific Hominid species from global.EntityCategories
 // // as EntityType.POP_HOMINID is obsolete.
@@ -142,7 +137,7 @@ initialize_from_profile = function() {
         return; // Stop further initialization
     }
 
-    show_debug_message($"INFO (obj_pop.initialize_from_profile): Initializing Pop with Profile ID '{self.profileIDStringRef}', Defined Name: '{_profile.name}'.");
+    show_debug_message($"INFO (obj_pop.initialize_from_profile): Initializing Pop with Profile ID '{self.profileIDStringRef}', Defined Name: '{_profile.name_display_type}'.");
 
     // --- Helper function to safely get a sprite asset index ---
     // Defined here to keep it local to this initialization logic.
@@ -225,7 +220,8 @@ initialize_from_profile = function() {
     self.current_sprite = self.sprite_index; // Ensure current_sprite reflects the chosen idle sprite
     self.image_index = 0; // Reset animation frame
     // If sprite_index is undefined or noone, image_speed 0 prevents errors. Otherwise, standard speed.
-    self.image_speed = (is_undefined(self.sprite_index) || self.sprite_index == noone) ? 0 : 1;
+    self.image_speed = (is_undefined(self.sprite_index) || self.sprite_index == noone) ? 0 : 1; 
+
 
     // --- 3. Name Generation ---
     // Generates a name for the pop. Assumes scr_generate_pop_name(profile_struct, sex_string) exists.
@@ -300,67 +296,57 @@ initialize_from_profile = function() {
     // --- 6. Traits Initialization ---
     // Assigns innate traits from the profile and applies their initial effects.
     self.traits = ds_list_create(); // Initialize a list to store trait profile structs
-    if (struct_exists(_profile, "innate_trait_profile_paths") && !is_undefined(_profile.innate_trait_profile_paths) && ds_exists(_profile.innate_trait_profile_paths, ds_type_list)) {
+    if (struct_exists(_profile, "innate_trait_profile_paths") && ds_exists(_profile.innate_trait_profile_paths, ds_type_list)) {
         var _trait_paths_list = _profile.innate_trait_profile_paths;
         for (var i = 0; i < ds_list_size(_trait_paths_list); i++) {
             var _trait_id_string = _trait_paths_list[| i]; // e.g., "TRAIT_STRONG"
             // Assuming global.GameData.GetProfileFromID(id_string) is available and returns the trait's data profile
-            var _trait_profile_data = global.GameData.GetProfileFromID(_trait_id_string);
-
+            var _trait_profile_data = global.GameData.GetProfileFromID(_trait_id_string); 
+            
             if (!is_undefined(_trait_profile_data)) {
                 ds_list_add(self.traits, _trait_profile_data); // Store the actual trait profile struct
-
+                
                 // TODO: Apply initial effects of the trait here.
-                // This is a placeholder for logic that would modify the pop's stats or state based on the trait.
-                // Example:
-                // if (struct_exists(_trait_profile_data, "on_acquire_effect_script")) {
-                //     script_execute(_trait_profile_data.on_acquire_effect_script, id); // Pass instance id to the script
-                // } else if (struct_exists(_trait_profile_data, "stat_modifiers")) {
-                //     // Apply stat_modifiers directly
-                // }
-                show_debug_message($"INFO (obj_pop.initialize_from_profile for {self.pop_identifier_string}): Added innate trait '{_trait_profile_data.name}'.");
-            } else {
-                show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): Innate trait profile ID '{_trait_id_string}' not found in GameData. Trait not added.");
+                show_debug_message("INFO (obj_pop Create for " + self.pop_identifier_string + "): Added innate trait '" + _trait_profile_data.name + "'.");            } else {
+                show_debug_message("WARNING (obj_pop Create for " + self.pop_identifier_string + "): Innate trait profile ID '" + string(_trait_id) + "' not found in GameData. Trait not added.");
             }
         }
     } else {
-        // This is not necessarily a warning if a pop type simply has no innate traits.
-        // show_debug_message($"INFO (obj_pop.initialize_from_profile for {self.pop_identifier_string}): No 'innate_trait_profile_paths' list in profile or list is empty/invalid. No innate traits assigned from profile.");
+         // show_debug_message("INFO (obj_pop Create for " + self.pop_identifier_string + "): No 'innate_trait_profile_ids' array in profile or array is empty. No innate traits assigned from profile.");
     }
 
     // --- 7. Inventory Initialization ---
-    // Sets up the pop's inventory capacity and data structure.
-    // Assumes scr_inventory_create() exists and returns an inventory data structure (e.g., a ds_list or a custom struct).
-    if (script_exists(asset_get_index("scr_inventory_create"))) {
-        self.inventory_items = scr_inventory_create(); // This script should return the initialized inventory structure
-    } else {
-        self.inventory_items = ds_list_create(); // Fallback: simple ds_list if script is missing
-        show_debug_message("WARNING (obj_pop.initialize_from_profile): scr_inventory_create script not found. Using basic ds_list for inventory.");
-    }
+    // Initializes inventory-related variables and data structures.
+    // This is separated from the main initialization to allow for easier overrides or custom logic
+    // in the future, such as loading inventory from a save file or applying starting items from the profile.
+    self.inventory_items = ds_list_create(); // Create the inventory list
+    self.max_inventory_capacity = 10; // Default capacity, can be overridden by profile or other logic
+    self.hauling_threshold = 10;    // Default threshold for when to start hauling items
+    // Note: Actual items will be added to the inventory in a separate step, typically after this initialization phase.
 
-    // Set inventory capacity from profile, with fallback
-    if (struct_exists(_profile, "carrying_capacity_units")) {
-        self.max_inventory_capacity = _profile.carrying_capacity_units;
-        // Hauling threshold might be the same as capacity, a fraction of it, or its own value in the profile
-        self.hauling_threshold = _profile.carrying_capacity_units; // Defaulting to full capacity for now
-    } else {
-        self.max_inventory_capacity = 10; // Default capacity if not in profile
-        self.hauling_threshold = 10;    // Default threshold
-        show_debug_message($"WARNING (obj_pop.initialize_from_profile for {self.pop_identifier_string}): No 'carrying_capacity_units' in profile. Using fallback capacity: {self.max_inventory_capacity}.");
-    }
-
-    // --- 8. Initialize other necessary pop-specific runtime variables ---
-    // (e.g., needs, current action, relationships, etc.)
-    // These are typically not from the static profile but are part of the pop's dynamic state.
-    // self.needs = { hunger: 50, thirst: 50, rest: 100 }; // Example starting needs
-    // self.current_task_id = undefined; // No task assigned initially
-
-    // Ensure essential movement variables are set (some might be initialized in Create event, this confirms/overrides)
-    self.travel_point_x = self.x; // Start at current position
-    self.travel_point_y = self.y;
-    self.has_arrived = true;      // Considered arrived at starting point
-
-    // Final log to confirm completion of this initialization stage
-    show_debug_message($"INFO (obj_pop.initialize_from_profile): Pop '{self.pop_identifier_string}' (Profile Name: '{_profile.name}') has completed profile-based initialization.");
-} // <<< THIS BRACE WAS MISSING
+    // --- 8. Debug/Info Logging ---
+    // Initial logging for debugging purposes. Can be expanded or modified based on needs.
+    show_debug_message("DEBUG (obj_pop Create for " + self.pop_identifier_string + "): Initialization complete. Current state: " + string(state) + ", Position: (" + string(x) + ", " + string(y) + "), Depth: " + string(depth) + ".");
+    // Consider adding more detailed logs for each major step or variable of interest.
+    // Example: show_debug_message("DEBUG (obj_pop Create): Assigned sprites - Idle: " + string(self.spr_idle) + ", Walk Prefix: " + self.spr_walk_prefix_string + ", Portrait: " + self.spr_portrait + ", Death: " + self.spr_death + ".");
+};
 #endregion
+
+// --- 0. Validate Injected Data ---
+// Ensure entity_data has been set by the spawner (scr_spawn_entity)
+if (!variable_instance_exists(self, "entity_data") || !is_struct(self.entity_data)) {
+    var _error_msg = "FATAL (obj_pop Create): self.entity_data was not provided or is not a struct. Entity Type ID: " 
+                   + (variable_instance_exists(self, "entity_type_id") ? string(self.entity_type_id) : "UNKNOWN") 
+                   + ". Cannot initialize.";
+    show_error(_error_msg, true);
+    instance_destroy(); // Destroy self if no data
+    exit; // Stop further execution of the Create event
+}
+
+// Assign self.entity_data to self.pop for compatibility with existing code that uses self.pop
+// This ensures that scripts like scr_pop_wandering can access entity properties via self.pop.
+self.pop = self.entity_data;
+
+// Convenience alias for the injected data, used throughout this Create event.
+var _data = self.entity_data; 
+

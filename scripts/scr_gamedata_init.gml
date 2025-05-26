@@ -3,31 +3,57 @@
 function gamedata_init() {
     show_debug_message("Initializing global.GameData...");
 
+    // Ensure critical enums and base structures from other scripts are loaded first
+    if (script_exists(asset_get_index("scr_database"))) {
+        scr_database(); // This script defines the EntityType enum and global.EntityCategories
+        show_debug_message("scr_database() executed from gamedata_init.");
+    } else {
+        show_error("CRITICAL ERROR: scr_database script not found. EntityType enum will be undefined.", true);
+        return; // Stop initialization if critical script is missing
+    }
+    
+    // Initialize scr_constants if it defines enums needed by other gamedata parts
+    if (script_exists(asset_get_index("scr_constants"))) {
+        scr_constants(); // This script defines various enums like PopLifeStage, FormationType etc.
+        show_debug_message("scr_constants() executed from gamedata_init.");
+    } else {
+        show_debug_message("WARNING: scr_constants script not found. Some enums might be undefined.");
+    }
+
     global.GameData = {};
 
     // --- Top-Level Categories ---
-    global.GameData.Entity = {};
+    global.GameData.Entity = {}; // This will be populated by scr_database or similar later
     global.GameData.Items = {};
     global.GameData.Recipes = {};
     global.GameData.SpawnFormations = {};
     global.GameData.Traits = {};
-    global.GameData.Skills = {};
+    global.GameData.Skills = {}; // Initialize Skills structure
     global.GameData.WorldConstants = {};
     global.GameData.LootTables = {};
 
     // --- SpawnFormations ---
-    global.GameData.SpawnFormations.Type = {
-        SINGLE_POINT: 0,
-        CLUSTERED: 1,
-        LINE: 2,
-        GRID: 3,
-        PACK_SCATTER: 4
-    };
+    // Ensure FormationType is defined (typically in scr_constants) before accessing it here
+    if (variable_global_exists("FormationType")) {
+        global.GameData.SpawnFormations.Type = {
+            SINGLE_POINT: FormationType.SINGLE_POINT, // Assuming FormationType has these
+            CLUSTERED: FormationType.CLUSTERED,
+            LINE: FormationType.LINE,
+            GRID: FormationType.GRID,
+            PACK_SCATTER: FormationType.PACK_SCATTER 
+            // Add other formation types if they exist in your FormationType enum
+        };
+    } else {
+        show_debug_message("WARNING (gamedata_init): FormationType enum not found. SpawnFormations.Type may be incomplete.");
+        // Fallback or default definition if FormationType is missing
+        global.GameData.SpawnFormations.Type = { 
+            SINGLE_POINT: 0, CLUSTERED: 1, LINE: 2, GRID: 3, PACK_SCATTER: 4 
+        };
+    }
     // Example: global.GameData.SpawnFormations.DefaultParams could be defined here if needed
 
     // --- Skills ---
     // This section defines skill types (used as keys/IDs) and their corresponding profiles.
-    global.GameData.Skills = {};
     global.GameData.Skills.Type = { // Enum-like struct for skill identifiers
         FORAGING: "skill_type_foraging",
         CRAFTING_PRIMITIVE: "skill_type_crafting_primitive",
@@ -37,18 +63,21 @@ function gamedata_init() {
 
     // Skill Profiles (actual data for each skill)
     // The key for each profile is the value from GameData.Skills.Type
-    global.GameData.Skills[global.GameData.Skills.Type.FORAGING] = {
+    // IMPORTANT: Initialize Profiles as a struct first
+    global.GameData.Skills.Profiles = {}; 
+
+    global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FORAGING] = {
         profile_id_string: global.GameData.Skills.Type.FORAGING, // Consistent ID
         display_name_key: "skill_name_foraging", // For localization
         description_key: "skill_desc_foraging",
         // Other properties: xp_curve_type, effects_per_level, etc.
     };
-    global.GameData.Skills[global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = {
+    global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = {
         profile_id_string: global.GameData.Skills.Type.CRAFTING_PRIMITIVE,
         display_name_key: "skill_name_crafting_primitive",
         description_key: "skill_desc_crafting_primitive",
     };
-    global.GameData.Skills[global.GameData.Skills.Type.SCAVENGING] = {
+    global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.SCAVENGING] = {
         profile_id_string: global.GameData.Skills.Type.SCAVENGING,
         display_name_key: "skill_name_scavenging",
         description_key: "skill_desc_scavenging",

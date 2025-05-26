@@ -21,6 +21,13 @@ function gamedata_init() {
     }
 
     global.GameData = {};
+    // Load external JSON data files into global.GameData (data-driven override)
+    if (script_exists(scr_load_external_data_all)) {
+        scr_load_external_data_all("datafiles");
+        show_debug_message("External JSON data loaded into global.GameData.");
+    } else {
+        show_debug_message("scr_load_external_data_all() not found. Skipping external data load.");
+    }
 
     // --- Top-Level Categories ---
     global.GameData.Entity = {}; // This will be populated by scr_database or similar later

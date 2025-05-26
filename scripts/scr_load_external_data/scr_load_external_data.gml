@@ -284,6 +284,11 @@ function scr_load_external_data_all(_base_path) {
     var _ent = load_json_file(_ent_path);
     if (is_struct(_ent)) global.GameData.entities = _ent;
 
+    // Name Data
+    var _name_path = _base_path + "/pop_name_data.json";
+    var _names = load_json_file(_name_path);
+    if (is_struct(_names)) global.GameData.pop_name_data = _names;
+
     // Names handled by load_name_data (text-based)
     show_debug_message("External data loaded from: " + _base_path);
 }

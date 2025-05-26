@@ -154,12 +154,15 @@ if (!instance_exists(obj_entity_state_controller)) {
 // 4.B PRE-SPAWN DATA INITIALIZATION (e.g. Name data for pops)
 // ============================================================================
 #region 4.B.1 Load Name Data
-// Ensure name data is loaded before any pops are created, as scr_generate_pop_details needs it.
-if (script_exists(scr_load_name_data)) {
-    scr_load_name_data();
-    debug_log("Name data loaded via scr_load_name_data().", "obj_controller:Create", "green");
+// Load pop name data from external JSON loaded into global.GameData.pop_name_data
+if (is_struct(global.GameData.pop_name_data)) {
+    global.male_prefixes   = global.GameData.pop_name_data.male_prefixes;
+    global.male_suffixes   = global.GameData.pop_name_data.male_suffixes;
+    global.female_prefixes = global.GameData.pop_name_data.female_prefixes;
+    global.female_suffixes = global.GameData.pop_name_data.female_suffixes;
+    debug_log("Pop name data loaded from JSON.", "obj_controller:Create", "green");
 } else {
-    debug_log("ERROR: scr_load_name_data() script not found. Pop names may not generate correctly.", "obj_controller:Create", "red");
+    debug_log("ERROR: JSON pop_name_data not found. Pop names may not generate correctly.", "obj_controller:Create", "red");
 }
 #endregion
 

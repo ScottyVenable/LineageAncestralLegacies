@@ -26,7 +26,18 @@ function scr_pop_hauling(target_pop) {
     #region 0.1 Imports & Cached Locals
     var self = target_pop; // Reference to the pop instance
     var _room_speed = room_speed;
-    var TILE_SIZE = 16; // Should be a global or game setting
+    // Replace direct access to global.TILE_SIZE with a safe check:
+    var TILE_SIZE;
+    if (variable_global_exists("TILE_SIZE")) {
+        TILE_SIZE = global.TILE_SIZE; // Use the defined global tile size
+    } else {
+        show_debug_message("WARNING: global.TILE_SIZE not set. Using fallback TILE_SIZE = 32.");
+        TILE_SIZE = 32; // Fallback tile size
+    }
+    // Debug: log the current hauling sub-state each step to trace behavior
+    if (variable_instance_exists(self, "hauling_sub_state")) {
+        show_debug_message("scr_pop_hauling: Pop " + string(self.id) + " sub_state = " + self.hauling_sub_state);
+    }
     #endregion
 
     // =========================================================================
@@ -38,24 +49,31 @@ function scr_pop_hauling(target_pop) {
         return;
     }
     if (!variable_instance_exists(self, "current_state") || self.current_state != EntityState.HAULING) {
-        // show_debug_message("INFO: scr_pop_hauling() — Pop " + string(self) + " not in HAULING state.");
         return;
     }
-    // Ensure necessary data structures from entity_data are present
     if (!variable_instance_exists(self, "stats") || !is_struct(self.stats)) {
         show_debug_message("ERROR: scr_pop_hauling() - Pop " + string(self) + " is missing 'stats' struct.");
-        scr_pop_resume_previous_or_idle(self); // Attempt to recover
+        scr_pop_resume_previous_or_idle(self);
         return;
     }
     if (!variable_instance_exists(self, "behavior_settings") || !is_struct(self.behavior_settings)) {
         show_debug_message("ERROR: scr_pop_hauling() - Pop " + string(self) + " is missing 'behavior_settings' struct.");
-        scr_pop_resume_previous_or_idle(self); // Attempt to recover
+        scr_pop_resume_previous_or_idle(self);
         return;
     }
-    if (!variable_instance_exists(self, "inventory") || !is_array(self.inventory)) {
-        show_debug_message("ERROR: scr_pop_hauling() - Pop " + string(self) + " is missing 'inventory' array.");
-        scr_pop_resume_previous_or_idle(self); // Attempt to recover
-        return;
+    // Ensure inventory_items ds_list exists
+    if (!variable_instance_exists(self, "inventory_items") || !ds_exists(self.inventory_items, ds_type_list)) {
+        show_debug_message("ERROR: scr_pop_hauling() - Pop " + string(self) + " is missing 'inventory_items' ds_list or it's not a list.");
+        // Attempt to create it if missing, as a recovery measure.
+        if (!variable_instance_exists(self, "inventory_items")) {
+            self.inventory_items = ds_list_create();
+            show_debug_message("INFO: scr_pop_hauling() - Created 'inventory_items' ds_list for Pop " + string(self));
+        } else if (!ds_exists(self.inventory_items, ds_type_list)) {
+            // It exists but is not a list, this is a more serious error.
+             show_debug_message("CRITICAL ERROR: scr_pop_hauling() - Pop " + string(self) + " 'inventory_items' exists but is NOT a ds_list. Cannot proceed with hauling.");
+            scr_pop_resume_previous_or_idle(self); // Attempt to recover
+            return;
+        }
     }
     #endregion
 
@@ -63,43 +81,33 @@ function scr_pop_hauling(target_pop) {
     // 2. CONFIGURATION & CONSTANTS (from Pop's Data Profile)
     // =========================================================================
     #region 2.1 Behavior-Specific Parameters
-    // var move_speed = self.stats.base_move_speed; // OLD: base_move_speed is not used.
-    // Hauling speed is a percentage of the pop's walk_speed.
-    // Ensure walk_speed exists in stats; if not, use a fallback to prevent errors.
-    // LEARNING POINT: Accessing nested struct variables like 'self.stats.walk_speed' can lead to errors
-    // if 'self.stats' itself doesn't exist, or if 'walk_speed' isn't a member of 'stats'.
-    // It's good practice to check for the existence of each level of the structure.
-    var _base_walk_speed = 1.0; // Default fallback walk_speed
-    if (variable_instance_exists(self, "stats")) { // Check if the 'stats' struct exists on 'self'
-        if (variable_struct_exists(self.stats, "walk_speed")) { // Check if 'walk_speed' exists within 'stats'
+    var _base_walk_speed = 1.0; 
+    if (variable_instance_exists(self, "stats")) {
+        if (variable_struct_exists(self.stats, "walk_speed")) {
             _base_walk_speed = self.stats.walk_speed;
         } else {
-            // Log a warning if 'walk_speed' is missing from 'stats', helps in debugging.
             show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.stats.walk_speed not found. Using fallback: {_base_walk_speed}");
         }
     } else {
-        // Log a warning if the entire 'stats' struct is missing, which is a more significant issue.
         show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.stats struct not found. Using fallback walk_speed: {_base_walk_speed}");
     }
-    var move_speed = _base_walk_speed * 0.75; // Hauling speed is 75% of walk_speed.
+    var move_speed = _base_walk_speed * 0.75;
 
-    // var carry_capacity_kg = self.stats.carry_capacity_kg; // OLD: Direct access, less safe.
-    // Safely access carry_capacity_kg from stats, with a fallback.
-    var carry_capacity_kg = 10; // Default fallback carry capacity
+    var carry_capacity_kg = 10; 
     if (variable_instance_exists(self, "stats")) {
         if (variable_struct_exists(self.stats, "carry_capacity_kg")) {
             carry_capacity_kg = self.stats.carry_capacity_kg;
+        } else if (variable_struct_exists(self.stats, "max_carrying_capacity")) { // Fallback to max_carrying_capacity if carry_capacity_kg is missing
+            carry_capacity_kg = self.stats.max_carrying_capacity;
+            show_debug_message($"INFO (scr_pop_hauling for Pop {self.id}): self.stats.carry_capacity_kg not found. Using self.stats.max_carrying_capacity: {carry_capacity_kg}kg");
         } else {
-            show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.stats.carry_capacity_kg not found. Using fallback: {carry_capacity_kg}kg");
+            show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.stats.carry_capacity_kg and max_carrying_capacity not found. Using fallback: {carry_capacity_kg}kg");
         }
     } else {
         show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.stats struct not found. Using fallback carry_capacity_kg: {carry_capacity_kg}kg");
     }
     
-    // Threshold for how "full" inventory needs to be (percentage) before seeking drop-off.
-    // var hauling_fullness_threshold_percent = self.behavior_settings.hauling_fullness_threshold_percent; // OLD: Direct access
-    // Safely access hauling_fullness_threshold_percent from behavior_settings, with a fallback.
-    var hauling_fullness_threshold_percent = 75; // Default to 75% if not set
+    var hauling_fullness_threshold_percent = 75; 
     if (variable_instance_exists(self, "behavior_settings")) {
         if (variable_struct_exists(self.behavior_settings, "hauling_fullness_threshold_percent")) {
             hauling_fullness_threshold_percent = self.behavior_settings.hauling_fullness_threshold_percent;
@@ -110,11 +118,8 @@ function scr_pop_hauling(target_pop) {
         show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.behavior_settings struct not found. Using fallback hauling_fullness_threshold_percent: {hauling_fullness_threshold_percent}%");
     }
 
-    // Calculate actual weight threshold based on percentage of carry capacity.
     var hauling_threshold_kg = carry_capacity_kg * (hauling_fullness_threshold_percent / 100);
-    // var interaction_distance = self.behavior_settings.interaction_distance_pixels; // Distance to interact with items/stockpiles // OLD: Direct access
-    // Safely access interaction_distance_pixels from behavior_settings, with a fallback.
-    var interaction_distance = TILE_SIZE * 0.75; // Default interaction distance
+    var interaction_distance = TILE_SIZE * 0.75; 
     if (variable_instance_exists(self, "behavior_settings")) {
         if (variable_struct_exists(self.behavior_settings, "interaction_distance_pixels")) {
             var _setting_dist = self.behavior_settings.interaction_distance_pixels;
@@ -129,77 +134,69 @@ function scr_pop_hauling(target_pop) {
     } else {
         show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): self.behavior_settings struct not found. Using fallback interaction_distance: {interaction_distance}");
     }
-    // if (!is_real(interaction_distance) || interaction_distance <= 0) interaction_distance = TILE_SIZE * 0.75; // Default if not set // Covered by above
-
-    // Resource types the pop is allowed to haul (can be specific or general)
-    // Example: ["wood", "stone"], or a broader category like "any_raw_material"
-    // For this example, we assume it can haul any item it finds via scr_find_nearest_item_for_hauling
-    // var haulable_resource_types = self.behavior_settings.haulable_resource_types; // Array of item_id strings
     #endregion
 
     // =========================================================================
     // 3. STATE LOGIC (Sub-states: FIND_ITEM, MOVE_TO_ITEM, COLLECT_ITEM, FIND_DROPOFF, MOVE_TO_DROPOFF, DEPOSIT_ITEM)
     // =========================================================================
-    // Initialize hauling sub-state if not present
     if (!variable_instance_exists(self, "hauling_sub_state")) {
         self.hauling_sub_state = "FIND_ITEM";
         self.target_item_instance = noone;
         self.target_dropoff_instance = noone;
-        self.state_timer = 0; // General purpose timer for actions within sub-states
-        // show_debug_message("Pop " + string(self) + " entering HAULING: FIND_ITEM");
+        self.state_timer = 0; 
     }
 
-    // --- Calculate current inventory weight ---
+    // --- Calculate current inventory weight (using ds_list: inventory_items) ---
     var current_inventory_weight = 0;
-    for (var i = 0; i < array_length(self.inventory); i++) {
-        var item_entry = self.inventory[i];
-        if (is_struct(item_entry) && variable_struct_exists(item_entry, "item_data") && variable_struct_exists(item_entry.item_data, "weight_kg")) {
-            current_inventory_weight += item_entry.quantity * item_entry.item_data.weight_kg;
+    // Ensure inventory_items is valid before using ds_list_size
+    if (variable_instance_exists(self, "inventory_items") && ds_exists(self.inventory_items, ds_type_list)) {
+        for (var i = 0; i < ds_list_size(self.inventory_items); i++) {
+            var item_stack_struct = self.inventory_items[| i];
+            if (is_struct(item_stack_struct) && variable_struct_exists(item_stack_struct, "item_id_enum") && variable_struct_exists(item_stack_struct, "quantity")) {
+                // get_item_data is expected to return a struct with item definition, including weight.
+                var item_base_data = get_item_data(item_stack_struct.item_id_enum); 
+                if (is_struct(item_base_data)) {
+                    var _weight_key = "weight_kg"; // Primary key
+                    if (!variable_struct_exists(item_base_data, _weight_key)) {
+                        _weight_key = "weight_per_unit"; // Fallback key
+                    }
+
+                    if (variable_struct_exists(item_base_data, _weight_key)) {
+                        current_inventory_weight += item_stack_struct.quantity * item_base_data[$ _weight_key];
+                    } else {
+                        // show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): Item enum {item_stack_struct.item_id_enum} missing weight_kg or weight_per_unit in item_base_data.");
+                    }
+                } else {
+                     // show_debug_message($"WARNING (scr_pop_hauling for Pop {self.id}): Could not get item_base_data for item enum {item_stack_struct.item_id_enum}.");
+                }
+            }
         }
     }
-    self.current_inventory_weight_kg = current_inventory_weight; // Update for UI or other systems
+    self.current_inventory_weight_kg = current_inventory_weight; 
 
     // --- Hauling State Machine ---
     switch (self.hauling_sub_state) {
-        //---------------------------------------------------------------------
         case "FIND_ITEM":
-            // If inventory is already full enough, skip finding more items and go to drop-off.
             if (current_inventory_weight >= hauling_threshold_kg) {
                 self.hauling_sub_state = "FIND_DROPOFF";
-                self.target_item_instance = noone; // Clear previous item target
-                // show_debug_message("Pop " + string(self) + " inventory full enough (" + string(current_inventory_weight) + "kg / " + string(hauling_threshold_kg) + "kg). Switching to FIND_DROPOFF.");
-                break; // Re-evaluate switch in the same frame
+                self.target_item_instance = noone; 
+                break; 
             }
-
-            // Try to find a nearby item that needs hauling.
-            // scr_find_nearest_item_for_hauling should return an instance_id or noone.
-            // It might consider item types, if they are not already in a stockpile, etc.
-            self.target_item_instance = scr_find_nearest_item_for_hauling(self.x, self.y, self, undefined); // `undefined` for any type for now
+            // Ensure scr_find_nearest_item_for_hauling exists before calling
+            if (script_exists(scr_find_nearest_item_for_hauling)) {
+                self.target_item_instance = scr_find_nearest_item_for_hauling(self.x, self.y, self, undefined); 
+            } else {
+                show_debug_message_once("ERROR: scr_find_nearest_item_for_hauling script missing!");
+                self.target_item_instance = noone;
+            }
 
             if (instance_exists(self.target_item_instance)) {
                 self.hauling_sub_state = "MOVE_TO_ITEM";
-                // show_debug_message("Pop " + string(self) + " found item " + string(self.target_item_instance) + ". Switching to MOVE_TO_ITEM.");
             } else {
-                // No items to haul found. What to do? 
-                // Option 1: Wait a bit and try again.
-                // Option 2: Switch to a different state (e.g., IDLE or WANDERING).
-                // show_debug_message("Pop " + string(self) + " found no items to haul. Switching to IDLE temporarily.");
-                scr_pop_resume_previous_or_idle(self); // Go idle or to previous task
-                // Or, set a timer to retry FIND_ITEM after a delay:
-                // self.state_timer = 2 * _room_speed; // Wait 2 seconds
-                // self.hauling_sub_state = "WAIT_BEFORE_RETRY_FIND_ITEM";
+                scr_pop_resume_previous_or_idle(self); 
             }
             break;
 
-        //---------------------------------------------------------------------
-        // case "WAIT_BEFORE_RETRY_FIND_ITEM":
-        //     self.state_timer--;
-        //     if (self.state_timer <= 0) {
-        //         self.hauling_sub_state = "FIND_ITEM";
-        //     }
-        //     break;
-
-        //---------------------------------------------------------------------
         case "MOVE_TO_ITEM":
             if (!instance_exists(self.target_item_instance)) {
                 // Target item disappeared (e.g., picked up by someone else).
@@ -220,27 +217,30 @@ function scr_pop_hauling(target_pop) {
             if (_dist_to_item <= interaction_distance) {
                 // Reached the item.
                 self.hauling_sub_state = "COLLECT_ITEM";
-                // show_debug_message("Pop " + string(self) + " reached item " + string(self.target_item_instance) + ". Switching to COLLECT_ITEM.");
             } else {
                 // Move towards the item.
-                // Simple direct movement; replace with pathfinding if needed.
                 var _dir = point_direction(self.x, self.y, self.target_item_instance.x, self.target_item_instance.y);
-                self.x += lengthdir_x(min(move_speed, _dist_to_item), _dir);
-                self.y += lengthdir_y(min(move_speed, _dist_to_item), _dir);
-                // Basic sprite flipping (assuming sprites face right by default)
-                if (self.x != self.xprevious) {
-                     // self.image_xscale = sign(self.x - self.xprevious); // OLD way, direct scale
-                     // New way: use scr_update_walk_sprite which handles direction and animation
-                     scr_update_walk_sprite(self); // Pass 'self' to update its own sprite based on movement
+                // Ensure speed is applied correctly; direct modification of x/y is fine for simple movement.
+                // Using min(move_speed, _dist_to_item) prevents overshooting in a single step.
+                var move_dist = min(move_speed, _dist_to_item);
+                self.x += lengthdir_x(move_dist, _dir);
+                self.y += lengthdir_y(move_dist, _dir);
+                
+                if (self.x != self.xprevious || self.y != self.yprevious) { // Check if position actually changed
+                     if (script_exists(scr_update_walk_sprite)) {
+                        scr_update_walk_sprite(self); 
+                     } else {
+                        // Fallback sprite logic if scr_update_walk_sprite is missing
+                        if (self.x != self.xprevious) { self.image_xscale = sign(self.x - self.xprevious); }
+                     }
                 }
-                self.image_speed = 1.0; // Standard animation speed for walking
+                self.image_speed = 1.0; 
             }
             break;
 
-        //---------------------------------------------------------------------
         case "COLLECT_ITEM":
             if (!instance_exists(self.target_item_instance)) {
-                self.hauling_sub_state = "FIND_ITEM"; // Item gone
+                self.hauling_sub_state = "FIND_ITEM"; 
                 // Clear sprite and speed as we are no longer interacting
                 self.speed = 0;
                 // Use spr_idle from stats, falling back to spr_pop_man_idle if not defined or invalid.
@@ -251,98 +251,83 @@ function scr_pop_hauling(target_pop) {
                 break;
             }
 
-            // Attempt to pick up the item.
-            // This requires the item instance to have item_id, quantity, and item_data (with weight_kg).
-            // And the pop to have an scr_inventory_add_item function.
-            if (variable_instance_exists(self.target_item_instance, "item_id") &&
+            // Item instance on ground should have: item_id_enum, quantity, item_data (struct with weight_kg)
+            if (variable_instance_exists(self.target_item_instance, "item_id_enum") && // Expecting item_id_enum now
                 variable_instance_exists(self.target_item_instance, "quantity") &&
-                variable_instance_exists(self.target_item_instance, "item_data")) {
+                variable_instance_exists(self.target_item_instance, "item_data") && // item_data on the instance for its own properties
+                is_struct(self.target_item_instance.item_data) &&
+                variable_struct_exists(self.target_item_instance.item_data, "weight_kg")) {
 
                 var item_to_collect = self.target_item_instance;
-                var weight_of_this_item = item_to_collect.quantity * item_to_collect.item_data.weight_kg;
+                // Calculate weight of the specific item instance being collected
+                var weight_of_this_item_instance = item_to_collect.quantity * item_to_collect.item_data.weight_kg;
 
-                if (current_inventory_weight + weight_of_this_item <= carry_capacity_kg) {
-                    // Can carry it. Add to inventory.
-                    var success = scr_inventory_add_item(self, item_to_collect.item_id, item_to_collect.quantity, item_to_collect.item_data);
+                if (current_inventory_weight + weight_of_this_item_instance <= carry_capacity_kg) {
+                    // Corrected call to scr_inventory_add_item
+                    // It expects: target_inventory_list (ds_list), item_to_add_enum, quantity_to_add
+                    // item_to_collect.item_id_enum should be the enum value for the item.
+                    var success = false;
+                    if (script_exists(scr_inventory_add_item)) {
+                         // scr_inventory_add_item returns items_remaining_to_add. Success is if 0 items remain.
+                        var items_not_added = scr_inventory_add_item(self.inventory_items, item_to_collect.item_id_enum, item_to_collect.quantity);
+                        success = (items_not_added == 0);
+                    } else {
+                        show_debug_message_once("ERROR: scr_inventory_add_item script missing!");
+                    }
+                                        
                     if (success) {
-                        // show_debug_message("Pop " + string(self) + " collected " + string(item_to_collect.quantity) + "x " + item_to_collect.item_id + ".");
-                        instance_destroy(item_to_collect); // Remove the item from the world
+                        instance_destroy(item_to_collect); 
                         self.target_item_instance = noone;
-                        // Recalculate current weight for next decision
-                        current_inventory_weight += weight_of_this_item;
-                        self.current_inventory_weight_kg = current_inventory_weight;
+                        // Recalculate current weight (will be done at the start of the next cycle of this script)
+                        // For immediate decision making, update it here:
+                        current_inventory_weight += weight_of_this_item_instance; // Add weight of collected item
+                        self.current_inventory_weight_kg = current_inventory_weight; // Update the instance variable
                         
-                        // Decide next step: find more items or find drop-off?
                         if (current_inventory_weight >= hauling_threshold_kg) {
                             self.hauling_sub_state = "FIND_DROPOFF";
-                            // show_debug_message("Pop " + string(self) + " inventory full enough after pickup. Switching to FIND_DROPOFF.");
                         } else {
-                            self.hauling_sub_state = "FIND_ITEM"; // Look for more items
-                            // show_debug_message("Pop " + string(self) + " looking for more items.");
+                            self.hauling_sub_state = "FIND_ITEM"; 
                         }
                     } else {
-                        // Failed to add to inventory (should not happen if weight check passed, but maybe other reasons)
-                        // show_debug_message("Pop " + string(self) + " failed to add item " + item_to_collect.item_id + " to inventory. Returning to FIND_ITEM.");
                         self.hauling_sub_state = "FIND_ITEM";
                     }
                 } else {
-                    // Too heavy to pick up this specific item with current load.
-                    // show_debug_message("Pop " + string(self) + " cannot carry item " + item_to_collect.item_id + " (too heavy). Switching to FIND_DROPOFF if carrying anything, else FIND_ITEM (for lighter items).");
                     if (current_inventory_weight > 0) {
-                        self.hauling_sub_state = "FIND_DROPOFF"; // Go drop off what it has
+                        self.hauling_sub_state = "FIND_DROPOFF"; 
                     } else {
-                        // Can't even carry this single item, and inventory is empty. Maybe it's just too heavy for this pop.
-                        // Or, the item is bugged (e.g. massive weight).
-                        // For now, just try to find other (potentially lighter) items.
-                        self.target_item_instance = noone; // Forget this heavy item
+                        self.target_item_instance = noone; 
                         self.hauling_sub_state = "FIND_ITEM"; 
                     }
                 }
             } else {
-                // Target item is not a valid collectible item (missing properties).
-                // show_debug_message("Pop " + string(self) + " target item " + string(self.target_item_instance) + " is not a valid collectible. Returning to FIND_ITEM.");
                 self.hauling_sub_state = "FIND_ITEM";
             }
             break;
 
-        //---------------------------------------------------------------------
         case "FIND_DROPOFF":
-            // If inventory is empty, something went wrong, or it just dropped off.
-            // Go back to finding items.
-            if (current_inventory_weight <= 0 && array_length(self.inventory) == 0) {
-                // show_debug_message("Pop " + string(self) + " inventory empty. Switching to FIND_ITEM.");
+            // Check inventory_items ds_list size for emptiness
+            if (current_inventory_weight <= 0 && (ds_exists(self.inventory_items, ds_type_list) && ds_list_empty(self.inventory_items))) {
                 self.hauling_sub_state = "FIND_ITEM";
                 break;
             }
 
-            // Find the nearest suitable drop-off point (e.g., a stockpile object).
-            // scr_find_nearest_stockpile should return an instance_id or noone.
-            // It might also consider if the stockpile can accept the items the pop is carrying.
-            self.target_dropoff_instance = scr_find_nearest_stockpile(self.x, self.y, self, self.inventory); 
+            // Ensure scr_find_nearest_stockpile exists
+            if (script_exists(scr_find_nearest_stockpile)) {
+                // Call without a filter so any flagged stockpile (e.g., gathering hut) is chosen
+                self.target_dropoff_instance = scr_find_nearest_stockpile(self.x, self.y, self);
+                show_debug_message("DEBUG (scr_pop_hauling): target_dropoff_instance = " + string(self.target_dropoff_instance));
+            } else {
+                show_debug_message_once("ERROR: scr_find_nearest_stockpile script missing!");
+                self.target_dropoff_instance = noone;
+            }
 
             if (instance_exists(self.target_dropoff_instance)) {
                 self.hauling_sub_state = "MOVE_TO_DROPOFF";
-                // show_debug_message("Pop " + string(self) + " found dropoff " + string(self.target_dropoff_instance) + ". Switching to MOVE_TO_DROPOFF.");
             } else {
-                // No drop-off point found. This is problematic.
-                // Options: Wait and retry, or switch to IDLE and hope one gets built.
-                // show_debug_message("Pop " + string(self) + " found no dropoff point! Switching to IDLE temporarily.");
-                scr_pop_resume_previous_or_idle(self); // Go idle or to previous task
-                // Or, set a timer to retry FIND_DROPOFF after a delay:
-                // self.state_timer = 5 * _room_speed; // Wait 5 seconds
-                // self.hauling_sub_state = "WAIT_BEFORE_RETRY_FIND_DROPOFF";
+                scr_pop_resume_previous_or_idle(self);
             }
             break;
 
-        //---------------------------------------------------------------------
-        // case "WAIT_BEFORE_RETRY_FIND_DROPOFF":
-        //     self.state_timer--;
-        //     if (self.state_timer <= 0) {
-        //         self.hauling_sub_state = "FIND_DROPOFF";
-        //     }
-        //     break;
-
-        //---------------------------------------------------------------------
         case "MOVE_TO_DROPOFF":
             if (!instance_exists(self.target_dropoff_instance)) {
                 // Target dropoff disappeared (e.g., destroyed).
@@ -361,91 +346,96 @@ function scr_pop_hauling(target_pop) {
             var _dist_to_dropoff = point_distance(self.x, self.y, self.target_dropoff_instance.x, self.target_dropoff_instance.y);
 
             if (_dist_to_dropoff <= interaction_distance) {
-                // Reached the drop-off point.
                 self.hauling_sub_state = "DEPOSIT_ITEM";
-                // show_debug_message("Pop " + string(self) + " reached dropoff " + string(self.target_dropoff_instance) + ". Switching to DEPOSIT_ITEM.");
             } else {
-                // Move towards the drop-off point.
                 var _dir = point_direction(self.x, self.y, self.target_dropoff_instance.x, self.target_dropoff_instance.y);
-                self.x += lengthdir_x(min(move_speed, _dist_to_dropoff), _dir);
-                self.y += lengthdir_y(min(move_speed, _dist_to_dropoff), _dir);
-                // Basic sprite flipping
-                if (self.x != self.xprevious) {
-                     // self.image_xscale = sign(self.x - self.xprevious); // OLD way
-                     scr_update_walk_sprite(self); // New way
+                var move_dist_dropoff = min(move_speed, _dist_to_dropoff);
+                self.x += lengthdir_x(move_dist_dropoff, _dir);
+                self.y += lengthdir_y(move_dist_dropoff, _dir);
+                
+                if (self.x != self.xprevious || self.y != self.yprevious) {
+                     if (script_exists(scr_update_walk_sprite)) {
+                        scr_update_walk_sprite(self);
+                     } else {
+                        if (self.x != self.xprevious) { self.image_xscale = sign(self.x - self.xprevious); }
+                     }
                 }
-                self.image_speed = 1.0; // Standard animation speed for walking
+                self.image_speed = 1.0; 
             }
             break;
 
-        //---------------------------------------------------------------------
         case "DEPOSIT_ITEM":
             if (!instance_exists(self.target_dropoff_instance)) {
-                self.hauling_sub_state = "FIND_DROPOFF"; // Dropoff gone
+                self.hauling_sub_state = "FIND_DROPOFF"; 
                 break;
             }
-
-            // Attempt to deposit items into the stockpile.
-            // This requires the stockpile to have a method like `accept_item(item_id, quantity, item_data)`
-            // or for this script to directly manage global item stocks if stockpiles are abstract.
-            // For this example, assume a function on the stockpile or a global function.
             
             var items_deposited_this_cycle = false;
-            if (variable_instance_exists(self.target_dropoff_instance, "inventory_target_struct_name")) {
-                // This stockpile is a controller that manages a global inventory (e.g., global.lineage_main_storage)
-                var _target_inventory_name = self.target_dropoff_instance.inventory_target_struct_name;
-                
-                // Iterate through pop's inventory and try to add to the target global inventory
-                for (var i = array_length(self.inventory) - 1; i >= 0; i--) {
-                    var item_entry = self.inventory[i];
-                    // Call a global/controller script to handle adding to the target storage
-                    // This script would need to exist and handle the logic (e.g. scr_add_item_to_global_storage)
-                    var deposited_successfully = scr_stockpile_deposit_item(self.target_dropoff_instance, item_entry.item_id, item_entry.quantity, item_entry.item_data);
+            // Ensure inventory_items is valid and scr_stockpile_deposit_item & scr_inventory_remove_item_from_list exist
+            if (ds_exists(self.inventory_items, ds_type_list) && 
+                script_exists(scr_stockpile_deposit_item) &&
+                script_exists(scr_inventory_remove_item_from_list) && // Check for the renamed/new remove script
+                script_exists(get_item_data) && // Ensure get_item_data exists
+                script_exists(scr_ui_showDropoffText) // Ensure UI script exists
+                ) {
+
+                // Iterate through pop's inventory_items (ds_list)
+                for (var i = ds_list_size(self.inventory_items) - 1; i >= 0; i--) { // Iterate backwards for safe removal
+                    var item_stack_struct = self.inventory_items[| i];
+                    if (!is_struct(item_stack_struct) || 
+                        !variable_struct_exists(item_stack_struct, "item_id_enum") || 
+                        !variable_struct_exists(item_stack_struct, "quantity")) {
+                        continue; // Skip malformed entries
+                    }
+
+                    var item_base_data_for_deposit = get_item_data(item_stack_struct.item_id_enum);
+                    if (!is_struct(item_base_data_for_deposit)) {
+                        // show_debug_message($"WARNING (scr_pop_hauling DEPOSIT): Could not get item_base_data for enum {item_stack_struct.item_id_enum}. Skipping deposit for this stack.");
+                        continue; 
+                    }
+                    
+                    // Call scr_stockpile_deposit_item with item_id_enum and fetched item_base_data
+                    var deposited_successfully = scr_stockpile_deposit_item(
+                        self.target_dropoff_instance, 
+                        item_stack_struct.item_id_enum, 
+                        item_stack_struct.quantity, 
+                        item_base_data_for_deposit // Pass the full item data struct
+                    );
                     
                     if (deposited_successfully) {
-                        // Construct the message for the UI
-                        var _display_name = (variable_instance_exists(self, "display_name")) ? self.display_name : "Pop";
-                        var _item_name = (variable_struct_exists(item_entry.item_data, "display_name")) ? item_entry.item_data.display_name : item_entry.item_id;
+                        var _display_name = (variable_instance_exists(self, "pop_name")) ? self.pop_name : "Pop";
+                        var _item_name = (variable_struct_exists(item_base_data_for_deposit, "display_name")) ? item_base_data_for_deposit.display_name : item_stack_struct.item_id_enum;
                         var _stockpile_name = instance_exists(self.target_dropoff_instance) ? object_get_name(self.target_dropoff_instance.object_index) : "stockpile";
-                        var _message = $"{_display_name} deposited {item_entry.quantity}x {_item_name} to {_stockpile_name}.";
-                        // Call the UI display function with the correct number of arguments
-                        scr_ui_showDropoffText(_message, 3); // Display for 3 seconds
+                        var _message = $"{_display_name} deposited {item_stack_struct.quantity}x {_item_name} to {_stockpile_name}.";
+                        scr_ui_showDropoffText(_message, 3); 
 
-                        // show_debug_message("Pop " + string(self) + " deposited " + string(item_entry.quantity) + "x " + item_entry.item_id + " to " + _target_inventory_name + ".");
-                        scr_inventory_remove_item(self, item_entry.item_id, item_entry.quantity); // Remove from pop's inventory
+                        // Use scr_inventory_remove_item_from_list
+                        scr_inventory_remove_item_from_list(self.inventory_items, item_stack_struct.item_id_enum, item_stack_struct.quantity); 
                         items_deposited_this_cycle = true;
                     } else {
-                        // show_debug_message("Pop " + string(self) + " failed to deposit " + item_entry.item_id + " to " + _target_inventory_name + ". Stockpile might be full for this item type.");
+                        // show_debug_message($"Pop {self.id} failed to deposit {item_stack_struct.item_id_enum}. Stockpile might be full or script failed.");
                     }
                 }
             } else {
-                // Fallback or error: stockpile doesn't have the expected variable to identify its inventory.
-                // show_debug_message("ERROR: Pop " + string(self) + " - Target stockpile " + string(self.target_dropoff_instance) + " does not have 'inventory_target_struct_name'. Cannot deposit.");
+                 if (!script_exists(scr_stockpile_deposit_item)) show_debug_message_once("ERROR: scr_stockpile_deposit_item script missing!");
+                 if (!script_exists(scr_inventory_remove_item_from_list)) show_debug_message_once("ERROR: scr_inventory_remove_item_from_list script missing!");
+                 if (!script_exists(get_item_data)) show_debug_message_once("ERROR: get_item_data script missing!");
+                 if (!script_exists(scr_ui_showDropoffText)) show_debug_message_once("ERROR: scr_ui_showDropoffText script missing!");
+                 if (!ds_exists(self.inventory_items, ds_type_list)) show_debug_message_once($"ERROR: Pop {self.id} inventory_items ds_list missing in DEPOSIT_ITEM!");
             }
 
             if (items_deposited_this_cycle) {
-                 // After depositing, recalculate weight and decide next step.
-                current_inventory_weight = 0; // Will be recalculated at the start of the script
-                for (var i = 0; i < array_length(self.inventory); i++) {
-                    var item_entry = self.inventory[i];
-                    if (is_struct(item_entry) && variable_struct_exists(item_entry, "item_data") && variable_struct_exists(item_entry.item_data, "weight_kg")) {
-                        current_inventory_weight += item_entry.quantity * item_entry.item_data.weight_kg;
-                    }
-                }
+                // Recalculate weight (will also be done at the start of the script's next run)
+                // Setting to 0 here is fine as it will be accurately recalculated.
+                current_inventory_weight = 0; 
                 self.current_inventory_weight_kg = current_inventory_weight;
             }
             
-            // After attempting deposit, always go back to FIND_ITEM to re-evaluate.
-            // This handles cases where not all items could be deposited (e.g., stockpile full for some types).
             self.hauling_sub_state = "FIND_ITEM";
             self.target_dropoff_instance = noone;
-            // show_debug_message("Pop " + string(self) + " finished deposit attempt. Returning to FIND_ITEM.");
             break;
 
-        //---------------------------------------------------------------------
         default:
-            // Unknown sub-state, reset to FIND_ITEM to be safe.
-            // show_debug_message("Pop " + string(self) + " in unknown hauling sub-state: " + string(self.hauling_sub_state) + ". Resetting to FIND_ITEM.");
             self.hauling_sub_state = "FIND_ITEM";
             break;
     }
@@ -454,22 +444,8 @@ function scr_pop_hauling(target_pop) {
     // =========================================================================
     // 4. MOVEMENT & ANIMATION (Handled within sub-states for this behavior)
     // =========================================================================
-    // #region 4.1 Sprite and Animation
-    // Basic sprite updates are handled in MOVE_TO_ITEM and MOVE_TO_DROPOFF.
-    // More complex animation (e.g., carrying animation) would go here or be part of a dedicated animation controller.
-    // if (current_inventory_weight > 0 && variable_instance_exists(self, "spr_carry_walk_left")) {
-    //     // Example: Use carrying sprites if holding items
-    //     if (self.x > self.xprevious) self.sprite_index = self.spr_carry_walk_right;
-    //     else if (self.x < self.xprevious) self.sprite_index = self.spr_carry_walk_left;
-    // } else if (variable_instance_exists(self, "spr_walk_left")){
-    //     // Standard walking sprites if not carrying or no specific carry sprites
-    //     if (self.x > self.xprevious) self.sprite_index = self.spr_walk_right;
-    //     else if (self.x < self.xprevious) self.sprite_index = self.spr_walk_left;
-    // }
-    // #endregion
-
+    // ... existing comments ...
     // =========================================================================
     // 5. CLEANUP & RETURN (Handled by instance state or not applicable here)
     // =========================================================================
-    // No explicit return. Modifies instance state directly.
 }

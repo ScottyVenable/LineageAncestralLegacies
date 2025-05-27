@@ -23,7 +23,23 @@ if(is_dragging){
 	scr_draw_selection_box();
 }
 
-show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selection_box."); // DEBUG ADDED
+// Defensive: Check if _shift_held is defined before using it to avoid runtime errors
+if (variable_global_exists("_shift_held") && _shift_held && (mouse_wheel_up() || mouse_wheel_down())) {
+    global.block_zoom_this_frame = true; // Signal to your zoom code to block zooming this frame
+    // Educational: This prevents zooming when changing formation spacing/type with Shift+mouse wheel.
+}
+
+// Only log the debug message once every 60 frames to avoid flooding the log
+// Use a global variable for the timer, since static cannot be used in the Draw event in GMS2
+if (!variable_global_exists("debug_draw64_log_timer")) {
+    global.debug_draw64_log_timer = 0;
+}
+if (global.debug_draw64_log_timer <= 0) {
+    show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selection_box.");
+    global.debug_draw64_log_timer = 60; // Log once every 60 frames (about once per second at 60fps)
+} else {
+    global.debug_draw64_log_timer--;
+}
 #endregion
 
 // =========================================================================
@@ -34,7 +50,7 @@ show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selecti
 if (global.formation_notification_alpha > 0 && global.formation_notification_text != "") {
     // Positioning: bottom-left at (192, 798) in GUI coordinates (user request)
     var _text_x_pos = 185;
-    var _text_y_pos = 795;
+    var _text_y_pos = 840;
 
     // Set drawing properties for the notification text
     draw_set_font(fnt_ui_header); // Or a specific fnt_notification if you create one

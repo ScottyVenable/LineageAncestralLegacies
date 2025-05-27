@@ -67,6 +67,9 @@ if (_ctrl_held) {
 }
 // --- Shift + Mouse Wheel Cycling for Formation Type ---
 else if (_shift_held) { 
+    // Block zoom logic when changing formation type
+    global.block_zoom_this_frame = true; // Set a flag for your zoom code to check
+
     var _current_formation_val = global.current_formation_type;
     var _formation_enum_first = FormationType.NONE;
     var _formation_enum_last = FormationType.CIRCLE; // <<<<< CORRECTED: Use FormationType for enum consistency
@@ -79,21 +82,15 @@ else if (_shift_held) {
         if (_current_formation_val < _formation_enum_first) { 
             _current_formation_val = _formation_enum_last; // Wrap to last
         }
-        // Only update global and set changed flag if the value actually differs
-        if (global.current_formation_type != _current_formation_val) {
-            global.current_formation_type = _current_formation_val;
-            _formation_changed_this_step = true;
-        }
+        global.current_formation_type = _current_formation_val;
+        _formation_changed_this_step = true;
     } else if (_wheel_down_type) {
         _current_formation_val++;
         if (_current_formation_val > _formation_enum_last) { 
             _current_formation_val = _formation_enum_first; // Wrap to first
         }
-        // Only update global and set changed flag if the value actually differs
-        if (global.current_formation_type != _current_formation_val) {
-            global.current_formation_type = _current_formation_val;
-            _formation_changed_this_step = true;
-        }
+        global.current_formation_type = _current_formation_val;
+        _formation_changed_this_step = true;
     }
 }
 

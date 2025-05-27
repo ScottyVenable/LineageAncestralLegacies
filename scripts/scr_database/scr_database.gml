@@ -341,6 +341,10 @@ function scr_database_init() {
     // =============================================================================
     // SECTION: ITEMS
     // =============================================================================
+    // Educational: Each item profile below must include a `tags` array
+    //   that helps stockpiles filter and categorize resources.
+    //   e.g. tags: ["resource"], ["food","resource"], ["tool","axe"]
+
     global.GameData.Items = {
         Resource: {},
         Tool: {},

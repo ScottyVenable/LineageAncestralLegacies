@@ -141,6 +141,7 @@
     {"id":{"name":"scr_debug_settings","path":"scripts/scr_debug_settings/scr_debug_settings.yy",},},
     {"id":{"name":"scr_draw_selection_box","path":"scripts/scr_draw_selection_box/scr_draw_selection_box.yy",},},
     {"id":{"name":"scr_ds_list_to_array","path":"scripts/scr_ds_list_to_array/scr_ds_list_to_array.yy",},},
+    {"id":{"name":"scr_find_nearest_stockpile","path":"scripts/scr_find_nearest_stockpile/scr_find_nearest_stockpile.yy",},},
     {"id":{"name":"scr_formation_get_name","path":"scripts/scr_formation_get_name/scr_formation_get_name.yy",},},
     {"id":{"name":"scr_formations","path":"scripts/scr_formations/scr_formations.yy",},},
     {"id":{"name":"scr_generate_pop_details","path":"scripts/scr_generate_pop_details/scr_generate_pop_details.yy",},},

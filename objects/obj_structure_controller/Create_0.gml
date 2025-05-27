@@ -33,7 +33,7 @@ if (!variable_instance_exists(self, "entity_data") || !is_struct(self.entity_dat
 // Convenience aliases for the injected data
 var _data = self.entity_data; 
 var _entity_id_string = variable_instance_exists(self, "entity_type_id") ? string(self.entity_type_id) : "UNKNOWN_ID"; // For logging
-var _display_name_for_log = variable_struct_exists(_data, "name_display_type") ? _data.name_display_type : "Unnamed Structure"; // For logging
+var _display_name_for_log = variable_struct_exists(_data, "type_tag") ? _data.type_tag : "Unnamed Structure"; // For logging
 
 show_debug_message($"INFO (obj_structure_controller Create): Initializing Structure '{_display_name_for_log}' (ID: {_entity_id_string}) from self.entity_data.");
 

@@ -141,7 +141,7 @@ var _data = self.entity_data;
 // Determines the biological sex of the pop, influencing sprites and potentially other attributes.
 // Use EntitySex enum values instead of raw strings for consistency
 self.sex = choose(EntitySex.MALE, EntitySex.FEMALE); // Randomly assign enum sex
-show_debug_message($"INFO (obj_pop Create): Pop '{_data.name_display_type}' (ID: {self.entity_type_id}) assigned sex: {self.sex}.");
+show_debug_message($"INFO (obj_pop Create): Pop (ID: {self.entity_type_id}) assigned sex: {self.sex}.");
 
 // --- 2. Sprite Initialization (Sex-Specific, from _data.sprite_info) ---
 // Sets sprites based on assigned sex and data from _data.sprite_info.
@@ -168,7 +168,9 @@ if (struct_exists(_data, "sprite_info")) {
         (struct_exists(_sprite_info, "female_walk_prefix") ? _sprite_info.female_walk_prefix : undefined);
     // Note: spr_walk_prefix_string is a name prefix, not a direct asset. No get_sprite_asset_safely needed here.
     if (is_undefined(self.spr_walk_prefix_string)) {
-         show_debug_message($"WARNING (obj_pop Create for {_data.name_display_type}): Walk sprite prefix string not found in sprite_info for sex '{self.sex}'. Movement animations may fail.");
+         // Use type_tag for context if available, else fallback to "Pop"
+         var _type_context = variable_struct_exists(_data, "type_tag") ? _data.type_tag : "Pop";
+         show_debug_message($"WARNING (obj_pop Create for {_type_context}): Walk sprite prefix string not found in sprite_info for sex '{self.sex}'. Movement animations may fail.");
     }
 
     // Portrait Sprite
@@ -184,7 +186,9 @@ if (struct_exists(_data, "sprite_info")) {
     // self.spr_death = get_sprite_asset_safely(_death_sprite_name_key, _fallback_sprite_asset, _debug_sprite_context);
 
 } else {
-    show_debug_message($"WARNING (obj_pop Create for {_data.name_display_type}): 'sprite_info' struct not found in profile. Sprites will use Create event defaults or be undefined.");
+    // Use type_tag for context if available, else fallback to "Pop"
+    var _type_context = variable_struct_exists(_data, "type_tag") ? _data.type_tag : "Pop";
+    show_debug_message($"WARNING (obj_pop Create for {_type_context}): 'sprite_info' struct not found in profile. Sprites will use Create event defaults or be undefined.");
     self.spr_idle = spr_pop_man_idle; // Fallback to a default sprite
     self.sprite_index = self.spr_idle;
     self.spr_walk_prefix_string = undefined;
@@ -336,6 +340,8 @@ if (struct_exists(_data, "innate_trait_profile_paths") && is_array(_data.innate_
 
         if (!is_undefined(_trait_profile_data)) {
             ds_list_add(self.traits_list, _trait_profile_data); // Store the actual trait profile struct
+            // Defensive: Always check for undefined or missing data when loading from profiles or mods.
+            // This prevents runtime errors and helps with modding support.
             // TODO: Apply initial effects of the trait here.
             // This might involve calling a function like `apply_trait_effects(self, _trait_profile_data);`
             show_debug_message($"INFO (obj_pop Create for {self.pop_identifier_string}): Added innate trait '{_trait_profile_data.display_name_key}'.");
@@ -513,7 +519,7 @@ initialize_from_profile = function() {
         return; // Stop further initialization
     }
 
-    show_debug_message($"INFO (obj_pop.initialize_from_profile): Initializing Pop with Profile ID \'{self.profileIDStringRef}\', Defined Name: \'{_profile.name_display_type}\'.");
+    show_debug_message($"INFO (obj_pop.initialize_from_profile): Initializing Pop with Profile ID '{self.profileIDStringRef}', Type: '{variable_struct_exists(_profile, "type_tag") ? _profile.type_tag : "Pop"}'.");
 
     // --- Helper function to safely get a sprite asset index ---
     // Defined here to keep it local to this initialization logic.

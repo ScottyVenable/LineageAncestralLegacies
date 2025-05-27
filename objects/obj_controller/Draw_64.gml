@@ -32,9 +32,9 @@ show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selecti
 #region 2.1 Draw Formation Notification Text
 // Only draw if the notification is active (alpha > 0) and has text
 if (global.formation_notification_alpha > 0 && global.formation_notification_text != "") {
-    // Positioning at the top-center of the GUI
-    var _text_x_pos = display_get_gui_width() / 2;
-    var _text_y_pos = 30; // Desired pixels from the top of the screen
+    // Positioning: bottom-left at (192, 798) in GUI coordinates (user request)
+    var _text_x_pos = 185;
+    var _text_y_pos = 795;
 
     // Set drawing properties for the notification text
     draw_set_font(fnt_ui_header); // Or a specific fnt_notification if you create one
@@ -42,15 +42,13 @@ if (global.formation_notification_alpha > 0 && global.formation_notification_tex
     draw_set_valign(fa_middle);   // Vertically center the text around _text_y_pos
     draw_set_alpha(global.formation_notification_alpha); // Apply fade effect
 
-    // Draw shadow for better readability against various backgrounds
+    // Make the text 50% smaller (scale = 0.5)
+    var _scale = 0.5;
     draw_set_color(c_black);
-    draw_text(_text_x_pos + 2, _text_y_pos + 2, global.formation_notification_text);
-
-    // Draw main notification text
+    draw_text_transformed(_text_x_pos + 2, _text_y_pos + 2, global.formation_notification_text, _scale, _scale, 0);
     draw_set_color(c_white); // Or another prominent color like c_yellow or c_lime
-    draw_text(_text_x_pos, _text_y_pos, global.formation_notification_text);
+    draw_text_transformed(_text_x_pos, _text_y_pos, global.formation_notification_text, _scale, _scale, 0);
 
-    // Reset alpha to default (important if other GUI elements follow)
     draw_set_alpha(1.0);
     // Font, halign, valign will likely be reset by other drawing calls
     // or should be reset if this is the last GUI element drawn by this object.

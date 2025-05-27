@@ -71,8 +71,10 @@ draw_self();
 // 2. DRAW POP NAME (Colored by Sex, Above Pop, CONDITIONAL)
 // ============================================================================
 #region 2.1 Draw Pop Name
-if (_show_details_text && variable_instance_exists(id, "pop_identifier_string")) {
-    var _name_text = pop_identifier_string;
+if (_show_details_text && variable_instance_exists(id, "pop_name")) {
+    // Only display the pop's name above their head for clarity and a clean UI.
+    // We use pop_name instead of pop_identifier_string to avoid showing debug info (instance/profile IDs).
+    var _name_text = pop_name;
     
     var _text_x = _x_pop;
     var _name_y_offset_from_top = 8; 

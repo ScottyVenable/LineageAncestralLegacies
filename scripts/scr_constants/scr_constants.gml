@@ -288,7 +288,8 @@ enum FormationType {
     SINGLE_POINT,
     CLUSTERED,
     PACK_SCATTER,
-    SCATTER
+    SCATTER,
+    STAGGERED_LINE_HORIZONTAL
     
     
     // Add other formation types as needed, e.g.:

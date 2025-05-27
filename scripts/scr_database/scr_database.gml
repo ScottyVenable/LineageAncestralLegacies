@@ -187,6 +187,7 @@ function scr_database_init() {
             PACK_SCATTER: "pack_scatter",       // Matches enum
             SCATTER: "scatter"                  // Added based on enum
         }
+        // Educational: This mapping allows us to convert enum values to strings for saving/loading data, UI display, or modding support. Always update this if you add new formation types to the enum.
     };
 
     // =============================================================================
@@ -520,12 +521,8 @@ function scr_database_init() {
     global.GameData.Entity.Pop.GEN1 = {
         // --- Core Identification & Classification ---
         ID: 1, // Unique numerical ID for this profile (optional, if you use it)
-        profile_id_string: "POP_GEN1_PIONEERS", // Descriptive unique string ID
-        name_display_type: "Hominid (Gen 1)", // Display name for this TYPE of pop.
-                                        // Individual instance names (e.g., "Uga", "Groka")
-                                        // will be generated randomly at spawn time.
+        profile_id_string: "POP_GEN1", // Descriptive unique string ID
         type_tag: "Hominid",    // Broad category
-        species_concept: "Early Hominid (Habilis-inspired)", // Anthropological inspiration
 
         // --- Spawning & Visuals ---
         object_to_spawn: obj_pop, // The GameMaker object asset to instance
@@ -695,6 +692,16 @@ function scr_database_init() {
         // This structure makes it easy to add more recipes and ensures consistency across all crafting data.
     };
     // ... More recipes
+
+    // =============================================================================
+    // SECTION: DEFAULT POP NAMES (for fallback in name generation)
+    // =============================================================================
+    global.GameData.defaultMaleNames = [
+        "Uga", "Groka", "Boro", "Tarn", "Mako", "Rok", "Daru", "Karn", "Zug", "Varn"
+    ];
+    global.GameData.defaultFemaleNames = [
+        "Lira", "Suna", "Mira", "Tara", "Vena", "Rina", "Dara", "Kira", "Zana", "Nira"
+    ];
 
     debug_message("global.GameData populated successfully in scr_database. Version with GEN1-4 Pops.");
 }

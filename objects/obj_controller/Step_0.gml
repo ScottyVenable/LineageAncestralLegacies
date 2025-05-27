@@ -68,8 +68,8 @@ if (_ctrl_held) {
 // --- Shift + Mouse Wheel Cycling for Formation Type ---
 else if (_shift_held) { 
     var _current_formation_val = global.current_formation_type;
-    var _formation_enum_first = Formation.NONE;
-    var _formation_enum_last = Formation.CIRCLE; // <<<<< CORRECTED TO THE ACTUAL LAST ENUM VALUE
+    var _formation_enum_first = FormationType.NONE;
+    var _formation_enum_last = FormationType.CIRCLE; // <<<<< CORRECTED: Use FormationType for enum consistency
 
     var _wheel_up_type = mouse_wheel_up();
     var _wheel_down_type = mouse_wheel_down();
@@ -100,26 +100,26 @@ else if (_shift_held) {
 // --- F-Key Debug Cycling ---
 // Condition `!_shift_held && !_ctrl_held` ensures F-keys don't interfere with wheel actions
 if (!_shift_held && !_ctrl_held) {
-    if (keyboard_check_pressed(vk_f1) && global.current_formation_type != Formation.NONE) {
-        global.current_formation_type = Formation.NONE; _formation_changed_this_step = true;
-    } else if (keyboard_check_pressed(vk_f2) && global.current_formation_type != Formation.LINE_HORIZONTAL) {
-        global.current_formation_type = Formation.LINE_HORIZONTAL; _formation_changed_this_step = true;
-    } else if (keyboard_check_pressed(vk_f3) && global.current_formation_type != Formation.LINE_VERTICAL) {
-        global.current_formation_type = Formation.LINE_VERTICAL; _formation_changed_this_step = true;
-    } else if (keyboard_check_pressed(vk_f4) && global.current_formation_type != Formation.GRID) {
-        global.current_formation_type = Formation.GRID; _formation_changed_this_step = true;
-    } else if (keyboard_check_pressed(vk_f5) && global.current_formation_type != Formation.STAGGERED_LINE_HORIZONTAL) {
-        global.current_formation_type = Formation.STAGGERED_LINE_HORIZONTAL; _formation_changed_this_step = true;
-    } else if (keyboard_check_pressed(vk_f6) && global.current_formation_type != Formation.CIRCLE) {
-        global.current_formation_type = Formation.CIRCLE; _formation_changed_this_step = true;
+    if (keyboard_check_pressed(vk_f1) && global.current_formation_type != FormationType.NONE) {
+        global.current_formation_type = FormationType.NONE; _formation_changed_this_step = true;
+    } else if (keyboard_check_pressed(vk_f2) && global.current_formation_type != FormationType.LINE_HORIZONTAL) {
+        global.current_formation_type = FormationType.LINE_HORIZONTAL; _formation_changed_this_step = true;
+    } else if (keyboard_check_pressed(vk_f3) && global.current_formation_type != FormationType.LINE_VERTICAL) {
+        global.current_formation_type = FormationType.LINE_VERTICAL; _formation_changed_this_step = true;
+    } else if (keyboard_check_pressed(vk_f4) && global.current_formation_type != FormationType.GRID) {
+        global.current_formation_type = FormationType.GRID; _formation_changed_this_step = true;
+    } else if (keyboard_check_pressed(vk_f5) && global.current_formation_type != FormationType.STAGGERED_LINE_HORIZONTAL) {
+        global.current_formation_type = FormationType.STAGGERED_LINE_HORIZONTAL; _formation_changed_this_step = true;
+    } else if (keyboard_check_pressed(vk_f6) && global.current_formation_type != FormationType.CIRCLE) {
+        global.current_formation_type = FormationType.CIRCLE; _formation_changed_this_step = true;
     }
 }
 
 // --- Trigger Formation Type Notification if Changed ---
 if (_formation_changed_this_step) {
-    var _formation_name_string = scr_formation_get_name(global.current_formation_type);
-    scr_trigger_formation_notification("Formation: " + _formation_name_string);
-    show_debug_message("Formation Type set to: " + _formation_name_string);
+    var _formation_name_string = "Formation: " + scr_formation_get_name(global.current_formation_type);
+    scr_trigger_formation_notification(_formation_name_string);
+    show_debug_message("Formation changed to: " + _formation_name_string);
 }
 #endregion
 

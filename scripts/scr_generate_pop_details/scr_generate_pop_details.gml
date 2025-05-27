@@ -32,15 +32,6 @@ function scr_generate_pop_details(life_stage) {
     // Check if the pop is in the TRIBAL life stage
     if (life_stage == PopLifeStage.TRIBAL) {
         if (sex == EntitySex.MALE) {
-            _prefixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
-            _suffixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
-        } else { // FEMALE
-            _prefixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
-            _suffixes_list = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
-        }
-    } else {
-        // Default to global prefixes and suffixes
-        if (sex == EntitySex.MALE) {
             _prefixes_list = global.male_prefixes;
             _suffixes_list = global.male_suffixes;
             _name_base = "MalePop";

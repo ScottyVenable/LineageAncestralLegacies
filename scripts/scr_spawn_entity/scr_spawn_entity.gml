@@ -97,12 +97,13 @@ function scr_spawn_entity(entity_type_id, spawn_x, spawn_y, layer_id = "Entities
     // Log successful creation for debugging purposes.
     // Using entity_data.name provides a human-readable name for the spawned entity.
     var _display_name = "Unknown Entity"; // Default display name
-    if (variable_struct_exists(entity_data, "name_display_type")) {
-        _display_name = entity_data.name_display_type;
+    if (variable_struct_exists(entity_data, "type_tag")) {
+        _display_name = entity_data.type_tag;
     } else if (variable_struct_exists(entity_data, "name")) {
-        // Fallback to "name" if "name_display_type" doesn't exist, though "name" caused the error.
-        // This is a defensive measure; the primary fix is using "name_display_type".
+        // Fallback to "name" if "type_tag" doesn't exist
         _display_name = entity_data.name; 
+    } else {
+        _display_name = "Entity";
     }
     show_debug_message("Entity spawned: " + _display_name + " (ID: " + string(entity_type_id) + ") at (" + 
                      string(spawn_x) + ", " + string(spawn_y) + ") using controller " + object_get_name(controller_obj));

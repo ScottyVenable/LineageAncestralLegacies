@@ -304,10 +304,15 @@ var _num_selected_for_move = array_length(_selected_pops_list_for_move);
 if (_num_selected_for_move > 0) {
     global.order_counter++; 
 
-    if (_num_selected_for_move > 1 && global.current_formation_type != Formation.NONE) {
-        var _formation_slots = scr_formation_calculate_slots(
-            _event_mouse_x_room, _event_mouse_y_room, _num_selected_for_move,
-            global.current_formation_type, global.formation_spacing
+    if (_num_selected_for_move > 1 && global.current_formation_type != FormationType.NONE) {
+        // Educational: Always use the enum name (FormationType.NONE) for clarity and to avoid bugs.
+        // This ensures the code is robust if the enum values ever change.
+        var _formation_slots = scr_calculate_formation_positions(
+            global.current_formation_type,
+            _num_selected_for_move,
+            _event_mouse_x_room,
+            _event_mouse_y_room,
+            { spacing: global.formation_spacing }
         );
         if (array_length(_formation_slots) == _num_selected_for_move) {
             for (var i = 0; i < _num_selected_for_move; i++) {

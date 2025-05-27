@@ -65,14 +65,20 @@ function scr_generate_pop_name(_entity_data, _sex) {
     // Combine prefix and suffix to form the name
     var _name = (_prefix + _suffix);
 
-    // Fallback: if both lists were empty or produced blank, use a generic placeholder
+    // Fallback: if both lists were empty or produced blank, use a random fallback name from database
     if (_name == "") {
-        // Use type key from profile if available, else use "Pop"
-        var _base = (variable_struct_exists(_entity_data, "name_display_type"))
-                    ? _entity_data.name_display_type
-                    : "Pop";
-        // Append instance id to ensure uniqueness
-        _name = _base + string(id);
+        // Educational: This fallback ensures pops always get a name, even if name data fails to load.
+        if (_sex == EntitySex.MALE && is_array(global.GameData.defaultMaleNames) && array_length(global.GameData.defaultMaleNames) > 0) {
+            _name = global.GameData.defaultMaleNames[irandom(array_length(global.GameData.defaultMaleNames)-1)];
+        } else if (_sex == EntitySex.FEMALE && is_array(global.GameData.defaultFemaleNames) && array_length(global.GameData.defaultFemaleNames) > 0) {
+            _name = global.GameData.defaultFemaleNames[irandom(array_length(global.GameData.defaultFemaleNames)-1)];
+        } else {
+            // Final fallback: use a generic name with instance id
+            var _base = variable_struct_exists(_entity_data, "type_tag")
+                        ? _entity_data.type_tag
+                        : "Pop";
+            _name = _base + string(id);
+        }
     }
 
     return _name;

@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_formations",
+  "%Name":"scr_formation_get_name",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_formations",
+  "name":"scr_formation_get_name",
   "parent":{
-    "name":"Formations",
-    "path":"folders/Scripts/Entities/Formations.yy",
+    "name":"Entities",
+    "path":"folders/Scripts/Entities.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

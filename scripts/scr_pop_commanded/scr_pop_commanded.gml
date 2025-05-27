@@ -86,7 +86,8 @@ function scr_pop_commanded() {
         // Arrived at the commanded destination
         // Pop has arrived at the commanded destination.
         // Log this event for tracking and debugging pop movement and task completion.
-        var _pop_id_str = get_pop_identifier_string(id); // Helper to get a consistent name/ID string
+        // Use robust helper for pop debug string (educational: avoids undefined variable errors)
+        var _pop_id_str = scr_get_pop_identifier_string(id); // Helper to get a consistent name/ID string
         debug_message("Pop " + _pop_id_str + " (ID: " + string(id) + ") arrived at commanded point (" + string(travel_point_x) + "," + string(travel_point_y) + ").");
 
         // Clear pathfinding variables as the destination is reached

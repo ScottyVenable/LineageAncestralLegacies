@@ -17,7 +17,8 @@ function scr_name_for_pop(_profile_struct, _sex) {
     var _name = _prefix + _suffix;
     // Fallback if empty
     if (_name == "") {
-        var _base = variable_struct_exists(_profile_struct, "name_display_type") ? _profile_struct.name_display_type : "Pop";
+        // Use type_tag if available, else fallback to "Pop"
+        var _base = variable_struct_exists(_profile_struct, "type_tag") ? _profile_struct.type_tag : "Pop";
         _name = _base + string(id);
     }
     return _name;

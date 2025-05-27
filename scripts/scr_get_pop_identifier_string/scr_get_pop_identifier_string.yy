@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_get_pop_identifier_string",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_get_pop_identifier_string",
+  "parent":{
+    "name":"Pop",
+    "path":"folders/Scripts/Entities/Pop.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

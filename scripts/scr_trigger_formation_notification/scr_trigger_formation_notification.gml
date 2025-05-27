@@ -27,6 +27,8 @@ function scr_trigger_formation_notification(_notification_string) {
     global.formation_notification_text = _notification_string;
     global.formation_notification_alpha = 1.0; // Start fully visible
     global.formation_notification_timer = 0;   // Reset timer for the new notification
+    // Educational: The actual fade-out and timing logic for this notification is handled in the controller's Step event.
+    // This script only sets up the notification; the Step event will decrease alpha and hide the message after a set time.
     #endregion
 
     // =========================================================================

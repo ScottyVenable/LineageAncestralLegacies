@@ -19,11 +19,15 @@ if (keyboard_check(vk_control)) { // Only draw preview if Ctrl is currently held
         if (selected) { _selected_pop_count_for_preview++; }
     }
 
-    if (_selected_pop_count_for_preview > 0 && global.current_formation_type != Formation.NONE) {
-        var _preview_slots = scr_formation_calculate_slots(
-            _preview_center_x_room, _preview_center_y_room,
-            _selected_pop_count_for_preview, global.current_formation_type,
-            global.formation_spacing
+    if (_selected_pop_count_for_preview > 0 && global.current_formation_type != FormationType.NONE) {
+        // Educational: Use scr_calculate_formation_positions to preview formation slots.
+        // The argument order is (formation_type, spawn_count, center_x, center_y, options)
+        var _preview_slots = scr_calculate_formation_positions(
+            global.current_formation_type,
+            _selected_pop_count_for_preview,
+            _preview_center_x_room,
+            _preview_center_y_room,
+            { spacing: global.formation_spacing }
         );
 
         if (array_length(_preview_slots) > 0) {

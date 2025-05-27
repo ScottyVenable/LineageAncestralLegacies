@@ -1,26 +1,28 @@
-/// scr_load_name_data.gml
+/// scr_load_external_data.gml
 ///
 /// Purpose:
-///   Loads name prefixes and suffixes from .txt files into global arrays.
-///   These arrays are then used for generating culturally appropriate names for pops.
+///   Centralized script to load all external data files (JSON) for the game.
+///   This includes item data, resource nodes, structures, entities, and more.
+///   Designed to be called once at the beginning of the game (e.g., in a controller object's Create Event).
 ///
 /// Metadata:
-///   Summary:       Loads male and female name components (prefixes, suffixes) from text files into global arrays.
-///   Usage:         Call `load_name_data()` once at the beginning of the game (e.g., in a controller object's Create Event).
+///   Summary:       Loads various game data from JSON files into global structures.
+///   Usage:         Call `scr_load_external_data_all()` once at the beginning of the game.
 ///   Parameters:    None
-///   Returns:       void (This function modifies global variables directly: `global.male_prefixes`, `global.male_suffixes`, `global.female_prefixes`, `global.female_suffixes`)
-///   Tags:          [data][utility][names][generation][initialization][file_io]
-///   Version:       1.1 - 2025-05-23 // Renamed functions, aligned with TEMPLATE_SCRIPT.
-///   Dependencies:  `ds_list_to_array()` (from `ds_list_to_array.gml`). Text files in `data/names/`.
+///   Returns:       void (This function modifies global variables directly: `global.GameData.items`, `global.GameData.resource_nodes`, etc.)
+///   Tags:          [data][utility][initialization][file_io][json]
+///   Version:       1.2 - 2025-05-23 // Updated to use game_save_id + "/gamedata/core/" as target directory for runtime JSON files
+///   Dependencies:  None explicitly, but relies on JSON structure consistency and file availability.
 ///   Creator:       GameDev AI (Originally) / Your Name // Please update creator if known
 ///   Created:       2025-05-22 // Assumed creation date, please update if known
-///   Last Modified: 2025-05-23 by Copilot // Updated to match template, renamed functions
+///   Last Modified: 2025-05-23 by Copilot // Initial creation
 
 // =========================================================================
 // 0. IMPORTS & CACHES (Script-level)
 // =========================================================================
 #region 0.1 Global Scope Dependencies
-// This script relies on `ds_list_to_array` being available globally from `ds_list_to_array.gml`.
+// This script relies on various global variables and functions being available,
+// particularly those related to GameData structure and JSON handling.
 // No direct script-level imports here, but function dependencies are noted in metadata.
 #endregion
 
@@ -33,353 +35,263 @@
 // 4. CORE LOGIC (Function Definitions)
 // =========================================================================
 
-#region 4.1 Main Data Loading Function: load_name_data()
-/// @function load_name_data()
-/// @description Loads all specified name data files (prefixes, suffixes for male/female) into global arrays.
-function load_name_data() {
-    // =========================================================================
-    // 4.1.0. IMPORTS & CACHES (Function-local)
-    // =========================================================================
-    #region FunctionLocal_0.1 Imports & Cached Locals
-    // Cache the helper function for loading lines from a file.
-    var _load_lines_func = load_text_file_lines;
-    #endregion
+#region Helper Function: load_json_file
+/// @function load_json_file(_filepath)
+/// @description Reads a file and parses its content as JSON.
+/// @param {string} _filepath The path to the JSON file.
+/// @return {Struct|Array|undefined} Parsed JSON data, or undefined on error.
+function load_json_file(_filepath) {
+    if (!file_exists(_filepath)) {
+        show_debug_message("ERROR (load_json_file): File not found at path: " + _filepath);
+        return undefined;
+    }
 
-    // =========================================================================
-    // 4.1.1. VALIDATION & EARLY RETURNS (Function-local)
-    // =========================================================================
-    #region FunctionLocal_1.1 Parameter Validation
-    // No parameters for this function.
-    #endregion
-    #region FunctionLocal_1.2 Pre-condition Checks
-    // Could add a check if data is already loaded to prevent re-loading, if necessary.
-    // e.g., if (global.name_data_loaded) { show_debug_message("Name data already loaded."); return; }
-    #endregion
+    var _buffer = buffer_load(_filepath);
+    if (!buffer_exists(_buffer)) {
+        show_debug_message("ERROR (load_json_file): Could not load file into buffer: " + _filepath);
+        return undefined;
+    }
 
-    // =========================================================================
-    // 4.1.2. CONFIGURATION & CONSTANTS (Function-local)
-    // =========================================================================
-    #region FunctionLocal_2.1 Local Constants - File Paths
-    // Define the paths to the text files containing name components.
-    // It's good practice to keep these paths easily configurable at the top of the function.
-    var _male_prefixes_path   = "data/names/male_name_prefixes.txt";
-    var _male_suffixes_path   = "data/names/male_name_suffixes.txt";
-    var _female_prefixes_path = "data/names/female_name_prefixes.txt";
-    var _female_suffixes_path = "data/names/female_name_suffixes.txt";
-    #endregion
+    var _json_string = buffer_read(_buffer, buffer_string);
+    buffer_delete(_buffer); // Clean up buffer
 
-    // =========================================================================
-    // 4.1.3. INITIALIZATION & STATE SETUP (Function-local)
-    // =========================================================================
-    #region FunctionLocal_3.1 Global Variable Initialization
-    // Ensure global arrays are initialized (or re-initialized) before loading.
-    // This prevents issues if the function is called multiple times, though ideally it's called once.
-    global.male_prefixes    = [];
-    global.male_suffixes    = [];
-    global.female_prefixes  = [];
-    global.female_suffixes  = [];
-    #endregion
+    if (_json_string == "" || _json_string == undefined) {
+        show_debug_message("ERROR (load_json_file): File was empty or could not be read as string: " + _filepath);
+        return undefined;
+    }
 
-    // =========================================================================
-    // 4.1.4. CORE LOGIC (Function-local) - Loading Data
-    // =========================================================================
-    #region FunctionLocal_4.1 Load Name Data from Files
-    // Use the helper function to load lines from each specified file into the corresponding global array.
-    show_debug_message("Attempting to load male prefixes from: " + _male_prefixes_path);
-    global.male_prefixes    = _load_lines_func(_male_prefixes_path);
+    var _parsed_data = json_parse(_json_string);
+
+    // json_parse returns the input string if it fails to parse, which is not what we want.
+    // We should check if the result is a struct or array, as valid JSON should parse to one of these.
+    if (!is_struct(_parsed_data) && !is_array(_parsed_data)) {
+        show_debug_message("ERROR (load_json_file): Failed to parse JSON string from file: " + _filepath + ". Content might not be valid JSON.");
+        // show_debug_message("Content: " + _json_string); // Uncomment for debugging, but can be very verbose.
+        return undefined; // Indicate failure
+    }
     
-    show_debug_message("Attempting to load male suffixes from: " + _male_suffixes_path);
-    global.male_suffixes    = _load_lines_func(_male_suffixes_path);
-    
-    show_debug_message("Attempting to load female prefixes from: " + _female_prefixes_path);
-    global.female_prefixes  = _load_lines_func(_female_prefixes_path);
-    
-    show_debug_message("Attempting to load female suffixes from: " + _female_suffixes_path);
-    global.female_suffixes  = _load_lines_func(_female_suffixes_path);
-    
-    // global.name_data_loaded = true; // Optional: set a flag indicating data has been loaded.
-    #endregion
-
-    // =========================================================================
-    // 4.1.5. CLEANUP & RETURN (Function-local)
-    // =========================================================================
-    #region FunctionLocal_5.1 Cleanup
-    // No specific cleanup needed within this function beyond what load_text_file_lines handles.
-    #endregion
-    #region FunctionLocal_5.2 Return Value
-    // This function does not return a value; it modifies global variables.
-    #endregion
-
-    // =========================================================================
-    // 4.1.6. DEBUG/PROFILING (Function-local)
-    // =========================================================================
-    #region FunctionLocal_6.1 Debug Logging
-    // Log the number of prefixes and suffixes loaded for verification.
-    show_debug_message("Loaded male prefixes: " + string(array_length(global.male_prefixes)));
-    show_debug_message("Loaded male suffixes: " + string(array_length(global.male_suffixes)));
-    show_debug_message("Loaded female prefixes: " + string(array_length(global.female_prefixes)));
-    show_debug_message("Loaded female suffixes: " + string(array_length(global.female_suffixes)));
-    #endregion
+    // Successfully parsed
+    return _parsed_data;
 }
 #endregion
 
-#region 4.2 Helper Function: load_text_file_lines()
-/// @function load_text_file_lines(_path)
-/// @description Reads all lines from a given text file, splits lines by comma if present,
-///              trims whitespace from each part, and returns them as an array of strings.
-/// @param {string} _path The path to the text file (relative to the game's working directory or included files).
-/// @returns {Array<String>} An array of strings, where each string is a processed line or part of a line from the file.
-///                        Returns an empty array if the file doesn't exist or cannot be opened.
-function load_text_file_lines(_path) {
+#region 4.1 Main Data Loading Function: scr_load_external_data_all()
+/// @function scr_load_external_data_all(_base_path_from_included_files)
+/// @description Loads all external JSON data files.
+///              For now, it loads from the project's Included Files.
+///              Later, this can be adapted to check the player's game directory.
+/// @param {string} _base_path_from_included_files The subfolder within Included Files (e.g., "gamedata/core") containing the default game data.
+function scr_load_external_data_all(_base_path_from_included_files) {
     // =========================================================================
-    // Helper_0. IMPORTS & CACHES
+    // 1. Define Paths
     // =========================================================================
-    #region Helper_0.1 Imports & Cached Locals
-    // Cache the ds_list_to_array function if it's used frequently within a loop (not the case here, but good practice).
-    // var _ds_list_to_array_func = ds_list_to_array; // Assuming ds_list_to_array is globally available
-    #endregion
+    // Ensure _base_path_from_included_files uses backslashes internally for consistency
+    var _sanitized_base_path = string_replace_all(_base_path_from_included_files, "/", "\\");
+    var _default_data_path_prefix = (_sanitized_base_path == "" || _sanitized_base_path == undefined) ? "" : _sanitized_base_path + "\\";
+    
+    var _save_data_main_dir = game_save_id; // Base save directory
+    
+    // Define the target subdirectory structure within game_save_id
+    var _save_gamedata_sub_dir_name = "gamedata";
+    var _save_core_sub_dir_name = "core";
+    
+    // Construct paths using backslashes
+    var _path_to_gamedata_in_save_dir = _save_data_main_dir + _save_gamedata_sub_dir_name + "\\";
+    var _path_to_core_in_save_dir = _path_to_gamedata_in_save_dir + _save_core_sub_dir_name + "\\"; // This is where files like item_data.json will go
+
+    show_debug_message("scr_load_external_data_all: Default data prefix (Included Files): '" + _default_data_path_prefix + "'");
+    show_debug_message("scr_load_external_data_all: Target save data path (Runtime): '" + _path_to_core_in_save_dir + "'");
 
     // =========================================================================
-    // Helper_1. VALIDATION & EARLY RETURNS
+    // 2. Ensure Save Data Directory Exists
     // =========================================================================
-    #region Helper_1.1 Parameter Validation
-    if (!is_string(_path) || string_length(_path) == 0) {
-        show_debug_message("ERROR (load_text_file_lines): Invalid or empty path provided.");
-        return [];
+    if (!directory_exists(_save_data_main_dir)) {
+        show_debug_message("scr_load_external_data_all: Main save directory '" + _save_data_main_dir + "' not found. Attempting to create.");
+        directory_create(_save_data_main_dir); 
     }
-    #endregion
-    #region Helper_1.2 Pre-condition Checks - File Existence
-    // Check if the file exists before attempting to open it. This prevents errors.
-    if (!file_exists(_path)) {
-        show_debug_message("ERROR (load_text_file_lines): File not found - " + _path);
-        return []; // Return an empty array as a fallback if the file doesn't exist.
+    if (!directory_exists(_path_to_gamedata_in_save_dir)) {
+        show_debug_message("scr_load_external_data_all: Subdirectory '" + _path_to_gamedata_in_save_dir + "' not found. Attempting to create.");
+        directory_create(_path_to_gamedata_in_save_dir); 
     }
-    #endregion
+    if (!directory_exists(_path_to_core_in_save_dir)) {
+        show_debug_message("scr_load_external_data_all: Subdirectory '" + _path_to_core_in_save_dir + "' not found. Attempting to create.");
+        directory_create(_path_to_core_in_save_dir); 
+    }
 
     // =========================================================================
-    // Helper_2. CONFIGURATION & CONSTANTS
+    // 3. Define Helper to Manage and Load Files
+    //    This helper will:
+    //    - Check if the file exists in the target save directory (_path_to_core_in_save_dir).
+    //    - If not, copy it from Included Files (defaults at _default_data_path_prefix).
+    //    - Attempt to load from the target save directory.
+    //    - If that fails, attempt to load from Included Files (defaults) as a fallback.
     // =========================================================================
-    #region Helper_2.1 Local Constants
-    // No specific constants needed for this helper.
-    #endregion
+    function _get_data_file_path_and_load(_filename, _current_path_to_core_in_save_dir, _current_default_data_path_prefix) {
+        // Files will be directly inside _path_to_core_in_save_dir
+        // Ensure filenames are appended with backslashes
+        var _path_in_save_dir = _current_path_to_core_in_save_dir + _filename;
+        var _path_in_defaults = _current_default_data_path_prefix + _filename; // Path to the default file in Included Files
 
-    // =========================================================================
-    // Helper_3. INITIALIZATION & STATE SETUP
-    // =========================================================================
-    #region Helper_3.1 Data Structures
-    var _list = ds_list_create(); // Create a temporary ds_list to hold lines before converting to an array.
-                                  // ds_lists are efficient for adding many items.
-    var _array = [];              // Initialize an empty array for the final result.
-    #endregion
-
-    // =========================================================================
-    // Helper_4. CORE LOGIC - File Reading
-    // =========================================================================
-    #region Helper_4.1 Open and Read File
-    var _file = file_text_open_read(_path); // Attempt to open the file for reading.
-
-    if (_file != -1) { // Check if the file was opened successfully.
-        // Loop until the end of the file (eof) is reached.
-        while (!file_text_eof(_file)) {
-            var _line = file_text_read_string(_file); // Read the current entire line as a string.
+        // Check if the file exists in the save directory.
+        // If not, copy the default version from Included Files.
+        if (!file_exists(_path_in_save_dir)) {
+            show_debug_message("INFO (" + _filename + "): Not found in save directory ('" + _path_in_save_dir + "'). Checking for default in Included Files: '" + _path_in_defaults + "'.");
             
-            // Split the line by commas. This allows multiple names/parts per line in the source file.
-            var _split_values = string_split(_line, ","); 
-            
-            // Iterate through the parts obtained after splitting.
-            for (var i = 0; i < array_length(_split_values); i++) {
-                var _trimmed_value = string_trim(_split_values[i]); // Remove leading/trailing whitespace.
-                if (string_length(_trimmed_value) > 0) { // Only add non-empty strings.
-                    ds_list_add(_list, _trimmed_value); 
+            if (file_exists(_path_in_defaults)) { // Check if the default file exists in "Included Files"
+                show_debug_message("INFO (" + _filename + "): Default found at '" + _path_in_defaults + "'. Attempting to copy to '" + _path_in_save_dir + "'.");
+                var _copy_success = file_copy(_path_in_defaults, _path_in_save_dir);
+                if (_copy_success) {
+                    show_debug_message("SUCCESS (" + _filename + "): Copied default to save directory.");
+                } else {
+                    show_debug_message("ERROR (" + _filename + "): FAILED to copy default '" + _path_in_defaults + "' to '" + _path_in_save_dir + "'. This can happen if the source doesn't exist in Included Files or due to permissions.");
                 }
-            }
-            file_text_readln(_file); // Advance to the next line for the next iteration.
-        }
-        file_text_close(_file); // Close the file once reading is complete.
-    } else {
-        // If the file could not be opened (e.g., due to permissions, though file_exists should catch most issues).
-        show_debug_message("ERROR (load_text_file_lines): Unable to open file - " + _path);
-        // Cleanup ds_list even on error before returning.
-        ds_list_destroy(_list);
-        return []; // Return an empty array as a fallback.
-    }
-    #endregion
-
-    // =========================================================================
-    // Helper_5. CLEANUP & RETURN
-    // =========================================================================
-    #region Helper_5.1 Convert to Array and Cleanup DS_List
-    // Convert the ds_list to a standard GameMaker array.
-    // This uses the `ds_list_to_array` function (expected to be globally available from `ds_list_to_array.gml`).
-    if (script_exists(ds_list_to_array)) { // Check if the conversion script exists
-        _array = ds_list_to_array(_list); 
-    } else {
-        show_debug_message("CRITICAL ERROR (load_text_file_lines): ds_list_to_array script not found! Cannot convert list for " + _path);
-        // Fallback: Manually convert if ds_list_to_array is missing (less efficient for large lists but functional)
-        // for (var i = 0; i < ds_list_size(_list); i++) {
-        //     array_push(_array, _list[| i]);
-        // }
-    }
-    
-    ds_list_destroy(_list); // IMPORTANT: Destroy the ds_list to prevent memory leaks.
-    #endregion
-    #region Helper_5.2 Return Value
-    return _array; // Return the populated array (or an empty one if errors occurred).
-    #endregion
-
-    // =========================================================================
-    // Helper_6. DEBUG/PROFILING (Optional)
-    // =========================================================================
-    #region Helper_6.1 Debug & Profile Hooks
-    // Example debug: 
-    // show_debug_message(string_format("load_text_file_lines: Loaded {0} items from {1}", array_length(_array), _path));
-    #endregion
-}
-#endregion
-
-#region 4.3 JSON Data Loading Functions
-/// @function load_json_file(_path)
-/// Safely loads and parses JSON from a text file, returning a struct or undefined.
-function load_json_file(_path) {
-    if (file_exists(_path)) {
-        var _f = file_text_open_read(_path);
-        var _text = "";
-        if (_f != -1) {
-            while (!file_text_eof(_f)) {
-                _text += file_text_read_string(_f);
-                file_text_readln(_f);
-            }
-            file_text_close(_f);
-            return json_parse(_text);
-        }
-    }
-    return undefined;
-}
-
-/// @function scr_load_external_data_all(_base_path)
-function scr_load_external_data_all(_base_path) {
-    // =========================================================================
-    // 1. Ensure data folder exists
-    // =========================================================================
-    var _data_folder = working_directory + "/" + _base_path;
-    if (!directory_exists(_data_folder)) {
-        directory_create(_data_folder);
-        show_debug_message("Created missing data directory: " + _data_folder);
-    }
-
-    // =========================================================================
-    // 2. Define helper to ensure file exists or copy default
-    // =========================================================================
-    function _ensure_file(_filename) {
-        var _path = _data_folder + "/" + _filename;
-        if (!file_exists(_path)) {
-            // Copy default from same folder
-            var _default = _data_folder + "/default_" + _filename;
-            if (file_exists(_default)) {
-                file_copy(_default, _path);
-                show_debug_message("Copied default data file for missing " + _filename);
             } else {
-                show_debug_message("WARNING: Neither " + _filename + " nor default_" + _filename + " found.");
+                show_debug_message("CRITICAL WARNING (" + _filename + "): Default file '" + _path_in_defaults + "' not found in Included Files. Cannot populate save directory or use as fallback.");
             }
         }
-        return _path;
+
+        // Now, attempt to load from the save directory first.
+        if (file_exists(_path_in_save_dir)) {
+            var _loaded_data = load_json_file(_path_in_save_dir);
+            if (is_struct(_loaded_data) || is_array(_loaded_data)) { // Check if JSON parsing was successful
+                show_debug_message("SUCCESS (" + _filename + "): Loaded from save directory: '" + _path_in_save_dir + "'.");
+                return _loaded_data;
+            } else {
+                show_debug_message("WARNING (" + _filename + "): Failed to load or parse from save directory '" + _path_in_save_dir + "' (file might be corrupted or not valid JSON). Attempting to load from default in Included Files.");
+            }
+        } else {
+             show_debug_message("WARNING (" + _filename + "): File still not found in save directory '" + _path_in_save_dir + "' after copy attempt (or no default to copy). Attempting to load directly from default in Included Files.");
+        }
+
+        // Fallback: Try to load from the default Included Files location.
+        if (file_exists(_path_in_defaults)) {
+            var _loaded_data_fallback = load_json_file(_path_in_defaults);
+            if (is_struct(_loaded_data_fallback) || is_array(_loaded_data_fallback)) {
+                show_debug_message("SUCCESS (" + _filename + "): Loaded from DEFAULTS (Included Files): '" + _path_in_defaults + "'.");
+                return _loaded_data_fallback;
+            } else {
+                show_debug_message("ERROR (" + _filename + "): Failed to load or parse from DEFAULTS '" + _path_in_defaults + "' as well.");
+            }
+        }
+        
+        return undefined; // Return undefined if all attempts fail.
     }
 
     // =========================================================================
-    // 3. Items
+    // 4. Load Each Data File using the Helper
     // =========================================================================
-    var _item_path = _ensure_file("item_data.json");
-    var _items = load_json_file(_item_path);
+    
+    // --- Items ---
+    var _item_data_filename = "item_data.json";
+    var _items = _get_data_file_path_and_load(_item_data_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
     if (is_struct(_items)) {
         global.GameData.items = _items;
+        // Path shown in previous messages is now more complex, so a generic success message here.
+        show_debug_message("Item data processed into global.GameData.items.");
     } else {
-        // Fallback to default JSON
-        var _def_item_path = _ensure_file("default_item_data.json");
-        var _def_items = load_json_file(_def_item_path);
-        if (is_struct(_def_items)) {
-            global.GameData.items = _def_items;
-            show_debug_message("Loaded default item_data.json after parse failure.");
-        }
+        show_debug_message("ERROR: Failed to process item data. global.GameData.items may be incomplete or default.");
     }
-
-    // =========================================================================
-    // 4. Resource Nodes
-    // =========================================================================
-    var _res_path = _ensure_file("resource_node_data.json");
-    var _res = load_json_file(_res_path);
+    
+    // --- Resource Nodes ---
+    var _resource_node_data_filename = "resource_node_data.json";
+    var _res = _get_data_file_path_and_load(_resource_node_data_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
     if (is_struct(_res)) {
         global.GameData.resource_nodes = _res;
+        show_debug_message("Resource node data processed into global.GameData.resource_nodes.");
     } else {
-        var _def_res_path = _ensure_file("default_resource_node_data.json");
-        var _def_res = load_json_file(_def_res_path);
-        if (is_struct(_def_res)) {
-            global.GameData.resource_nodes = _def_res;
-            show_debug_message("Loaded default resource_node_data.json after parse failure.");
-        }
+        show_debug_message("ERROR: Failed to process resource node data.");
     }
 
-    // =========================================================================
-    // 5. Structures
-    // =========================================================================
-    var _struct_path = _ensure_file("structure_data.json");
-    var _struct = load_json_file(_struct_path);
-    if (is_struct(_struct)) {
-        global.GameData.structures = _struct;
+    // --- Structures ---
+    var _structure_data_filename = "structure_data.json";
+    var _struct_data = _get_data_file_path_and_load(_structure_data_filename, _path_to_core_in_save_dir, _default_data_path_prefix); // Renamed var to avoid conflict
+    if (is_struct(_struct_data)) {
+        global.GameData.structures = _struct_data;
+        show_debug_message("Structure data processed into global.GameData.structures.");
     } else {
-        var _def_struct_path = _ensure_file("default_structure_data.json");
-        var _def_struct = load_json_file(_def_struct_path);
-        if (is_struct(_def_struct)) {
-            global.GameData.structures = _def_struct;
-            show_debug_message("Loaded default structure_data.json after parse failure.");
-        }
+        show_debug_message("ERROR: Failed to process structure data.");
     }
 
-    // =========================================================================
-    // 6. Entities
-    // =========================================================================
-    var _ent_path = _ensure_file("entity_data.json");
-    var _ent = load_json_file(_ent_path);
+    // --- Entities ---
+    var _entity_data_filename = "entity_data.json";
+    var _ent = _get_data_file_path_and_load(_entity_data_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
     if (is_struct(_ent)) {
         global.GameData.entities = _ent;
+        show_debug_message("Entity data processed into global.GameData.entities.");
     } else {
-        var _def_ent_path = _ensure_file("default_entity_data.json");
-        var _def_ent = load_json_file(_def_ent_path);
-        if (is_struct(_def_ent)) {
-            global.GameData.entities = _def_ent;
-            show_debug_message("Loaded default entity_data.json after parse failure.");
-        }
+        show_debug_message("ERROR: Failed to process entity data.");
+    }
+    
+    // --- Pop Name Data (JSON version) ---
+    // If name_data.json is in a subfolder of _base_path_from_included_files (e.g., "datafiles/namedata/name_data.json")
+    // then _name_data_json_filename should be "namedata/name_data.json"
+    var _name_data_json_filename = "name_data.json"; 
+    // For example, if it's in a "namedata" subfolder of your "datafiles" Included Files folder:
+    // var _name_data_json_filename = "namedata/name_data.json"; 
+    var _names_json = _get_data_file_path_and_load(_name_data_json_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
+    if (is_struct(_names_json)) {
+        global.GameData.name_data = _names_json; 
+        show_debug_message("JSON name data processed into global.GameData.name_data.");
+    } else {
+        show_debug_message("WARNING: Failed to process JSON name data.");
     }
 
-    // =========================================================================
-    // 7. Pop Name Data
-    // =========================================================================
-    var _name_path = _ensure_file("pop_name_data.json");
-    var _names = load_json_file(_name_path);
-    if (is_struct(_names)) {
-        global.GameData.pop_name_data = _names;
+    // --- Pop States Data ---
+    var _pop_states_filename = "pop_states.json";
+    var _pop_states_data = _get_data_file_path_and_load(_pop_states_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
+    if (is_struct(_pop_states_data)) {
+        global.GameData.pop_states = _pop_states_data;
+        show_debug_message("Pop states data processed into global.GameData.pop_states.");
     } else {
-        var _def_name_path = _ensure_file("default_pop_name_data.json");
-        var _def_names = load_json_file(_def_name_path);
-        if (is_struct(_def_names)) {
-            global.GameData.pop_name_data = _def_names;
-            show_debug_message("Loaded default pop_name_data.json after parse failure.");
-        }
+        show_debug_message("ERROR: Failed to process pop states data.");
     }
 
-    // Names handled by load_name_data (text-based)
-    show_debug_message("External data loaded from: " + _base_path);
+    // --- Recipes Data ---
+    var _recipes_filename = "recipes.json"; 
+    var _recipes_data = _get_data_file_path_and_load(_recipes_filename, _path_to_core_in_save_dir, _default_data_path_prefix);
+    if (is_struct(_recipes_data)) {
+        global.GameData.recipes = _recipes_data; 
+        show_debug_message("Recipes data processed into global.GameData.recipes.");
+    } else {
+        show_debug_message("WARNING: Failed to process recipes data.");
+    }
 
+    show_debug_message("scr_load_external_data_all: Finished attempting to load all external JSON data.");
+    
     // =========================================================================
-    // 8. Linking/Resolution (Second Pass)
+    // 5. Linking/Resolution (Second Pass) - IMPORTANT
     // =========================================================================
-    // Resolve string IDs in resource nodes to item profile references
+    // This section should come AFTER all primary data has been loaded,
+    // as it relies on different parts of global.GameData being populated.
+    // Example: Resolve string IDs in resource nodes to item profile references
     if (is_struct(global.GameData.resource_nodes)) {
         var _res_keys = variable_struct_get_names(global.GameData.resource_nodes);
         for (var i = 0; i < array_length(_res_keys); i++) {
             var _key = _res_keys[i];
-            var _node = global.GameData.resource_nodes[_key];
+            // Use the $ accessor to get the struct member using a string variable for the key
+            var _node = global.GameData.resource_nodes[$ _key]; 
+            
+            // Check if _node is actually a struct before trying to access its members
+            if (!is_struct(_node)) {
+                show_debug_message("Warning: Expected a struct for resource node key '" + _key + "', but found: " + typeof(_node));
+                continue; // Skip to the next key
+            }
+            
+            // Check if gather_properties exists and is a struct
+            if (!variable_struct_exists(_node, "gather_properties") || !is_struct(_node.gather_properties)) {
+                show_debug_message("Warning: Missing or invalid 'gather_properties' for resource node '" + _key + "'.");
+                continue; // Skip to the next key
+            }
+            
+            // Check if resource_item_id exists in gather_properties
+            if (!variable_struct_exists(_node.gather_properties, "resource_item_id")) {
+                show_debug_message("Warning: Missing 'resource_item_id' in 'gather_properties' for resource node '" + _key + "'.");
+                continue; // Skip to the next key
+            }
+            
             var _item_id_str = _node.gather_properties.resource_item_id;
-            var _profile = find_item_profile_by_id(_item_id_str);
+            // Corrected function name from find_item_profile_by_id to get_item_profile_by_id
+            var _profile = get_item_profile_by_id(_item_id_str);
             if (is_struct(_profile)) {
                 _node.gather_properties.resource_item_profile = _profile;
             } else {

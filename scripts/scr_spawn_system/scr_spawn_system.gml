@@ -139,8 +139,11 @@ function world_gen_spawn(subject_identifier_string, amount_to_spawn, formation_e
         show_debug_message("ERROR: world_gen_spawn - global.GameData is not initialized. Cannot resolve entity profile.");
         return _spawned_instances;
     }
-    if (!is_method(global, "GetProfileFromUniqueID")) {
-        show_debug_message("ERROR: world_gen_spawn - global.GetProfileFromUniqueID method not found. Cannot resolve entity profile.");
+    // Corrected check: Use script_exists for global script functions
+    // or variable_struct_exists and then is_method if it's dynamically added to the 'global' struct.
+    // Assuming GetProfileFromUniqueID is a global script:
+    if (!script_exists(GetProfileFromUniqueID)) {
+        show_debug_message("ERROR: world_gen_spawn - Global script function GetProfileFromUniqueID not found. Cannot resolve entity profile.");
         return _spawned_instances;
     }
 

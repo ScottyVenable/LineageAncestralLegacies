@@ -15,20 +15,37 @@
 ///       The pop's biological sex, used to select appropriate name lists.
 ///   Returns:       string — The combined prefix+suffix name, or a fallback if lists are empty.
 ///   Tags:          [pop][name][generator]
-///   Version:       1.0 - 2025-05-26
-///   Dependencies:  EntitySex enum, global.male_prefixes, global.female_prefixes,
-///                  global.male_suffixes, global.female_suffixes
+///   Version:       1.1 - 2025-05-28 // Updated to use JSON data source
+///   Dependencies:  EntitySex enum, global.GameData.name_data (from name_data.json)
 
 function scr_generate_pop_name(_entity_data, _sex) {
-    // Determine which global lists to use based on sex
+    // Access the name data from the global GameData struct
+    // This data is loaded from name_data.json at game start
+    var _name_data = global.GameData.name_data;
+
+    // Determine which name lists to use based on sex
     var _prefix_list;
     var _suffix_list;
-    if (_sex == EntitySex.MALE) {
-        _prefix_list = global.male_prefixes;
-        _suffix_list = global.male_suffixes;
+
+    // Check if name_data and the relevant sex-specific data exist
+    if (variable_struct_exists(_name_data, "names")) {
+        if (_sex == EntitySex.MALE && variable_struct_exists(_name_data.names, "male")) {
+            _prefix_list = _name_data.names.male.prefixes;
+            _suffix_list = _name_data.names.male.suffixes;
+        } else if (_sex == EntitySex.FEMALE && variable_struct_exists(_name_data.names, "female")) {
+            _prefix_list = _name_data.names.female.prefixes;
+            _suffix_list = _name_data.names.female.suffixes;
+        } else {
+            // Fallback if sex-specific data is missing, though this shouldn't happen with valid JSON
+            _prefix_list = [];
+            _suffix_list = [];
+            show_debug_message("Warning: Name data for sex " + string(_sex) + " not found in global.GameData.name_data.names");
+        }
     } else {
-        _prefix_list = global.female_prefixes;
-        _suffix_list = global.female_suffixes;
+        // Fallback if the entire "names" structure is missing
+        _prefix_list = [];
+        _suffix_list = [];
+        show_debug_message("Warning: global.GameData.name_data.names not found.");
     }
 
     // Safely pick a random prefix

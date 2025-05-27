@@ -46,12 +46,33 @@ function get_item_profile_by_id(_item_id) {
     // Helper_4. CORE LOGIC - Profile Lookup
     // =========================================================================
     #region Helper_4.1 Lookup Item Profile
-    if (variable_struct_exists(global.GameData.items, _item_id)) {
-        return global.GameData.items[_item_id];
-    } else {
-        show_debug_message("WARNING (get_item_profile_by_id): Item profile not found for ID: " + _item_id);
-        return undefined;
+    // Iterate through the main categories in global.GameData.items (e.g., "Resource", "Tool", "Food")
+    var _item_categories = variable_struct_get_names(global.GameData.items);
+    for (var i = 0; i < array_length(_item_categories); i++) {
+        var _category_key = _item_categories[i];
+        var _category_struct = global.GameData.items[$ _category_key];
+
+        // Check if the current category is a struct
+        if (!is_struct(_category_struct)) continue;
+
+        // Iterate through items within this category
+        var _items_in_category = variable_struct_get_names(_category_struct);
+        for (var j = 0; j < array_length(_items_in_category); j++) {
+            var _item_key_in_category = _items_in_category[j];
+            var _item_profile = _category_struct[$ _item_key_in_category];
+
+            // Check if this item profile is a struct and has the 'item_id_string' field
+            if (is_struct(_item_profile) && variable_struct_exists(_item_profile, "item_id_string")) {
+                if (_item_profile.item_id_string == _item_id) {
+                    return _item_profile; // Found the item profile
+                }
+            }
+        }
     }
+
+    // If the loop completes without finding the item
+    show_debug_message("WARNING (get_item_profile_by_id): Item profile not found for ID: " + _item_id);
+    return undefined;
     #endregion
 }
 

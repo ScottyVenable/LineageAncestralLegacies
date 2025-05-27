@@ -154,16 +154,64 @@ if (!instance_exists(obj_entity_state_controller)) {
 // 4.B PRE-SPAWN DATA INITIALIZATION (e.g. Name data for pops)
 // ============================================================================
 #region 4.B.1 Load Name Data
-// Load pop name data from external JSON loaded into global.GameData.pop_name_data
-if (is_struct(global.GameData.pop_name_data)) {
-    global.male_prefixes   = global.GameData.pop_name_data.male_prefixes;
-    global.male_suffixes   = global.GameData.pop_name_data.male_suffixes;
-    global.female_prefixes = global.GameData.pop_name_data.female_prefixes;
-    global.female_suffixes = global.GameData.pop_name_data.female_suffixes;
-    debug_log("Pop name data loaded from JSON.", "obj_controller:Create", "green");
+// Load pop name data from external JSON loaded into global.GameData.name_data
+// Robust check to ensure global.GameData and global.GameData.name_data exist and are structs,
+// and then safely access sub-properties.
+if (variable_global_exists("GameData") && is_struct(global.GameData) &&
+    variable_struct_exists(global.GameData, "name_data") && is_struct(global.GameData.name_data)) {
+
+    // Safely access male_prefixes
+    if (variable_struct_exists(global.GameData.name_data, "male_prefixes")) {
+        global.male_prefixes = global.GameData.name_data.male_prefixes;
+    } else {
+        global.male_prefixes = [];
+        debug_log("WARNING: global.GameData.name_data.male_prefixes not found. Using empty list.", "obj_controller:Create", "yellow");
+    }
+
+    // Safely access male_suffixes
+    if (variable_struct_exists(global.GameData.name_data, "male_suffixes")) {
+        global.male_suffixes = global.GameData.name_data.male_suffixes;
+    } else {
+        global.male_suffixes = [];
+        debug_log("WARNING: global.GameData.name_data.male_suffixes not found. Using empty list.", "obj_controller:Create", "yellow");
+    }
+
+    // Safely access female_prefixes
+    if (variable_struct_exists(global.GameData.name_data, "female_prefixes")) {
+        global.female_prefixes = global.GameData.name_data.female_prefixes;
+    } else {
+        global.female_prefixes = [];
+        debug_log("WARNING: global.GameData.name_data.female_prefixes not found. Using empty list.", "obj_controller:Create", "yellow");
+    }
+
+    // Safely access female_suffixes
+    if (variable_struct_exists(global.GameData.name_data, "female_suffixes")) {
+        global.female_suffixes = global.GameData.name_data.female_suffixes;
+    } else {
+        global.female_suffixes = [];
+        debug_log("WARNING: global.GameData.name_data.female_suffixes not found. Using empty list.", "obj_controller:Create", "yellow");
+    }
+    
+    // Check if any names were actually loaded
+    if (array_length(global.male_prefixes) == 0 && array_length(global.female_prefixes) == 0) {
+        debug_log("INFO: No name components (prefixes/suffixes) were loaded from global.GameData.name_data. Pop names might be blank if text file loading also fails.", "obj_controller:Create", "yellow");
+    }
+
 } else {
-    debug_log("ERROR: JSON pop_name_data not found. Pop names may not generate correctly.", "obj_controller:Create", "red");
+    // This case handles if global.GameData.name_data itself is missing or not a struct.
+    debug_log("ERROR: global.GameData.name_data is not a valid struct or does not exist. Pop names will rely on text file fallbacks or be blank.", "obj_controller:Create", "red");
+    global.male_prefixes   = [];
+    global.male_suffixes   = [];
+    global.female_prefixes = [];
+    global.female_suffixes = [];
 }
+
+// Initialize text-based name loading (this is a separate system from name_data.json)
+// This was previously called by obj_gameStart, but it makes sense to have it here
+// if obj_controller is responsible for pop name components.
+// Ensure this doesn't conflict with obj_gameStart's call if it still exists there.
+// load_name_data(); // Consider if this call is duplicated or best placed here.
+// For now, assuming obj_gameStart handles this initial call.
 #endregion
 
 // ============================================================================

@@ -57,7 +57,7 @@ function get_sprite_asset_safely(asset_name_string, fallback_asset_index, debug_
         }
         var _msg_context_issue = (debug_context_string != "") ? $" for {debug_context_string}" : "";
         // Enhanced debug message to show the problematic value directly.
-        show_debug_message($"WARNING (get_sprite_asset_safely{_msg_context_issue}): Provided asset name was {_reason}. Value: '{asset_name_string}'. Using fallback.");
+        debug_message($"WARNING (get_sprite_asset_safely{_msg_context_issue}): Provided asset name was {_reason}. Value: '{asset_name_string}'. Using fallback.");
         return fallback_asset_index;
     }
 
@@ -85,7 +85,7 @@ function get_sprite_asset_safely(asset_name_string, fallback_asset_index, debug_
     //
     // The '100005' in the error message is likely an internal artifact resulting from 'global' being misinterpreted,
     // NOT the direct value of 'asset_name_string' at the point of the GML call (which your debug log shows is a string).
-    show_debug_message($"DEBUG (get_sprite_asset_safely): PRE-CALL CHECK for asset_get_type. asset_name_string = '{asset_name_string}', typeof = {typeof(asset_name_string)}, is_string = {is_string(asset_name_string)}, is_real = {is_real(asset_name_string)}");
+    debug_message($"DEBUG (get_sprite_asset_safely): PRE-CALL CHECK for asset_get_type. asset_name_string = '{asset_name_string}', typeof = {typeof(asset_name_string)}, is_string = {is_string(asset_name_string)}, is_real = {is_real(asset_name_string)}");
 
     // Check if the asset exists and what type it is.
     // asset_get_type(string_name) will return asset_unknown (-1) if the asset doesn't exist.
@@ -94,7 +94,7 @@ function get_sprite_asset_safely(asset_name_string, fallback_asset_index, debug_
 
     if (_asset_type == asset_unknown) {
         var _msg_context_exists = (debug_context_string != "") ? $" for {debug_context_string}" : "";
-        show_debug_message($"WARNING (get_sprite_asset_safely{_msg_context_exists}): Sprite asset name \'{asset_name_string}\' NOT FOUND (asset_unknown). Using fallback.");
+        debug_message($"WARNING (get_sprite_asset_safely{_msg_context_exists}): Sprite asset name \'{asset_name_string}\' NOT FOUND (asset_unknown). Using fallback.");
         return fallback_asset_index;
     }
 
@@ -102,7 +102,7 @@ function get_sprite_asset_safely(asset_name_string, fallback_asset_index, debug_
     if (_asset_type != asset_sprite) {
         var _msg_context_type = (debug_context_string != "") ? $" for {debug_context_string}" : "";
         // It's helpful to know what type it *was* if it wasn't a sprite.
-        show_debug_message($"WARNING (get_sprite_asset_safely{_msg_context_type}): Asset \'{asset_name_string}\' found but is NOT a sprite (type: {_asset_type}). Using fallback.");
+        debug_message($"WARNING (get_sprite_asset_safely{_msg_context_type}): Asset \'{asset_name_string}\' found but is NOT a sprite (type: {_asset_type}). Using fallback.");
         return fallback_asset_index;
     }
 

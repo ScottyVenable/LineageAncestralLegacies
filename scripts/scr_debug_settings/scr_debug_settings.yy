@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_debug_log",
+  "%Name":"scr_debug_settings",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_debug_log",
+  "name":"scr_debug_settings",
   "parent":{
     "name":"Debug",
     "path":"folders/Scripts/Utilities/Debug.yy",

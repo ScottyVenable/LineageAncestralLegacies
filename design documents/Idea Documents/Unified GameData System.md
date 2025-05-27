@@ -273,10 +273,10 @@ Once you have the profile struct (either directly via path or via `GetProfileFro
 
 *   `scr_gamedata_init.gml`: Sets up the `global.GameData` struct and calls `scr_load_external_data_all`.
 *   `scr_load_external_data_all.gml`:
-    *   Handles loading from JSON files (e.g., `item_data.json`, `resource_node_data.json`, `structure_data.json`, `entity_data.json`, `pop_name_data.json`, `pop_states.json`, `recipes.json`).
+    *   Handles loading from JSON files (e.g., `item_data.json`, `resource_node_data.json`, `structure_data.json`, `entity_data.json`, `name_data.json`, `pop_states.json`, `recipes.json`).
     *   Implements fallback to `default_*.json` files if primary files are missing or corrupt.
     *   Populates the corresponding sections of `global.GameData` (e.g., `global.GameData.items`, `global.GameData.pop_states`, `global.GameData.recipes`).
-*   **Current Data Loading:** The system now robustly loads JSON definitions for items, resource nodes, structures, entities, pop names, pop states, and recipes into `global.GameData`.
+    *   **Current Data Loading:** The system now robustly loads JSON definitions for items, resource nodes, structures, entities, pop names, pop states, and recipes into `global.GameData`.
 
 ### 5.2. Entity Spawning System
 

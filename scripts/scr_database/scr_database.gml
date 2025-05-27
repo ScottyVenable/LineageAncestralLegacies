@@ -4,9 +4,7 @@
 //          This script should be run once at the very start of the game.
 
 // Ensure prerequisite enums and entity definitions are loaded first.
-scr_constants(); // Defines global enums like FormationType, EntityState, etc.
-
-show_debug_message("Initializing scr_database: Populating global.GameData...");
+debug_message("Initializing scr_database: Populating global.GameData...");
 
 // -----------------------------------------------------------------------------
 // Optional: ID Enum (Flat enum for convenience, maps to GameData paths)
@@ -56,11 +54,23 @@ enum ID {
     TRAIT_FIRE_KEEPER,
     TRAIT_QUICK_LEARNER,
 
-    // Skill Profiles
+    // Skill Profiles (aligned with EntitySkill enum and global.GameData.Skills.Type)
     SKILL_FORAGING,
-    SKILL_CRAFTING_PRIMITIVE,
-    SKILL_HUNTING_BASIC,
-    SKILL_FIRE_MAKING
+    SKILL_FARMING,
+    SKILL_MINING,
+    SKILL_WOODCUTTING,
+    SKILL_CRAFTING_GENERAL,
+    SKILL_CRAFTING_WEAPONS,
+    SKILL_CRAFTING_TOOLS,
+    SKILL_CRAFTING_APPAREL,
+    SKILL_CONSTRUCTION,
+    SKILL_COOKING,
+    SKILL_MEDICINE,
+    SKILL_COMBAT_MELEE,
+    SKILL_COMBAT_RANGED,
+    SKILL_SOCIAL_CHARISMA,
+    SKILL_RESEARCHING,
+    SKILL_HAULING
 }
 
 // -----------------------------------------------------------------------------
@@ -68,16 +78,36 @@ enum ID {
 // -----------------------------------------------------------------------------
 global.GameData = {};
 
+// Pre-initialize top-level data categories to ensure they always exist as structs.
+// This prevents "variable not set" errors if scr_load_external_data_all fails to populate any of them.
+// The actual data will be loaded into these by scr_load_external_data_all.
+debug_message("scr_database: Pre-initializing global.GameData categories (items, name_data, etc.) as empty structs.");
+global.GameData.items = {};             // For item_data.json
+global.GameData.resource_nodes = {};  // For resource_node_data.json
+global.GameData.structures = {};      // For structure_data.json
+global.GameData.entities = {};        // For entity_data.json
+global.GameData.name_data = {};         // For name_data.json (formerly pop_name_data.json)
+global.GameData.pop_states = {};      // For pop_states.json
+global.GameData.recipes = {};         // For recipes.json
+
 // =============================================================================
 // SECTION: SPAWN FORMATIONS
 // =============================================================================
+// Ensure SpawnFormations and its sub-structs are also initialized if they are expected to exist.
 global.GameData.SpawnFormations = {
-    Type: { // Enum-like struct for formation types
-        SINGLE_POINT: 0,
-        CLUSTERED: 1,
-        LINE: 2,
-        GRID: 3,
-        PACK_SCATTER: 4 // For more organic animal groups
+    Type: { // Define known formation types based on the FormationType enum in scr_constants
+        NONE: "none",                       // Added based on enum
+        GRID: "grid",                       // Matches enum
+        LINE_HORIZONTAL: "line_horizontal", // Added based on enum
+        LINE_VERTICAL: "line_vertical",     // Added based on enum
+        CIRCLE: "circle",                   // Matches enum
+        RANDOM_WITHIN_RADIUS: "random_within_radius", // Added based on enum
+        SINGLE_POINT: "single_point",       // Changed from SINGLE to SINGLE_POINT to match enum
+        CLUSTERED: "clustered",             // Matches enum
+        PACK_SCATTER: "pack_scatter",       // Matches enum
+        SCATTER: "scatter"                  // Added based on enum
+        // Note: Removed "SINGLE: single" and "PAIR: pair" as they are not in the FormationType enum or are superseded.
+        //       Removed "LINE: line" as it's now specified by LINE_HORIZONTAL and LINE_VERTICAL.
     },
     // Default parameters for formations could be defined here too if desired,
     // or they can live within the entity profiles that use them by default.
@@ -149,33 +179,62 @@ global.GameData.Hazards = {
 // SECTION: SKILLS
 // =============================================================================
 global.GameData.Skills = {
-    Type: { // Enum-like struct for skill types
+    Type: { // Enum-like struct for skill types, aligned with EntitySkill enum
         FORAGING: 0,
-        CRAFTING_PRIMITIVE: 1,
-        HUNTING_BASIC: 2,
-        FIRE_MAKING: 3,
-        CONSTRUCTION_BASIC: 4,
-        SOCIAL_COMMUNICATION: 5,
-        // ... more skills
+        FARMING: 1, // Added
+        MINING: 2,  // Added
+        WOODCUTTING: 3, // Added
+        CRAFTING_GENERAL: 4, // Added (was CRAFTING_PRIMITIVE)
+        CRAFTING_WEAPONS: 5, // Added
+        CRAFTING_TOOLS: 6,   // Added
+        CRAFTING_APPAREL: 7, // Added
+        CONSTRUCTION: 8,     // Added (was CONSTRUCTION_BASIC)
+        COOKING: 9,          // Added
+        MEDICINE: 10,        // Added
+        COMBAT_MELEE: 11,    // Added
+        COMBAT_RANGED: 12,   // Added
+        SOCIAL_CHARISMA: 13, // Added (was SOCIAL_COMMUNICATION)
+        RESEARCHING: 14,     // Added
+        HAULING: 15,         // Added
+        // Removed HUNTING_BASIC, FIRE_MAKING as they might be covered by broader skills or specific actions
+        // Kept original numeric sequence for existing, inserted new ones
     },
     Profiles: {} // Will be populated below
 };
 
-global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FORAGING] = {
-    skill_id_enum: global.GameData.Skills.Type.FORAGING,
-    display_name_key: "skill_name_foraging",
-    description_key: "skill_desc_foraging",
-    max_level: 100,
-    xp_curve_id: "CURVE_STANDARD" // ID to look up an XP curve formula
-};
-global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = {
-    skill_id_enum: global.GameData.Skills.Type.CRAFTING_PRIMITIVE,
-    display_name_key: "skill_name_crafting_primitive",
-    description_key: "skill_desc_crafting_primitive",
-    max_level: 100,
-    xp_curve_id: "CURVE_STANDARD"
-};
-// ... Add other skill profiles
+// Helper for skill profile creation
+function CreateSkillProfile(_skill_enum, _name_key, _desc_key, _max_lvl = 100, _xp_curve = "CURVE_STANDARD") {
+    return {
+        skill_id_enum: _skill_enum,
+        display_name_key: _name_key,
+        description_key: _desc_key,
+        max_level: _max_lvl,
+        xp_curve_id: _xp_curve
+    };
+}
+
+// Populate Skill Profiles using the helper and EntitySkill enum for consistency
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FORAGING] = CreateSkillProfile(global.GameData.Skills.Type.FORAGING, "skill_name_foraging", "skill_desc_foraging");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FARMING] = CreateSkillProfile(global.GameData.Skills.Type.FARMING, "skill_name_farming", "skill_desc_farming");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.MINING] = CreateSkillProfile(global.GameData.Skills.Type.MINING, "skill_name_mining", "skill_desc_mining");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.WOODCUTTING] = CreateSkillProfile(global.GameData.Skills.Type.WOODCUTTING, "skill_name_woodcutting", "skill_desc_woodcutting");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_GENERAL] = CreateSkillProfile(global.GameData.Skills.Type.CRAFTING_GENERAL, "skill_name_crafting_general", "skill_desc_crafting_general");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_WEAPONS] = CreateSkillProfile(global.GameData.Skills.Type.CRAFTING_WEAPONS, "skill_name_crafting_weapons", "skill_desc_crafting_weapons");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_TOOLS] = CreateSkillProfile(global.GameData.Skills.Type.CRAFTING_TOOLS, "skill_name_crafting_tools", "skill_desc_crafting_tools");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_APPAREL] = CreateSkillProfile(global.GameData.Skills.Type.CRAFTING_APPAREL, "skill_name_crafting_apparel", "skill_desc_crafting_apparel");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CONSTRUCTION] = CreateSkillProfile(global.GameData.Skills.Type.CONSTRUCTION, "skill_name_construction", "skill_desc_construction");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COOKING] = CreateSkillProfile(global.GameData.Skills.Type.COOKING, "skill_name_cooking", "skill_desc_cooking");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.MEDICINE] = CreateSkillProfile(global.GameData.Skills.Type.MEDICINE, "skill_name_medicine", "skill_desc_medicine");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COMBAT_MELEE] = CreateSkillProfile(global.GameData.Skills.Type.COMBAT_MELEE, "skill_name_combat_melee", "skill_desc_combat_melee");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COMBAT_RANGED] = CreateSkillProfile(global.GameData.Skills.Type.COMBAT_RANGED, "skill_name_combat_ranged", "skill_desc_combat_ranged");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.SOCIAL_CHARISMA] = CreateSkillProfile(global.GameData.Skills.Type.SOCIAL_CHARISMA, "skill_name_social_charisma", "skill_desc_social_charisma");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.RESEARCHING] = CreateSkillProfile(global.GameData.Skills.Type.RESEARCHING, "skill_name_researching", "skill_desc_researching");
+global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.HAULING] = CreateSkillProfile(global.GameData.Skills.Type.HAULING, "skill_name_hauling", "skill_desc_hauling");
+
+// Note: HUNTING_BASIC and FIRE_MAKING were previously here.
+// If these are distinct skills and not covered by others (e.g., COMBAT_RANGED/MELEE for hunting, or a general "SURVIVAL" skill for fire-making),
+// they should be added to the EntitySkill enum in scr_constants and then defined here.
+// For now, assuming they are implicitly covered or will be added to EntitySkill later if needed.
 
 // =============================================================================
 // SECTION: TRAITS
@@ -215,7 +274,8 @@ global.GameData.Traits.Profiles[$ ID.TRAIT_PRIMITIVE_CRAFTER] = {
     trait_id_enum: global.GameData.Traits.Type.PRIMITIVE_CRAFTER_ID,
     display_name_key: "trait_name_primitive_crafter",
     description_key: "trait_desc_primitive_crafter",
-    effects: [{ skill_to_modify_enum: global.GameData.Skills.Type.CRAFTING_PRIMITIVE, modifier_type: "BONUS_LEVEL", value: 5 }],
+    // Corrected to use the renamed skill enum CRAFTING_GENERAL
+    effects: [{ skill_to_modify_enum: global.GameData.Skills.Type.CRAFTING_GENERAL, modifier_type: "BONUS_LEVEL", value: 5 }],
     category_enum: global.GameData.Traits.Type.MENTAL,
     tags: ["crafting", "skill_related"]
 };
@@ -528,107 +588,26 @@ global.GameData.Entity.Pop.GEN1 = {
 
 // Populate base_skill_aptitudes for GEN1 using enum keys
 global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.FORAGING] = 4;
-global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE] = 3;
-// global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.SCAVENGING] = 4; Assuming SCAVENGING is defined in Skills.Type
-
-global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.SOCIAL_COMMUNICATION] = 3;
-
-
-#region --- Entity.Animal Profiles ---
-global.GameData.Entity.Animal.Predator.WOLF = {
-    profile_id_string: "ANIMAL_WOLF_GREY",
-    display_name_concept: "Grey Wolf",
-    object_to_spawn: obj_creature_ai_controller, // Changed from obj_animal_wolf
-    sprite_info: {default: "spr_wolf_idle", walk_prefix: "spr_wolf_walk_" }, // Store sprite name as a string
-    base_max_health: 70,
-    base_speed_walk: 3.5,
-    base_speed_run: 6.0,
-    base_attack_damage: 12,
-    attack_range: 32,
-    tags: ["animal", "predator", "carnivore", "canine", "pack_hunter"],
-    diet_type_tags: ["carnivore_hunts_deer_boar"],
-    default_ai_behavior_package_id: "AI_ANIMAL_WOLF_PACK_HUNTER",
-    faction_default_id: "FACTION_WILDLIFE_PREDATOR",
-    default_spawn_amount_range: { min: 2, max: 5 },
-    default_spawn_formation_type: global.GameData.SpawnFormations.Type.PACK_SCATTER,
-    default_formation_params: { radius: 100, min_spacing_from_others: 40, attempts_per_entity: 5 },
-    loot_table_profile_path: global.GameData.LootTables.WOLF // Path to where loot tables will be defined
-};
-
-// --- Entity.Structure Profiles ---
-global.GameData.Entity.Structure.Functional.TOOL_HUT_BASIC = {
-    profile_id_string: "STRUCTURE_TOOL_HUT_BASIC",
-    display_name_concept: "Basic Tool Hut",
-    object_to_spawn: obj_structure_controller, // Generic structure controller
-    sprite_info: { default: "spr_tool_hut_basic" }, // Store sprite name as a string
-    base_max_health: 200,
-    is_destructible: true,
-    tags: ["structure", "crafting_station", "tools", "functional"],
-    build_materials_cost: [ // Array of { item_profile_path: ..., quantity: ... }
-        { item_profile_path: global.GameData.Items.Resource.WOOD_LOG, quantity: 10 },
-        { item_profile_path: global.GameData.Items.Resource.PLANT_FIBER, quantity: 5 }
-    ],
-    build_time_seconds: 60,
-    worker_slots_max: 1,
-    supported_recipe_tags: ["stone_tools_basic", "wood_tools_simple"], // Tags for recipes craftable here
-    // Other structure-specific properties from the Idea Document...
-    inventory_capacity: 10, // Small internal storage for crafting
-    provided_buffs: [{ buff_type: "CRAFTING_SPEED_PRIMITIVE", value: 0.1, radius: 0 }] // 10% speed boost if working at it
-};
-
-// --- Entity.ResourceNode Profiles ---
-global.GameData.Entity.ResourceNode.FLINT_DEPOSIT = {
-    profile_id_string: "NODE_FLINT_DEPOSIT",
-    display_name_concept: "Flint Deposit",
-    object_to_spawn: obj_resource_node_controller, // Generic node controller
-    sprite_info: { default: "spr_flint_deposit_full", depleted: "spr_flint_deposit_empty" }, // Store sprite names as strings
-    base_max_health: 50, // "Health" of the node, i.e., how much can be gathered
-    is_destructible: true, // Depletes
-    tags: ["resource_node", "stone", "flint", "gatherable"],
-    yielded_item_profile_path: global.GameData.Items.Resource.FLINT,
-    yield_amount_per_gather_action: irandom_range(1,3),
-    gather_time_per_action_seconds: 5,
-    required_tool_tags: ["tool_pickaxe_crude", "tool_hammerstone"], // Optional: tags of tools that are effective
-    respawn_time_seconds: -1 // -1 for no respawn, or time in seconds
-};
-
-// --- Entity.Hazard Profiles ---
-global.GameData.Entity.Hazard.AreaEffect.QUICKSAND = {
-    profile_id_string: "HAZARD_QUICKSAND",
-    display_name_concept: "Quicksand Pit",
-    object_to_spawn: obj_hazard_controller, // Generic hazard controller
-    // ... properties from the hazard idea document:
-    hazard_category_tag: "TerrainTrap",
-    tags: ["movement_impairing", "dangerous_terrain"],
-    damage_type_enum: undefined, // Or a suffocation damage type
-    damage_on_enter_amount: 0,
-    status_effects_applied: [{ effect_enum: global.GameData.StatusEffects.Type.SINKING, potency: 0.1, duration_seconds_on_entity: -1 }], // -1 while in
-    area_of_effect_shape_enum: global.GameData.SpawnFormations.Type.SINGLE_POINT, // Visually might be a decal/area
-    area_dimensions: { radius: 64 }, // Example
-    trigger_condition_enum: global.GameData.Hazards.TriggerType.PROXIMITY_ENTER, // Need to define these enums
-    is_temporary: false,
-    lifespan_seconds_active: -1,
-    movement_modifier_enum: global.GameData.MovementEffects.Type.IMPASSABLE_TRAPPED // Need to define
-    // ... visual and audio properties
-};
-#endregion
+// CRAFTING_PRIMITIVE is now CRAFTING_GENERAL or more specific ones.
+// For GEN1, CRAFTING_GENERAL seems appropriate as a starting point.
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.CRAFTING_GENERAL] = 3;
+// SOCIAL_COMMUNICATION is now SOCIAL_CHARISMA
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.SOCIAL_CHARISMA] = 3;
+// Add other relevant GEN1 aptitudes if necessary, e.g., HAULING, CONSTRUCTION
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.HAULING] = 2;
+global.GameData.Entity.Pop.GEN1.base_skill_aptitudes[$ global.GameData.Skills.Type.CONSTRUCTION] = 1;
 
 
-// =============================================================================
+// ...existing code...
 // SECTION: RECIPES
 // =============================================================================
 // Assign the frequently accessed skill profile to a temporary variable
-var _crafting_skill_profile_ref = undefined;
-if (is_struct(global.GameData.Skills.Profiles) && variable_struct_exists(global.GameData.Skills.Profiles, string(global.GameData.Skills.Type.CRAFTING_PRIMITIVE))) {
-    // Corrected: Use the $ accessor for enum/integer keys with structs.
-    // This was causing the "trying to index a variable which is not an array" error.
-    // The $ accessor converts the enum value (which is an integer) to its string representation
-    // for the struct lookup, matching how it was stored (e.g., Profiles[$ 1] = ...).
-    _crafting_skill_profile_ref = global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_PRIMITIVE];
+var _general_crafting_skill_profile_ref = undefined;
+// Use CRAFTING_GENERAL as the default for basic recipes
+if (is_struct(global.GameData.Skills.Profiles) && variable_struct_exists(global.GameData.Skills.Profiles, string(global.GameData.Skills.Type.CRAFTING_GENERAL))) {
+    _general_crafting_skill_profile_ref = global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_GENERAL];
 } else {
-    // It's good practice to log an error if a critical reference cannot be established.
-    // This helps in debugging if recipes fail to load or behave unexpectedly.
-    show_debug_message("ERROR (scr_database): Could not assign _crafting_skill_profile_ref for recipes. global.GameData.Skills.Profiles might be invalid or the CRAFTING_PRIMITIVE key is missing.");
+    debug_message("ERROR (scr_database): Could not assign _general_crafting_skill_profile_ref for recipes. Profile for CRAFTING_GENERAL missing.");
 }
 
 global.GameData.Recipes = {};
@@ -650,11 +629,12 @@ global.GameData.Recipes[$ ID.RECIPE_STONE_AXE] = { // Keyed by ID for convenienc
     ],
     base_crafting_time_seconds: 15, // How long crafting takes (in seconds) before any skill or station modifiers
     required_skill_profile: {
-        skill_profile_path: _crafting_skill_profile_ref, // Use temporary variable
+        // Assuming Stone Axe uses general crafting. If it needs a specific tool/weapon crafting skill, update this.
+        skill_profile_path: _general_crafting_skill_profile_ref, 
         min_level_required: 1 // Minimum skill level required to craft this recipe
     },
     required_crafting_station_tags: ["crafting_surface_basic", "tool_making_spot"], // Tags for stations where this recipe can be crafted (e.g., flat rock, work stump)
-    xp_reward_skill_path: _crafting_skill_profile_ref, // Use temporary variable
+    xp_reward_skill_path: _general_crafting_skill_profile_ref, 
     xp_reward_amount: 8 // Amount of XP awarded for crafting this item
     // This structure makes it easy to add more recipes and ensures consistency across all crafting data.
 };
@@ -667,34 +647,74 @@ function GetProfileFromID(id_enum) { // Parameter is id_enum
     // Corrected: Changed 'uid_enum' to 'id_enum' to match the function parameter.
     // This ensures the switch statement correctly uses the provided ID.
     switch (id_enum) {
-        // Entity Profiles
+        // Entity Profiles - Pops
         case ID.POP_GEN1: return global.GameData.Entity.Pop.GEN1;
-        // case ID.POP_ROLE_HUNTER: return global.GameData.Entity.Pop.Role.HUNTER; // Assuming Role path
+        // case ID.POP_GEN2: return global.GameData.Entity.Pop.GEN2; // Assuming GEN2 profile exists
+        // case ID.POP_GEN3: return global.GameData.Entity.Pop.GEN3; // Assuming GEN3 profile exists
+        // case ID.POP_GEN4: return global.GameData.Entity.Pop.GEN4; // Assuming GEN4 profile exists
+        // case ID.POP_ROLE_HUNTER: return global.GameData.Entity.Pop.Role.HUNTER; // Assuming Role path, e.g., global.GameData.Entity.Pop.Roles.HUNTER
 
-        case ID.ANIMAL_WOLF: return global.GameData.Entity.Animal.Predator.WOLF;
-        // ... many more mappings for all ID members ...
+        // Entity Profiles - Animals
+        case ID.ANIMAL_WOLF: return global.GameData.Entity.Animal.Predator.WOLF; // Assuming WOLF profile exists at this path
+        // case ID.ANIMAL_DEER: return global.GameData.Entity.Animal.Herbivore.DEER; // Assuming DEER profile exists
+
+        // Entity Profiles - Structures
+        // case ID.STRUCTURE_TOOL_HUT_BASIC: return global.GameData.Entity.Structure.Functional.TOOL_HUT_BASIC; // Assuming structure profile exists
+        // case ID.STRUCTURE_STORAGE_PIT: return global.GameData.Entity.Structure.Storage.STORAGE_PIT;
+        // case ID.STRUCTURE_FIRE_PIT: return global.GameData.Entity.Structure.Functional.FIRE_PIT;
+
+        // Entity Profiles - Resource Nodes
+        // case ID.NODE_FLINT_DEPOSIT: return global.GameData.Entity.ResourceNode.FLINT_DEPOSIT; // Assuming node profile exists
+        // case ID.NODE_BERRY_BUSH_RED: return global.GameData.Entity.ResourceNode.BERRY_BUSH_RED;
+
+        // Entity Profiles - Hazards
+        // case ID.HAZARD_QUICKSAND: return global.GameData.Entity.Hazard.AreaEffect.QUICKSAND; // Assuming hazard profile exists
+        // case ID.HAZARD_ROCKSLIDE_TRIGGER: return global.GameData.Entity.Hazard.EventBased.ROCKSLIDE_TRIGGER;
 
         // Item Profiles
         case ID.ITEM_FLINT: return global.GameData.Items.Resource.FLINT;
         case ID.ITEM_STICK: return global.GameData.Items.Resource.STICK;
         case ID.ITEM_STONE_AXE: return global.GameData.Items.Tool.STONE_AXE;
+        case ID.ITEM_RAW_MEAT: return global.GameData.Items.Food.RAW_WOLF_MEAT; // Example, assuming RAW_WOLF_MEAT is the generic raw meat for now
+        // case ID.ITEM_COOKED_MEAT: return global.GameData.Items.Food.COOKED_MEAT; // Assuming COOKED_MEAT profile exists
+        case ID.ITEM_BERRY_RED: return global.GameData.Items.Resource.BERRY_RED;
+
 
         // Recipe Profiles
         case ID.RECIPE_STONE_AXE: return global.GameData.Recipes[ID.RECIPE_STONE_AXE]; // Recipes keyed by ID
+        // case ID.RECIPE_COOKED_MEAT: return global.GameData.Recipes[ID.RECIPE_COOKED_MEAT]; // Assuming recipe profile exists
 
         // Trait Profiles
         case ID.TRAIT_KEEN_EYES: return global.GameData.Traits.Profiles[ID.TRAIT_KEEN_EYES];
+        case ID.TRAIT_STRONG_BACK: return global.GameData.Traits.Profiles[ID.TRAIT_STRONG_BACK];
+        case ID.TRAIT_PRIMITIVE_CRAFTER: return global.GameData.Traits.Profiles[ID.TRAIT_PRIMITIVE_CRAFTER];
+        // case ID.TRAIT_FIRE_KEEPER: return global.GameData.Traits.Profiles[ID.TRAIT_FIRE_KEEPER];
+        // case ID.TRAIT_QUICK_LEARNER: return global.GameData.Traits.Profiles[ID.TRAIT_QUICK_LEARNER];
 
-        // Skill Profiles
-        case ID.SKILL_FORAGING: return global.GameData.Skills.Profiles[global.GameData.Skills.Type.FORAGING];
-
+        // Skill Profiles (Aligned with the updated ID enum and global.GameData.Skills.Type)
+        case ID.SKILL_FORAGING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FORAGING];
+        case ID.SKILL_FARMING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.FARMING];
+        case ID.SKILL_MINING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.MINING];
+        case ID.SKILL_WOODCUTTING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.WOODCUTTING];
+        case ID.SKILL_CRAFTING_GENERAL: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_GENERAL];
+        case ID.SKILL_CRAFTING_WEAPONS: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_WEAPONS];
+        case ID.SKILL_CRAFTING_TOOLS: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_TOOLS];
+        case ID.SKILL_CRAFTING_APPAREL: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CRAFTING_APPAREL];
+        case ID.SKILL_CONSTRUCTION: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.CONSTRUCTION];
+        case ID.SKILL_COOKING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COOKING];
+        case ID.SKILL_MEDICINE: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.MEDICINE];
+        case ID.SKILL_COMBAT_MELEE: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COMBAT_MELEE];
+        case ID.SKILL_COMBAT_RANGED: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.COMBAT_RANGED];
+        case ID.SKILL_SOCIAL_CHARISMA: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.SOCIAL_CHARISMA];
+        case ID.SKILL_RESEARCHING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.RESEARCHING];
+        case ID.SKILL_HAULING: return global.GameData.Skills.Profiles[$ global.GameData.Skills.Type.HAULING];
 
         default:
             // Corrected: Changed 'uid_enum' to 'id_enum' for accurate debugging.
-            show_debug_message($"ERROR (GetProfileFromID): Unhandled ID enum: {id_enum}");
+            debug_message($"ERROR (GetProfileFromID): Unhandled ID enum: {id_enum}");
             return undefined;
     }
 }
 
 
-show_debug_message("global.GameData populated successfully in scr_database. Version with GEN1-4 Pops.");
+debug_message("global.GameData populated successfully in scr_database. Version with GEN1-4 Pops.");

@@ -75,5 +75,8 @@ if (is_real(_active_cam) && _active_cam >= 0) {
 // target_center_y = room_height / 2;
 // re_center_on_target = false; // Set to true by obj_controller to trigger a re-center
 
+// Ensure this object persists across rooms if it's meant to be a global camera controller
+// persistence = true; // Uncomment if persistence is desired
 
-show_debug_message("DEBUG (obj_camera_controller): Create Event executed.");
+// Initial debug message to confirm creation
+debug_message("DEBUG (obj_camera_controller): Create Event executed.");

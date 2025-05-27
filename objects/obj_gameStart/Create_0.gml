@@ -34,12 +34,17 @@ debug_message("Database initialized.");
 // room_goto(rm_main_menu);
 debug_message("obj_gameStart: Create event finished. Game setup complete.");
 
-// For now, let's go to a test room if it exists, or handle it gracefully.
-if (room_exists(rm_test_environment)) {
-    debug_message("Transitioning to rm_test_environment.");
-    room_goto(rm_test_environment);
-} else {
-    debug_message("rm_test_environment not found. Staying in initial room or ending game (if this is the only room).");
-    // Optionally, show an error or go to a default room like a main menu
-    // For now, it will just stay in the current room if rm_test_environment doesn't exist.
-}
+// Instead of rm_test_environment, use a real room or comment out for now to avoid errors.
+// Example: if (room_exists(World)) { ... } else { ... }
+// If you don't have a test room, comment out this block:
+// if (room_exists(rm_test_environment)) {
+//     debug_message("Transitioning to rm_test_environment.");
+//     room_goto(rm_test_environment);
+// } else {
+//     debug_message("rm_test_environment not found. Staying in initial room or ending game (if this is the only room).");
+//     // Optionally, show an error or go to a default room like a main menu
+//     // For now, it will just stay in the current room if rm_test_environment doesn't exist.
+// }
+
+// NOTE: If you want obj_controller to run before this, place obj_controller ABOVE obj_gameStart in the Room Editor's instance order.
+// This ensures all controller variables and systems are initialized before game start logic runs.

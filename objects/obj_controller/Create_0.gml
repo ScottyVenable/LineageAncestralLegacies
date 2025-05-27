@@ -18,6 +18,12 @@
 // ============================================================================
 #region 0.1 Initialize Global Variables
 // Ensure the first_load variable is initialized
+
+// --- Ensure the game database is initialized before using global.GameData ---
+if (!variable_global_exists("GameData") || !is_struct(global.GameData)) {
+    scr_database_init();
+}
+
 if (!variable_global_exists("first_load")) {
     global.first_load = true; // Assume it's a new game if not set
 }
@@ -427,16 +433,7 @@ debug_log("obj_controller initialized successfully.", "obj_controller:Create", "
 debug_log($"Music playing set to: {global.musicplaying}", "obj_controller:Create", "blue");
 #endregion
 
-// Initialize global name data variables
-if (!variable_global_exists("male_prefixes")) {
-    global.male_prefixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_prefixes.txt");
-}
-if (!variable_global_exists("male_suffixes")) {
-    global.male_suffixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_male_suffixes.txt");
-}
-if (!variable_global_exists("female_prefixes")) {
-    global.female_prefixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_prefixes.txt");
-}
-if (!variable_global_exists("female_suffixes")) {
-    global.female_suffixes = load_text_file_lines(working_directory + "\\namedata\\pops\\tribal_stage\\tribal_female_suffixes.txt");
-}
+
+
+// NOTE: To ensure obj_controller runs before obj_gameStart, place obj_controller ABOVE obj_gameStart in the Room Editor's instance order.
+// This ensures all controller variables and systems are initialized before game start logic runs.

@@ -1,11 +1,13 @@
 {
   "FolderOrderSettings":[
     {"name":"Structures","order":1,"path":"folders/Objects/Structures.yy",},
+    {"name":"Debug","order":5,"path":"folders/Objects/UI/Debug.yy",},
+    {"name":"Buttons","order":6,"path":"folders/Objects/UI/Buttons.yy",},
     {"name":"Entities","order":10,"path":"folders/Scripts/Entities.yy",},
+    {"name":"Formations","order":2,"path":"folders/Scripts/Entities/Formations.yy",},
     {"name":"Art","order":1,"path":"folders/Scripts/Entities/Pop/Art.yy",},
     {"name":"Behaviors","order":2,"path":"folders/Scripts/Entities/Pop/Behaviors.yy",},
     {"name":"Behavior Functions","order":4,"path":"folders/Scripts/Entities/Pop/Behaviors/Behavior Functions.yy",},
-    {"name":"Formations","order":2,"path":"folders/Scripts/Entities/Formations.yy",},
     {"name":"Physics","order":3,"path":"folders/Scripts/Entities/Pop/Physics.yy",},
     {"name":"Systems","order":4,"path":"folders/Scripts/Entities/Pop/Systems.yy",},
     {"name":"UI","order":6,"path":"folders/Scripts/UI.yy",},
@@ -31,6 +33,7 @@
     {"name":"Structures","order":10,"path":"folders/Sprites/Structures.yy",},
     {"name":"Tiles","order":5,"path":"folders/Sprites/Tiles.yy",},
     {"name":"UI","order":6,"path":"folders/Sprites/UI.yy",},
+    {"name":"Buttons","order":7,"path":"folders/Sprites/UI/Buttons.yy",},
     {"name":"icons","order":5,"path":"folders/Sprites/UI/icons.yy",},
   ],
   "ResourceOrderSettings":[
@@ -39,6 +42,7 @@
     {"name":"fnt_ui_stock_header","order":3,"path":"fonts/fnt_ui_stock_header/fnt_ui_stock_header.yy",},
     {"name":"obj_camera_controller","order":3,"path":"objects/obj_camera_controller/obj_camera_controller.yy",},
     {"name":"obj_creature_ai_controller","order":7,"path":"objects/obj_creature_ai_controller/obj_creature_ai_controller.yy",},
+    {"name":"obj_debug_controller","order":12,"path":"objects/obj_debug_controller/obj_debug_controller.yy",},
     {"name":"obj_entity_state_controller","order":11,"path":"objects/obj_entity_state_controller/obj_entity_state_controller.yy",},
     {"name":"obj_gameStart","order":3,"path":"objects/obj_gameStart/obj_gameStart.yy",},
     {"name":"obj_gui_controller","order":4,"path":"objects/obj_gui_controller/obj_gui_controller.yy",},
@@ -101,6 +105,7 @@
     {"name":"snd_man_commanded_8","order":7,"path":"sounds/snd_man_commanded_8/snd_man_commanded_8.yy",},
     {"name":"snd_man_commanded_9","order":8,"path":"sounds/snd_man_commanded_9/snd_man_commanded_9.yy",},
     {"name":"spr_building_placeholder","order":7,"path":"sprites/spr_building_placeholder/spr_building_placeholder.yy",},
+    {"name":"spr_dev_console","order":6,"path":"sprites/spr_dev_console/spr_dev_console.yy",},
     {"name":"spr_grass_1","order":3,"path":"sprites/spr_grass_1/spr_grass_1.yy",},
     {"name":"spr_man_walking_left","order":1,"path":"sprites/spr_man_walking_left/spr_man_walking_left.yy",},
     {"name":"spr_man_walking_right","order":2,"path":"sprites/spr_man_walking_right/spr_man_walking_right.yy",},
@@ -116,5 +121,6 @@
     {"name":"spr_UIborder_bone_3","order":4,"path":"sprites/spr_UIborder_bone_3/spr_UIborder_bone_3.yy",},
     {"name":"spr_UIborder_stone_1","order":2,"path":"sprites/spr_UIborder_stone_1/spr_UIborder_stone_1.yy",},
     {"name":"spr_UIborder_stone","order":1,"path":"sprites/spr_UIborder_stone/spr_UIborder_stone.yy",},
+    {"name":"spr_UIborder_stone2","order":8,"path":"sprites/spr_UIborder_stone2/spr_UIborder_stone2.yy",},
   ],
 }

@@ -36,15 +36,15 @@ function debug_log(_msg, _section = "General", _color = "gray") { // Added defau
     // Ensure _msg is a string, or attempt to convert it.
     if (!is_string(_msg)) {
         _msg = string(_msg); // Attempt to convert non-string messages to string.
-        show_debug_message("WARNING (debug_log): Message was not a string, converted automatically.");
+        show_debug_message("[WARNING] (debug_log): Message was not a string, converted automatically.");
     }
     if (!is_string(_section)) {
         _section = "InvalidSectionType";
-        show_debug_message("WARNING (debug_log): Section was not a string, using default.");
+        show_debug_message("[WARNING] (debug_log): Section was not a string, using default.");
     }
     if (!is_string(_color)) {
         _color = "gray"; // Default color if an invalid type is passed.
-        show_debug_message("WARNING (debug_log): Color was not a string, using default gray.");
+        show_debug_message("[WARNING] (debug_log): Color was not a string, using default gray.");
     }
     #endregion
     #region 1.2 Pre-condition Checks

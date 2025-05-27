@@ -31,14 +31,17 @@ if (variable_global_exists("_shift_held") && _shift_held && (mouse_wheel_up() ||
 
 // Only log the debug message once every 60 frames to avoid flooding the log
 // Use a global variable for the timer, since static cannot be used in the Draw event in GMS2
-if (!variable_global_exists("debug_draw64_log_timer")) {
-    global.debug_draw64_log_timer = 0;
-}
-if (global.debug_draw64_log_timer <= 0) {
-    show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selection_box.");
-    global.debug_draw64_log_timer = 60; // Log once every 60 frames (about once per second at 60fps)
-} else {
-    global.debug_draw64_log_timer--;
+
+if (variable_global_exists("debug_log_draw")) {
+    if (!variable_global_exists("debug_draw64_log_timer")) {
+        global.debug_draw64_log_timer = 0;
+    }
+    if (global.debug_draw64_log_timer <= 0) {
+        show_debug_message("DEBUG obj_controller Draw_64: AFTER call to scr_draw_selection_box.");
+        global.debug_draw64_log_timer = 180; // Log once every 180 frames (about once every 3 seconds at 60fps)
+    } else {
+        global.debug_draw64_log_timer--;
+    }
 }
 #endregion
 

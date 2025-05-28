@@ -30,8 +30,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_btn_stone_1",
-    "path":"sprites/spr_btn_stone_1/spr_btn_stone_1.yy",
+    "name":"spr_dev_console",
+    "path":"sprites/spr_dev_console/spr_dev_console.yy",
   },
   "spriteMaskId":null,
   "visible":true,

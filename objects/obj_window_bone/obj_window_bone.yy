@@ -31,8 +31,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_UIborder_bone_3",
-    "path":"sprites/spr_UIborder_bone_3/spr_UIborder_bone_3.yy",
+    "name":"spr_UIborder_bone_4",
+    "path":"sprites/spr_UIborder_bone_4/spr_UIborder_bone_4.yy",
   },
   "spriteMaskId":null,
   "visible":true,

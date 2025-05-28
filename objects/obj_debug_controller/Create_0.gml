@@ -9,6 +9,7 @@
 //                        GLOBAL VARIABLES
 // ----------------------------------------------------------------
 #region 1. GLOBAL VARIABLES
+    
     #region 1.1 DEBUG LOGGING
     /// This section initializes variables related to debug logging.
 
@@ -20,8 +21,9 @@
             global.Debug.Rendering = {};
             global.Debug.Entities = {};
             global.Debug.Errors = {};
+            global.Debug.Console = {};
             global.Debug.Enabled = true; // Master switch for the entire debug system, true by default
-            enum DebugStatus = enum("DISABLED", "FULL", "ERROR_ONLY", "PAUSED", "RELEASE"); // Define an enum for debug status. DISABLED = no debug messages, FULL = all messages, ERROR_ONLY = only error messages, PAUSED = temporarily paused, RELEASE = production ready mode.
+            enum DebugStatus {DISABLED, FULL, ERROR_ONLY, PAUSED, RELEASE}; // Define an enum for debug status. DISABLED = no debug messages, FULL = all messages, ERROR_ONLY = only error messages, PAUSED = temporarily paused, RELEASE = production ready mode.
             global.Debug.Status = DebugStatus.FULL;
 
             // Initialize the queue for debug messages
@@ -170,6 +172,45 @@
     global.Debug.Misc.ShowTimers = false; // Display any active custom timers
     global.Debug.Misc.LogNetworkMessages = false; // For multiplayer, log network traffic (if applicable)
     #endregion
+
+    #region 1.12 DEBUG CONSOLE
+    /// This section initializes variables related to the debug console.
+    global.Debug.Console.Enabled = false; // Master switch for the debug console
+    global.Debug.Console.Visible = false; // Track visibility of the debug console
+    global.Debug.Console.Messages = []; // Array to hold messages for the debug console
+
+    global.Debug.Console.InputColor = c_black
+    global.Debug.Console.OutputColor = c_blue
+    global.Debug.Console.draw_messages = function(messages_array) {
+        // This function will handle drawing the messages in the console.
+        // It should be defined in the obj_dev_console object.
+        // For now, we assume it exists and is responsible for rendering messages.
+        if (instance_exists(obj_dev_console)) {
+            obj_dev_console.draw_messages(messages_array || global.Debug.Console.Messages); // Draw the messages from the provided array or the default console messages
+        } else {
+            show_debug_message("DEBUG_SYSTEM: obj_dev_console instance does not exist. Cannot draw messages.");
+        }
+    };
+    global.Debug.Console.submitCommand = function(message) {
+        // Default behavior: Show a debug message and reset the input field.
+        show_debug_message("DEBUG_CONSOLE: Command submitted: " + message);
+        
+        // Here, add the message to the console and draw it.
+        global.Debug.Console.Messages[array_length(global.Debug.Console.Messages)] = "> " + message; // Add the command to the console messages
+        global.Debug.Console.draw_messages(); // Call a method to redraw the console messages
+        
+        // Reset the input box for the next command
+        global.Debug.Console.InputBox.text = ">"; // Reset text to the prompt
+        global.Debug.Console.InputBox.cursor_pos = string_length(global.Debug.Console.InputBox.text); // Place cursor after the prompt
+        global.Debug.Console.InputBox.selection_start = global.Debug.Console.InputBox.cursor_pos; // Clear any selection
+        global.Debug.Console.InputBox.selection_end = global.Debug.Console.InputBox.cursor_pos;
+
+    };
+    #endregion
+    
+    #endregion
+
+
 #endregion
 
 // ----------------------------------------------------------------
@@ -182,10 +223,20 @@
 
     #region 2.1 Pre-conditions
         // Check if the global Debug object exists and has the Logging property
-        if (!variable_global_exists("Debug") || !is_struct(global.Debug)) {
-            // If not, initialize it to prevent errors in other scripts
-            global.Debug = {};
+        show_debug_message("DEBUG_SYSTEM: Entering Pre-conditions. Checking global.Debug...");
+        if (variable_global_exists("Debug")) {
+            show_debug_message("DEBUG_SYSTEM: global.Debug exists. Type: " + typeof(global.Debug) + ", IsStruct: " + string(is_struct(global.Debug)));
+        } else {
+            show_debug_message("DEBUG_SYSTEM: global.Debug does NOT exist prior to check.");
         }
+
+        if (!variable_global_exists("Debug") || !is_struct(global.Debug)) {
+            show_debug_message("DEBUG_SYSTEM: Condition was TRUE. global.Debug was not a struct or did not exist. Initializing global.Debug = {}.");
+            global.Debug = {};
+        } else {
+            show_debug_message("DEBUG_SYSTEM: Condition was FALSE. global.Debug existed and was a struct.");
+        }
+        show_debug_message("DEBUG_SYSTEM: After check. IsStruct(global.Debug): " + string(is_struct(global.Debug)));
         
         // Ensure sub-structs exist, initializing them if necessary
         var _debug_categories = [
@@ -195,24 +246,64 @@
 
         for (var i = 0; i < array_length(_debug_categories); i++) {
             var cat_name = _debug_categories[i];
-            if (!variable_struct_exists(global.Debug, cat_name) || !is_struct(global.Debug[@ cat_name])) {
-                global.Debug[@ cat_name] = {};
+            var _category_struct; // Will hold the struct for the current category, e.g., global.Debug.Logging
+
+            // Check if the category (e.g., "Logging") exists as a key in global.Debug
+            if (!variable_struct_exists(global.Debug, cat_name)) {
+                // If the key itself doesn't exist, create the struct.
+                // This handles categories that might not have been pre-initialized earlier.
+                show_debug_message("DEBUG_SYSTEM: Key '" + cat_name + "' does not exist in global.Debug. Initializing global.Debug[$ '" + cat_name + "'] = {}.");
+                global.Debug[$ cat_name] = {};
+                _category_struct = global.Debug[$ cat_name];
+            } else {
+                // The key exists. Now, get the member associated with that key.
+                var _member = variable_struct_get(global.Debug, cat_name);
+                
+                // Check if the retrieved member is actually a struct.
+                // It could exist but be something else if code elsewhere accidentally overwrote it.
+                if (!is_struct(_member)) {
+                    show_debug_message("DEBUG_SYSTEM: Member global.Debug." + cat_name + " exists but is not a struct (Type: " + typeof(_member) + "). Re-initializing to {}.");
+                    global.Debug[$ cat_name] = {}; // Re-initialize as an empty struct
+                    _category_struct = global.Debug[$ cat_name]; // Get the newly created struct
+                } else {
+                    // The member exists and is already a struct. Use it.
+                    // show_debug_message("DEBUG_SYSTEM: Member global.Debug." + cat_name + " exists and is a struct. Using existing.");
+                    _category_struct = _member;
+                }
             }
-            // Ensure the .Enabled flag exists for categories that should have it
-            // Logging has AllEnabled. Errors and ErrorHandling have their own .Enabled flags directly under global.Debug.CategoryName.Enabled
-            // For Errors, we also need to ensure Messages sub-struct is initialized.
+            
+            // At this point, _category_struct is guaranteed to be the struct for the current category (e.g., global.Debug.Logging)
+
+            // Ensure the .Enabled flag exists for categories that should have it.
+            // _category_struct refers to the specific category struct, e.g., global.Debug.Errors, global.Debug.Rendering.
             if (cat_name == "Errors") {
-                if (!variable_struct_exists(global.Debug.Errors, "Enabled")) {
-                    global.Debug.Errors.Enabled = true; // Default to true
+                // For global.Debug.Errors (which is _category_struct here)
+                if (!variable_struct_exists(_category_struct, "Enabled")) {
+                    show_debug_message("DEBUG_SYSTEM: global.Debug.Errors.Enabled not found. Setting to true.");
+                    _category_struct.Enabled = true; 
                 }
-                if (!variable_struct_exists(global.Debug.Errors, "Messages") || !is_struct(global.Debug.Errors.Messages)) {
-                    global.Debug.Errors.Messages = {}; // Initialize if missing
+                if (!variable_struct_exists(_category_struct, "Messages") || !is_struct(_category_struct.Messages)) {
+                    show_debug_message("DEBUG_SYSTEM: global.Debug.Errors.Messages not found or not a struct. Initializing to {}.");
+                    _category_struct.Messages = {}; 
                 }
-            } else if (cat_name != "Logging" && cat_name != "ErrorHandling") { 
-                 if (!variable_struct_exists(global.Debug[@ cat_name], "Enabled")) {
-                    global.Debug[@ cat_name].Enabled = true; // Default to true
+            } else if (cat_name == "ErrorHandling") {
+                // For global.Debug.ErrorHandling (which is _category_struct here)
+                if (!variable_struct_exists(_category_struct, "Enabled")) {
+                    show_debug_message("DEBUG_SYSTEM: global.Debug.ErrorHandling.Enabled not found. Setting to true.");
+                    _category_struct.Enabled = true; 
+                }
+            } else if (cat_name != "Logging") { 
+                 // For other categories (e.g., Rendering, Entities, UI, AI, etc., but NOT Logging)
+                 // their .Enabled flag is directly within their struct (e.g., global.Debug.Rendering.Enabled).
+                 // _category_struct here is global.Debug.Rendering, global.Debug.Entities, etc.
+                 if (!variable_struct_exists(_category_struct, "Enabled")) {
+                    show_debug_message("DEBUG_SYSTEM: global.Debug." + cat_name + ".Enabled not found. Setting to true.");
+                    _category_struct.Enabled = true; 
                  }
             }
+            // Note: global.Debug.Logging.AllEnabled is the master switch for logging messages
+            // and is assumed to be initialized. Individual log sub-categories like WorldgenEnabled
+            // are also under global.Debug.Logging.
         }
 
         if (!variable_struct_exists(global.Debug, "Enabled")) {
@@ -220,7 +311,7 @@
         }
         if (!variable_struct_exists(global.Debug, "Status")) {
              // Define an enum for debug status if not already defined (e.g. if this runs before the main init)
-            enum DebugStatusLocal = enum("DISABLED", "FULL", "ERROR_ONLY", "PAUSED", "RELEASE");
+            enum DebugStatusLocal {DISABLED, FULL, ERROR_ONLY, PAUSED, RELEASE};
             global.Debug.Status = DebugStatusLocal.FULL;
         }
 
@@ -254,36 +345,11 @@
         // allowing for more granular control below or direct manipulation.
 
         // If the overall debug system (global.Debug.Enabled) is off, ensure all logging AND category .Enabled flags are also off.
-        if (!global.Debug.Enabled) {
-            global.Debug.Logging.AllEnabled = false;
-            
-            // Also disable all other main category .Enabled flags
-            if (variable_struct_exists(global.Debug, "Rendering") && variable_struct_exists(global.Debug.Rendering, "Enabled")) global.Debug.Rendering.Enabled = false;
-            if (variable_struct_exists(global.Debug, "Entities") && variable_struct_exists(global.Debug.Entities, "Enabled")) global.Debug.Entities.Enabled = false;
-            if (variable_struct_exists(global.Debug, "Errors") && variable_struct_exists(global.Debug.Errors, "Enabled")) global.Debug.Errors.Enabled = false; // If Debug.Enabled is false, even error specific visuals go.
-            if (variable_struct_exists(global.Debug, "DevTools") && variable_struct_exists(global.Debug.DevTools, "Enabled")) global.Debug.DevTools.Enabled = false;
-            if (variable_struct_exists(global.Debug, "ErrorHandling") && variable_struct_exists(global.Debug.ErrorHandling, "Enabled")) global.Debug.ErrorHandling.Enabled = false;
-            if (variable_struct_exists(global.Debug, "UI") && variable_struct_exists(global.Debug.UI, "Enabled")) global.Debug.UI.Enabled = false;
-            if (variable_struct_exists(global.Debug, "AI") && variable_struct_exists(global.Debug.AI, "Enabled")) global.Debug.AI.Enabled = false;
-            if (variable_struct_exists(global.Debug, "Inventory") && variable_struct_exists(global.Debug.Inventory, "Enabled")) global.Debug.Inventory.Enabled = false;
-            if (variable_struct_exists(global.Debug, "Pathfinding") && variable_struct_exists(global.Debug.Pathfinding, "Enabled")) global.Debug.Pathfinding.Enabled = false;
-            if (variable_struct_exists(global.Debug, "Misc") && variable_struct_exists(global.Debug.Misc, "Enabled")) global.Debug.Misc.Enabled = false;
-        }
+
 
         // If the master logging switch (global.Debug.Logging.AllEnabled) is false,
         // disable all individual logging categories.
         // Otherwise, they retain the values set in the "Boolean Flags" section.
-        if (!global.Debug.Logging.AllEnabled) {
-            if (variable_struct_exists(global.Debug.Logging, "WorldgenEnabled")) global.Debug.Logging.WorldgenEnabled = false;
-            if (variable_struct_exists(global.Debug.Logging, "PopsEnabled")) global.Debug.Logging.PopsEnabled = false;
-            if (variable_struct_exists(global.Debug.Logging, "EntitiesEnabled")) global.Debug.Logging.EntitiesEnabled = false;
-            if (variable_struct_exists(global.Debug.Logging, "UIEnabled")) global.Debug.Logging.UIEnabled = false;
-            if (variable_struct_exists(global.Debug.Logging, "AIEnabled")) global.Debug.Logging.AIEnabled = false;
-            if (variable_struct_exists(global.Debug.Logging, "InventoryEnabled")) global.Debug.Logging.InventoryEnabled = false;
-            
-            // Add any other specific categories here to ensure they are also disabled.
-            // e.g., if (variable_struct_exists(global.Debug.Logging, "PathfindingEnabled")) global.Debug.Logging.PathfindingEnabled = false;
-        }
     #endregion
 #endregion
 

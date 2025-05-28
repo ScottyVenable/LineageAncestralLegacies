@@ -18,7 +18,6 @@
 // ============================================================================
 #region 0.1 Initialize Global Variables
 // Ensure the first_load variable is initialized
-
 // --- Ensure the game database is initialized before using global.GameData ---
 if (!variable_global_exists("GameData") || !is_struct(global.GameData)) {
     scr_database_init();
@@ -53,7 +52,7 @@ selected_pop = noone; // This prevents 'not set before reading' errors when chec
 // ============================================================================
 randomize();
 #region 1.1 GUI Render Target
-display_set_gui_size(room_width, room_height);
+//display_set_gui_size(room_width, room_height);
 scr_item_definitions_init(); // Assuming this defines items
 #endregion
 

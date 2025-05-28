@@ -1,15 +1,22 @@
 {
   "$GMObject":"",
   "%Name":"obj_dev_console",
-  "eventList":[],
+  "eventList":[
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":64,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+  ],
   "managed":true,
   "name":"obj_dev_console",
   "overriddenProperties":[],
   "parent":{
-    "name":"Debug",
-    "path":"folders/Objects/UI/Debug.yy",
+    "name":"dev console",
+    "path":"folders/Objects/UI/Debug/dev console.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"obj_dev_console_controller",
+    "path":"objects/obj_dev_console_controller/obj_dev_console_controller.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,

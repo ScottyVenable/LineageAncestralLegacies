@@ -8,6 +8,11 @@
 // This should be one of the first things to run.
 debug_message_init(true); // true by default, can be changed later or loaded from a config
 
+// --- Initialize Debug Console Global Variables ---
+// This ensures the debug console starts in a known state.
+// global.Debug.Console.Visible will be initialized by obj_dev_console_controller
+// --- End Debug Console Initialization ---
+
 // Log that the game has started.
 // Uses the new debug_message system, so it will only show if debug messages are enabled.
 debug_message("obj_gameStart: Create event started.");

@@ -2,12 +2,12 @@
 // Inherited from obj_controller and scr_camera_controller logic.
 
 // --- Zoom Variables ---
-zoom_level    = 1.0;
-zoom_target   = 1.0;
+zoom_level    = 1.5;
+zoom_target   = 1.5;
 zoom_min      = 0.5; // Smallest zoom (e.g., 0.25 for 4x room view)
 zoom_max      = 2.0; // Largest zoom (e.g., 2.0 for 0.5x room view)
 zoom_speed    = 0.1; // How much zoom_target changes per wheel click
-zoom_smooth   = 0.15; // Smoothing factor (0.01 to 1.0). Smaller is smoother.
+zoom_smooth   = 0.3; // Smoothing factor (0.01 to 1.0). Smaller is smoother.
 
 // --- Camera Tracking Variables & Initial View Setup ---
 var _active_cam = view_camera[0]; // Get the camera ID first
@@ -32,8 +32,8 @@ if (view_enabled && view_get_visible(0) && is_real(_active_cam) && _active_cam >
     _view_w = 4; 
     _view_h = 768;  
     
-    cam_x = (room_width / 2) - (_view_w / 2);
-    cam_y = (room_height / 2) - (_view_h / 2);
+    cam_x = 0 + 30//(room_width / 2) - (_view_w / 2);
+    cam_y = 0 - 80//(room_height / 2) - (_view_h / 2);
     // Ensure cam_x and cam_y are within room bounds if room is smaller than default view
     // Corrected: Ensure _view_w and _view_h are positive before clamp
     cam_x = clamp(cam_x, 0, max(0, room_width - max(1, _view_w)));

@@ -175,6 +175,7 @@
 
     #region 1.12 DEBUG CONSOLE
     /// This section initializes variables related to the debug console.
+    global.Debug.Console.Enabled = false; // Master switch for the debug console
     global.Debug.Console.Visible = false; // Track visibility of the debug console
     global.Debug.Console.Messages = []; // Array to hold messages for the debug console
 

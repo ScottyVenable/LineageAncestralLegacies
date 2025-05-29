@@ -1,3 +1,13 @@
+// --- Singleton Check ---
+// Ensure only one instance of this controller exists.
+// If another instance is already present, this new one will destroy itself.
+if (instance_number(object_index) > 1) {
+    show_debug_message("Duplicate obj_dev_console_controller (id: " + string(id) + ") found. Destroying self.");
+    instance_destroy(); // Destroy this duplicate instance.
+    exit; // Stop executing the rest of the Create event for this duplicate.
+}
+show_debug_message("obj_dev_console_controller instance CREATED with id: " + string(id) + " (Singleton check passed).");
+
 // --- Initialize Debug Console Global Variables ---
 // This ensures the debug console starts in a known state.
 // It's done here in the controller to centralize console-specific setup.

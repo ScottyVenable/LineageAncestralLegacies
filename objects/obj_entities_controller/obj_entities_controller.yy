@@ -1,9 +1,9 @@
 {
   "$GMObject":"",
-  "%Name":"obj_creature_ai_controller",
+  "%Name":"obj_entities_controller",
   "eventList":[],
   "managed":true,
-  "name":"obj_creature_ai_controller",
+  "name":"obj_entities_controller",
   "overriddenProperties":[],
   "parent":{
     "name":"Controllers",

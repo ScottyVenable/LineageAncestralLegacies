@@ -7,7 +7,7 @@
 ///
 /// Metadata:
 ///    Version:       1.4 - 2024-05-19 // Scotty's Current Date - Added missing vars for UI Panel compatibility
-///    Dependencies:  scr_pop_names, EntitySex enum, PopSkill enum (optional)
+///    Dependencies:  scr_generate_pop_name, EntitySex enum, PopSkill enum (optional)
 
 function scr_generate_pop_details(life_stage) {
     // =========================================================================
@@ -25,42 +25,36 @@ function scr_generate_pop_details(life_stage) {
     // B. GENERATE NAME BASED ON SEX
     // =========================================================================
     #region B. Generate Name
-    var _prefixes_list;
-    var _suffixes_list;
-    var _name_base = "";
+    // The name generation logic has been centralized in scr_generate_pop_name.
+    // This script (scr_generate_pop_details) will now call scr_generate_pop_name
+    // to ensure consistency with the new name_data.json structure and fallback mechanisms.
 
-    // Check if the pop is in the TRIBAL life stage
-    if (life_stage == PopLifeStage.TRIBAL) {
-        if (sex == EntitySex.MALE) {
-            _prefixes_list = global.male_prefixes;
-            _suffixes_list = global.male_suffixes;
-            _name_base = "MalePop";
-        } else { // FEMALE
-            _prefixes_list = global.female_prefixes;
-            _suffixes_list = global.female_suffixes;
-            _name_base = "FemalePop";
-        }
-    }
+    // The _profile_struct argument for scr_generate_pop_name would typically be `self` or a specific struct
+    // containing entity data. Since this script operates within the context of a pop instance (implied by `id`,
+    // `pop_name`, `sex` being directly assigned), we can create a minimal profile struct or pass `self` if appropriate.
+    // For now, we'll create a minimal struct. If more pop-specific data (like race, culture)
+    // influences name generation in the future, this struct can be expanded or `self` can be passed.
+    var _pop_profile_for_name = {
+        // type_tag is used by scr_generate_pop_name's fallback if _entity_data.type_tag exists.
+        // We can set a default here or leave it to be handled by the fallback in scr_generate_pop_name.
+        // For example, if this script is always for a "Pop" type:
+        type_tag: "Pop" 
+        // Add other relevant properties from the pop instance if scr_generate_pop_name needs them.
+    };
 
-    // Generate a prefix and suffix for the name
-    // Ensure prefix and suffix are concatenated without unintended characters
-    var _prefix = (_prefixes_list != undefined && array_length(_prefixes_list) > 0) ? string(_prefixes_list[irandom(array_length(_prefixes_list) - 1)]) : "";
-    var _suffix = (_suffixes_list != undefined && array_length(_suffixes_list) > 0) ? string(_suffixes_list[irandom(array_length(_suffixes_list) - 1)]) : "";
+    // Call the centralized name generation function.
+    // It uses global.GameData.name_data (male_names, female_names) and handles fallbacks.
+    var _generated_name = scr_generate_pop_name(_pop_profile_for_name, sex);
 
-    // Combine prefix and suffix into a single name
-    var _generated_name = _prefix + _suffix;
-
-    // Assign the combined name to pop_identifier_string
-    pop_identifier_string = _generated_name;
-
-    // Ensure a fallback name is used if no prefix or suffix is available
-    if (_generated_name == "") {
-        _generated_name = _name_base + string(id); // Use instance id for fallback
-        show_debug_message("Fallback name used for pop: " + _generated_name);
-    }
-
-    // Assign the generated name to the pop
+    // Assign the generated name to the pop's properties
     pop_name = _generated_name;
+    pop_identifier_string = _generated_name; // Assuming pop_identifier_string should also use this name.
+
+    // The fallback logic is now handled within scr_generate_pop_name, so the old fallback here is removed.
+    // A debug message can still be useful if the name ends up being a generic fallback.
+    if (string_pos("Pop_" + string(id), _generated_name) > 0 || string_pos("Entity_" + string(id), _generated_name) > 0) {
+        show_debug_message("Info: A generic fallback name was assigned to pop: " + _generated_name);
+    }
     #endregion
 
     // =========================================================================

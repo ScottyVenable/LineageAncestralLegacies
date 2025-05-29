@@ -1,25 +1,30 @@
 /// scr_name_generator.gml
 /// Provides a generic name generation interface.
 /// If given an entity profile and sex, routes to the appropriate name function.
+/// Version: 1.1 - 2025-05-28 // Updated to use scr_generate_pop_name for pop names
 function scr_name_generator(_profile_struct, _sex) {
-    // For pops, generate a pop name
-    return scr_name_for_pop(_profile_struct, _sex);
+    // Use dynamic script execution to ensure proper resolution
+    var _script_id = asset_get_index("scr_generate_pop_name");
+    if (script_exists(_script_id)) {
+        // Execute the central name generation script dynamically
+        return script_execute(_script_id, _profile_struct, _sex);
+    } else {
+        show_debug_message("ERROR: scr_generate_pop_name script not found. Cannot generate pop name.");
+        return "";
+    }
 }
 
 /// scr_name_for_pop: Generates a pop name based on profile and sex
+/// DEPRECATED: This function's logic is now handled by scr_generate_pop_name.
+/// It is kept for now to maintain compatibility if other scripts call it directly,
+/// but it simply forwards the call to scr_generate_pop_name.
 function scr_name_for_pop(_profile_struct, _sex) {
-    // Select global lists by sex
-    var _prefix_list = (_sex == EntitySex.MALE) ? global.male_prefixes : global.female_prefixes;
-    var _suffix_list = (_sex == EntitySex.MALE) ? global.male_suffixes : global.female_suffixes;
-    // Pick random prefix/suffix safely
-    var _prefix = (is_array(_prefix_list) && array_length(_prefix_list) > 0) ? string(_prefix_list[irandom(array_length(_prefix_list)-1)]) : "";
-    var _suffix = (is_array(_suffix_list) && array_length(_suffix_list) > 0) ? string(_suffix_list[irandom(array_length(_suffix_list)-1)]) : "";
-    var _name = _prefix + _suffix;
-    // Fallback if empty
-    if (_name == "") {
-        // Use type_tag if available, else fallback to "Pop"
-        var _base = variable_struct_exists(_profile_struct, "type_tag") ? _profile_struct.type_tag : "Pop";
-        _name = _base + string(id);
+    show_debug_message("Note: scr_name_for_pop is being called. Consider updating calls to use scr_generate_pop_name directly.");
+    var _script_id = asset_get_index("scr_generate_pop_name");
+    if (script_exists(_script_id)) {
+        return script_execute(_script_id, _profile_struct, _sex);
+    } else {
+        show_debug_message("ERROR: scr_generate_pop_name script not found when calling scr_name_for_pop.");
+        return "";
     }
-    return _name;
 }
